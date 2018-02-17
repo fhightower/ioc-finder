@@ -24,7 +24,7 @@ setup(
     long_description=readme,
     author="Floyd Hightower",
     author_email='',
-    url='https://github.com/fhightower/ioc_finder',
+    url='https://github.com/fhightower/ioc-finder',
     packages=find_packages(exclude=('tests', 'docs')),
     include_package_data=True,
     install_requires=requirements,
