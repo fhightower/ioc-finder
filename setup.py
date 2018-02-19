@@ -27,6 +27,7 @@ setup(
     url='https://github.com/fhightower/ioc-finder',
     packages=find_packages(exclude=('tests', 'docs')),
     include_package_data=True,
+    package_data={'ioc_finder': ['data/*',]},
     install_requires=requirements,
     license=license,
     zip_safe=True,

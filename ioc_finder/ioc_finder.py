@@ -34,7 +34,7 @@ def _get_regexes():
 
         try:
             remove = config.get(indicator_type, 'remove')
-        except ConfigParser.NoOptionError as e:
+        except ConfigParser.NoOptionError:
             pass
         else:
             indicator_regexes[indicator_type]['remove'] = remove
