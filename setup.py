@@ -19,7 +19,7 @@ test_requirements = [
 
 setup(
     name='ioc_finder',
-    version='0.1.3',
+    version='0.1.4',
     description="Simple python package for finding indicators of compromise in text.",
     long_description=readme,
     author="Floyd Hightower",
