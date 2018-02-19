@@ -17,7 +17,7 @@ def text_a():
 def test_get_regexes():
     """Make sure the regexes are read properly."""
     regexes = _get_regexes()
-    assert len(regexes) == 7
+    assert len(regexes) == 8
 
 
 def test_ioc_finder(text_a):
@@ -54,6 +54,26 @@ def test_url_parsing():
     iocs = find_iocs(s)
     assert len(iocs['url']) == 1
     assert 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['url']
+
+
+def test_address_email_address():
+    """."""
+    s = "test@[192.168.2.1]"
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4_email']) == 1
+    assert 'test@[192.168.2.1]' in iocs['ipv4_email']
+    assert len(iocs['ipv4']) == 1
+    assert '192.168.2.1' in iocs['ipv4']
+
+
+def test_address_domain_url():
+    """."""
+    s = "http://192.64.55.61/test.php"
+    iocs = find_iocs(s)
+    assert len(iocs['url']) == 1
+    assert 'http://192.64.55.61/test.php' in iocs['url']
+    assert len(iocs['ipv4']) == 1
+    assert '192.64.55.61' in iocs['ipv4']
 
 
 def test_ioc_deduplication():

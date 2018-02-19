@@ -27,6 +27,11 @@ def _get_regexes():
             indicator_regexes[indicator_type] = {
                 'regex': config.get(indicator_type, 'regex') + config.get('domain', 'regex')
             }
+        elif indicator_type == 'ipv4_email':
+            formatted_ip_address_regex = config.get('ipv4', 'regex').replace('\\b', '')
+            indicator_regexes[indicator_type] = {
+                'regex': config.get(indicator_type, 'regex').format(formatted_ip_address_regex)
+            }
         else:
             indicator_regexes[indicator_type] = {
                 'regex': config.get(indicator_type, 'regex'),
@@ -56,17 +61,8 @@ def find_iocs(text):
                 # strip leading 0s
                 ip = '.'.join([str(int(x)) for x in ip.split('.')])
                 iocs[indicator_type].add(ip)
-            elif indicator_type == "domain":
-                iocs[indicator_type].add(match.string[match.start():match.end()])
-            # handle email addresses
-            elif indicator_type == "email":
-                iocs[indicator_type].add(match.string[match.start():match.end()])
-            elif indicator_type == "url":
-                iocs[indicator_type].add(match.string[match.start():match.end()])
-            elif indicator_type in ['md5', 'sha1', 'sha256']:
-                iocs[indicator_type].add(match.string[match.start():match.end()])
             else:
-                print("Unknown indicator type: {}".format(indicator_type))
+                iocs[indicator_type].add(match.string[match.start():match.end()])
 
             # if appropriate, remove the indicator from the text
             if indicator_regex.get('remove'):
