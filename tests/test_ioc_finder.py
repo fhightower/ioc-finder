@@ -11,7 +11,7 @@ from ioc_finder.ioc_finder import _get_regexes
 @pytest.fixture
 def text_a():
     """Provide some generic text for the tests below."""
-    return 'example.com is a nice domain if you consider http://bad.com/ to be bad. {} {} {} 1.2.3.4 192.64.55.61 bad12312@example.org'.format('a'*32, 'b'*40, 'c'*64)
+    return 'example.com is a nice domain if you consider http://bad.com/test/bingo.php to be bad. {} {} {} 1.2.3.4 192.64.55.61 bad12312@example.org'.format('a'*32, 'b'*40, 'c'*64)
 
 
 def test_get_regexes():
@@ -36,7 +36,7 @@ def test_ioc_finder(text_a):
     assert '192.64.55.61' in iocs['ipv4']
 
     assert len(iocs['url']) == 1
-    assert 'http://bad.com/' in iocs['url']
+    assert 'http://bad.com/test/bingo.php' in iocs['url']
 
     assert len(iocs['md5']) == 1
     assert 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' in iocs['md5']
@@ -46,6 +46,14 @@ def test_ioc_finder(text_a):
 
     assert len(iocs['sha256']) == 1
     assert 'cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc' in iocs['sha256']
+
+
+def test_url_parsing():
+    """Test some specific url examples."""
+    s = "https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh"
+    iocs = find_iocs(s)
+    assert len(iocs['url']) == 1
+    assert 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['url']
 
 
 def test_ioc_deduplication():
