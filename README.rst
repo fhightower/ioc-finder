@@ -15,19 +15,30 @@ IOC Finder
    :alt: Codacy Badge
    :target: https://www.codacy.com/app/fhightower/ioc-finder
 
-.. image:: https://readthedocs.org/projects/ioc-finder/badge/?version=latest
-        :target: https://ioc-finder.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
-
 Simple python package for finding indicators of compromise in text.
 
-* Free software: MIT license
-* Documentation: https://ioc-finder.readthedocs.io
+Installation
+============
+
+To install this package:
+
+.. code-block:: shell
+
+    pip install ioc_finder
 
 Usage
 =====
 
-Coming soon...
+To use this package:
+
+.. code-block:: python
+
+    from ioc_finder import find_iocs
+    text = "This is just an example.com"
+    iocs = find_iocs(text)
+    print('Domains: {}'.format(iocs['domain']))
+
+See `test_ioc_finder.py <https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py>`_ for more examples.
 
 Credits
 =======

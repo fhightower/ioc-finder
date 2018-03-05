@@ -5,19 +5,12 @@ import pytest
 
 
 from ioc_finder import find_iocs
-from ioc_finder.ioc_finder import _get_regexes
 
 
 @pytest.fixture
 def text_a():
     """Provide some generic text for the tests below."""
     return 'example.com is a nice domain if you consider http://bad.com/test/bingo.php to be bad. {} {} {} 1.2.3.4 192.64.55.61 bad12312@example.org'.format('a'*32, 'b'*40, 'c'*64)
-
-
-def test_get_regexes():
-    """Make sure the regexes are read properly."""
-    regexes = _get_regexes()
-    assert len(regexes) == 8
 
 
 def test_ioc_finder(text_a):
