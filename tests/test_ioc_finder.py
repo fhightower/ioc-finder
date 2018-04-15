@@ -14,7 +14,6 @@ def text_a():
 
 
 def test_ioc_finder(text_a):
-    """."""
     iocs = find_iocs(text_a)
     assert len(iocs['domain']) == 3
     assert 'example.com' in iocs['domain']
@@ -50,7 +49,6 @@ def test_url_parsing():
 
 
 def test_address_email_address():
-    """."""
     s = "test@[192.168.2.1]"
     iocs = find_iocs(s)
     assert len(iocs['ipv4_email']) == 1
@@ -60,13 +58,28 @@ def test_address_email_address():
 
 
 def test_address_domain_url():
-    """."""
     s = "http://192.64.55.61/test.php"
     iocs = find_iocs(s)
     assert len(iocs['url']) == 1
     assert 'http://192.64.55.61/test.php' in iocs['url']
     assert len(iocs['ipv4']) == 1
     assert '192.64.55.61' in iocs['ipv4']
+
+
+def test_ipv4_hostname_email_address():
+    s = "bad@[192.168.7.3]"
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4']) == 1
+    assert '192.168.7.3' in iocs['ipv4']
+    assert len(iocs['ipv4_email']) == 1
+    assert 'bad@[192.168.7.3]' in iocs['ipv4_email']
+
+
+def test_unicode_domain_name():
+    s = "ȩxample.com"
+    iocs = find_iocs(s)
+    assert len(iocs['domain']) == 1
+    assert '\\u0229xample.com' in iocs['domain']
 
 
 def test_ioc_deduplication():

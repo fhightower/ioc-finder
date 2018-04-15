@@ -51,21 +51,22 @@ def find_iocs(text):
     """Find indicators of compromise in the given text."""
     iocs = dict()
     indicator_regexes = _get_regexes()
+    text = text.encode('unicode-escape')
 
     for indicator_type, indicator_regex in indicator_regexes.items():
         iocs[indicator_type] = set()
 
-        for match in re.finditer(indicator_regex['regex'], text):
+        for match in re.finditer(bytes(indicator_regex['regex'], 'utf-8'), text):
             if indicator_type == "ipv4":
                 ip = match.string[match.start():match.end()]
                 # strip leading 0s
-                ip = '.'.join([str(int(x)) for x in ip.split('.')])
+                ip = '.'.join([str(int(x)) for x in ip.split(b'.')])
                 iocs[indicator_type].add(ip)
             else:
-                iocs[indicator_type].add(match.string[match.start():match.end()])
+                iocs[indicator_type].add(match.string[match.start():match.end()].decode('utf-8'))
 
             # if appropriate, remove the indicator from the text
             if indicator_regex.get('remove'):
-                text = text.replace(match.string[match.start():match.end()], "")
+                text = text.replace(match.string[match.start():match.end()], b"")
 
     return iocs

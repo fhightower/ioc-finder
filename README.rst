@@ -15,7 +15,23 @@ IOC Finder
    :alt: Codacy Badge
    :target: https://www.codacy.com/app/fhightower/ioc-finder
 
-Simple python package for finding indicators of compromise in text.
+Find `indicators of compromise <https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC>`_ in text.
+
+Capabilities
+============
+
+Currently, this package can the following items in a given text:
+
+- IP address (IPv4 and IPv6)
+- Email addresses (both standard format (e.g. ``test@example.com``) and an email with an IP address as the domain (e.g. ``test@[192.168.0.1]``))
+- Hosts (including unicode domain names (e.g. ``ȩxample.com``))
+- URLs
+- File Hashes (sha256, sha1, and md5)
+
+Also provides some helpful features like:
+
+- Ability to remove an indicator type after it is parsed - For example, this is helpful if you do not want to parse the host name from a URL. You can setup IOC Finder to remove all URLs from the text after it parses them.
+- Ability to set order in which IOCs are parsed
 
 Installation
 ============
