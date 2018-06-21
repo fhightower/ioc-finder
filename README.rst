@@ -40,7 +40,7 @@ To install this package:
 
 .. code-block:: shell
 
-    pip install ioc_finder
+    pip install ioc-finder
 
 Usage
 =====
