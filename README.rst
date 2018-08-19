@@ -1,6 +1,7 @@
-*******************************
-IOC Finder
-*******************************
+**NOTE:** THIS PROJECT HAS BEEN MOVED TO GITLAB: `https://gitlab.com/fhightower/ioc-finder/ <https://gitlab.com/fhightower/ioc-finder/>`_.
+
+
+**IOC Finder**
 
 .. image:: https://img.shields.io/pypi/v/ioc_finder.svg
         :target: https://pypi.python.org/pypi/ioc_finder
