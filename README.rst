@@ -66,3 +66,8 @@ This package was created with Cookiecutter_ and the `fhightower-templates/python
 
 .. _Cookiecutter: https://github.com/audreyr/cookiecutter
 .. _`fhightower-templates/python-project-template`: https://github.com/fhightower-templates/python-project-template
+
+
+.. image:: https://api.codacy.com/project/badge/Grade/4efdfbfa5a90457db37f9b807e32c167
+   :alt: Codacy Badge
+   :target: https://app.codacy.com/app/fhightower/ioc-finder?utm_source=github.com&utm_medium=referral&utm_content=fhightower/ioc-finder&utm_campaign=Badge_Grade_Settings
