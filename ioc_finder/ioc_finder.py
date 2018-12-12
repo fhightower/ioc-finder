@@ -20,6 +20,13 @@ def _listify(indicator_list):
     return _deduplicate([indicator[0] for indicator in indicator_list if indicator[0]])
 
 
+def _remove_items(items, text):
+    """Remove each item from the text."""
+    for item in items:
+        text = text.replace(item, ' ')
+    return text
+
+
 def parse_urls(text):
     """."""
     urls = ioc_grammars.url.searchString(text)
@@ -117,20 +124,30 @@ def parse_registry_key_paths(text):
     return _listify(registry_key_paths)
 
 
-def find_iocs(text):
+def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_address_from_cidr=True):
     """Find indicators of compromise in the given text."""
     iocs = dict()
 
     # urls
     iocs['urls'] = parse_urls(text)
-    text = _remove_url_paths(iocs['urls'], text)
+    if not parse_host_from_url:
+        text = _remove_items(iocs['urls'], text)
+    # even if we want to parse hosts from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
+    else:
+        text = _remove_url_paths(iocs['urls'], text)
 
     # email addresses
     iocs['email_addresses'] = parse_email_addresses(text)
+    if not parse_host_from_email:
+        text = _remove_items(iocs['email_addresses'], text)
 
     # cidr ranges
     iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
+    if not parse_address_from_cidr:
+        text = _remove_items(iocs['ipv4_cidrs'], text)
     # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
+    # if not parse_address_from_cidr:
+        # text = _remove_items(iocs['ipv6_cidrs'], text)
 
     # domains
     iocs['domains'] = parse_domain_names(text)
