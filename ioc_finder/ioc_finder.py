@@ -1,72 +1,153 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Simple python package for finding indicators of compromise in text."""
+"""Python package for finding indicators of compromise in text."""
 
-from collections import OrderedDict
-try:
-    import configparser as ConfigParser
-except ImportError:
-    import ConfigParser
 import os
-import re
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+
+import ioc_grammars
 
 
-def _get_regexes():
-    """Read the regexes."""
-    REGEX_FILE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "./data/regexes.ini"))
+def _deduplicate(indicator_list):
+    """Deduplicate the list of indicators of compromise."""
+    return list(set(indicator_list))
 
-    config = ConfigParser.ConfigParser()
-    with open(REGEX_FILE_PATH) as f:
-        config.readfp(f)
 
-    # initialize the indicator order
-    indicator_regexes = OrderedDict()
+def _listify(indicator_list):
+    """Convert the multi-dimensional indicator list into a one-dimensional indicator list with empty entries and duplicates removed."""
+    return _deduplicate([indicator[0] for indicator in indicator_list if indicator[0]])
 
-    for indicator_type in config.sections():
-        if indicator_type == 'email':
-            indicator_regexes[indicator_type] = {
-                'regex': config.get(indicator_type, 'regex') + config.get('domain', 'regex')
-            }
-        elif indicator_type == 'ipv4_email':
-            formatted_ip_address_regex = config.get('ipv4', 'regex').replace('\\b', '')
-            indicator_regexes[indicator_type] = {
-                'regex': config.get(indicator_type, 'regex').format(formatted_ip_address_regex)
-            }
-        else:
-            indicator_regexes[indicator_type] = {
-                'regex': config.get(indicator_type, 'regex'),
-            }
 
-        try:
-            remove = config.get(indicator_type, 'remove')
-        except ConfigParser.NoOptionError:
-            pass
-        else:
-            indicator_regexes[indicator_type]['remove'] = remove
+def parse_urls(text):
+    """."""
+    urls = ioc_grammars.url.searchString(text)
+    return _listify(urls)
 
-    return indicator_regexes
+
+def _remove_url_paths(urls, text):
+    """Remove the path from each url from the text."""
+    for url in urls:
+        parsed_url = ioc_grammars.url.parseString(url)
+        url_path = parsed_url.url_path
+
+        if len(url_path) > 1:
+            text = text.replace(url_path, ' ')
+
+    return text
+
+
+def parse_domain_names(text):
+    """."""
+    domains = ioc_grammars.domain_name.searchString(text)
+    return _listify(domains)
+
+
+def parse_ipv4_addresses(text):
+    """."""
+    addresses = ioc_grammars.ipv4_address.searchString(text)
+    return _listify(addresses)
+
+
+def parse_ipv6_addresses(text):
+    """."""
+    addresses = ioc_grammars.ipv6_address.searchString(text)
+    return _listify(addresses)
+
+
+def parse_email_addresses(text):
+    """."""
+    email_addresses = ioc_grammars.email_address.searchString(text)
+    return _listify(email_addresses)
+
+
+def parse_md5s(text):
+    """."""
+    md5s = ioc_grammars.md5.searchString(text)
+    return _listify(md5s)
+
+
+def parse_sha1s(text):
+    """."""
+    sha1s = ioc_grammars.sha1.searchString(text)
+    return _listify(sha1s)
+
+
+def parse_sha256s(text):
+    """."""
+    sha256s = ioc_grammars.sha256.searchString(text)
+    return _listify(sha256s)
+
+
+def parse_sha512s(text):
+    """."""
+    sha512s = ioc_grammars.sha512.searchString(text)
+    return _listify(sha512s)
+
+
+def parse_asns(text):
+    """."""
+    asns = ioc_grammars.asn.searchString(text)
+    return _listify(asns)
+
+
+def parse_cves(text):
+    """."""
+    cves = ioc_grammars.cve.searchString(text)
+    return _listify(cves)
+
+
+def parse_ipv4_cidrs(text):
+    """."""
+    cidrs = ioc_grammars.ipv4_cidr.searchString(text)
+    return _listify(cidrs)
+
+
+# def parse_ipv6_cidrs(text):
+#     """."""
+#     # TODO: implement
+#     cidrs = ioc_grammars.ipv6_cidr.searchString(text)
+#     return _listify(cidrs)
+
+
+def parse_registry_key_paths(text):
+    """."""
+    registry_key_paths = ioc_grammars.registry_key_path.searchString(text)
+    return _listify(registry_key_paths)
 
 
 def find_iocs(text):
     """Find indicators of compromise in the given text."""
     iocs = dict()
-    indicator_regexes = _get_regexes()
-    text = text.encode('unicode-escape')
 
-    for indicator_type, indicator_regex in indicator_regexes.items():
-        iocs[indicator_type] = set()
+    # urls
+    iocs['urls'] = parse_urls(text)
+    text = _remove_url_paths(iocs['urls'], text)
 
-        for match in re.finditer(bytes(indicator_regex['regex'], 'utf-8'), text):
-            if indicator_type == "ipv4":
-                ip = match.string[match.start():match.end()]
-                # strip leading 0s
-                ip = '.'.join([str(int(x)) for x in ip.split(b'.')])
-                iocs[indicator_type].add(ip)
-            else:
-                iocs[indicator_type].add(match.string[match.start():match.end()].decode('utf-8'))
+    # email addresses
+    iocs['email_addresses'] = parse_email_addresses(text)
 
-            # if appropriate, remove the indicator from the text
-            if indicator_regex.get('remove'):
-                text = text.replace(match.string[match.start():match.end()], b"")
+    # cidr ranges
+    iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
+    # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
+
+    # domains
+    iocs['domains'] = parse_domain_names(text)
+
+    # ip addresses
+    iocs['ipv4s'] = parse_ipv4_addresses(text)
+    iocs['ipv6s'] = parse_ipv6_addresses(text)
+
+    # file hashes
+    iocs['sha512s'] = parse_sha512s(text)
+    iocs['sha256s'] = parse_sha256s(text)
+    iocs['sha1s'] = parse_sha1s(text)
+    iocs['md5s'] = parse_md5s(text)
+
+    # misc
+    iocs['asns'] = parse_asns(text)
+    iocs['cves'] = parse_cves(text)
+    iocs['registry_key_paths'] = parse_registry_key_paths(text)
 
     return iocs

@@ -10,28 +10,23 @@ with open('LICENSE') as license_file:
     license = license_file.read()
 
 requirements = [
-    # TODO: put package requirements here
-]
-
-test_requirements = [
-    # TODO: put package test requirements here
+    'pyparsing'
 ]
 
 setup(
     name='ioc_finder',
     version='0.1.5',
-    description="Simple python package for finding indicators of compromise in text.",
+    description="Python package for finding and parsing indicators of compromise from text.",
     long_description=readme,
     author="Floyd Hightower",
     author_email='',
     url='https://github.com/fhightower/ioc-finder',
     packages=find_packages(exclude=('tests', 'docs')),
     include_package_data=True,
-    package_data={'ioc_finder': ['data/*',]},
     install_requires=requirements,
     license=license,
     zip_safe=True,
-    keywords='ioc_finder',
+    keywords='iocs indicators of compromise parsing finding searching threat intelligence',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
