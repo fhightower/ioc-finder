@@ -40,9 +40,10 @@ To use this package:
 
 ```python
 from ioc_finder import find_iocs
-text = "This is just an example.com"
+text = "This is just an example.com https://example.org/test/bingo.php"
 iocs = find_iocs(text)
 print('Domains: {}'.format(iocs['domains']))
+print('URLs: {}'.format(iocs['urls']))
 ```
 
 See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py) for more examples.
