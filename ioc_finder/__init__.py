@@ -4,4 +4,4 @@
 from .ioc_finder import find_iocs
 
 __author__ = """Floyd Hightower"""
-__version__ = '1.0.0'
+__version__ = '1.0.1'
