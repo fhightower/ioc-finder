@@ -99,3 +99,17 @@ def test_file_hash_order():
     iocs = find_iocs(s)
     assert iocs['md5s'][0] == 'a'*32
     assert iocs['sha1s'][0] == 'b'*40
+
+
+def test_url_boundaries():
+    """Make sure the boundaries for a url are correct."""
+    s = """http://192.168.0.1/test/bad.html</a><br></div>"""
+    iocs = find_iocs(s)
+    assert iocs['urls'][0] == 'http://192.168.0.1/test/bad.html'
+    assert len(iocs['urls']) == 1
+
+
+def test_host_parsing():
+    s = "Host: dfasdfa (mz-fcb301p.ocn.ad.jp asdfsdafs"
+    iocs = find_iocs(s)
+    assert iocs['domains'][0] == 'mz-fcb301p.ocn.ad.jp'

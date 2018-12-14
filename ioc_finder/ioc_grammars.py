@@ -31,7 +31,7 @@ url_scheme = Word(alphas)
 # todo: move the handling for port to the domain grammar - maybe?
 port = Combine(':' + Word(nums))
 url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)('port'))
-url_path = Combine(Word(printables, excludeChars='?#') + Optional('/'))
+url_path = Combine(OneOrMore(Word(alphanums + "$-_.+!*'(),") + Optional('/')))
 url_query = Word(printables, excludeChars='#')
 url_fragment = Word(printables, excludeChars='?')
 url = Combine(url_scheme('url_scheme') + '://' + url_authority('url_authority') + Optional(Combine('/' + Optional(url_path)))('url_path') + (Optional(Combine('?' + url_query)('url_query')) & Optional(Combine('#' + url_fragment)('url_fragment'))))

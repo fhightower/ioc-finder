@@ -27,15 +27,5 @@ setup(
     license=license,
     zip_safe=True,
     keywords='iocs indicators of compromise parsing finding searching threat intelligence',
-    classifiers=[
-        'Development Status :: 3 - Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: MIT License',
-        'Natural Language :: English',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-    ],
     test_suite='tests'
 )
