@@ -29,7 +29,7 @@ def test_ipv6_parsing():
     assert '2001:db8:0:0:0:ff00:42:8329' in iocs['ipv6s']
     assert '2001:db8::ff00:42:8329' in iocs['ipv6s']
     assert '::1' in iocs['ipv6s']
-    # assert '1:1' not in iocs['ipv6s']
+    assert '1:1' not in iocs['ipv6s']
 
 
 def test_email_address_parsing():

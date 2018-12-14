@@ -60,7 +60,7 @@ def test_address_email_address():
     assert len(iocs['email_addresses']) == 1
     assert 'jsmith@[IPv6:2001:db8::1]' in iocs['email_addresses']
     assert len(iocs['ipv6s']) == 1
-    # assert '2001:db8::1' in iocs['ipv6s']
+    assert '2001:db8::1' in iocs['ipv6s']
 
 
 def test_address_domain_url():
@@ -85,7 +85,7 @@ def test_unicode_domain_name():
     s = "ȩxample.com"
     iocs = find_iocs(s)
     assert len(iocs['domains']) == 1
-    # assert '\\u0229xample.com' in iocs['domains']
+    assert '\\u0229xample.com' in iocs['domains']
 
 
 def test_ioc_deduplication():
