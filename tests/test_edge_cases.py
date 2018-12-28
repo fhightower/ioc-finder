@@ -113,3 +113,8 @@ def test_host_parsing():
     s = "Host: dfasdfa (mz-fcb301p.ocn.ad.jp asdfsdafs"
     iocs = find_iocs(s)
     assert iocs['domains'][0] == 'mz-fcb301p.ocn.ad.jp'
+    assert len(iocs['domains']) == 1
+
+    s = "smtp.mailfrom"
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 0
