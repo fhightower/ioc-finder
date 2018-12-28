@@ -10,7 +10,8 @@ with open('LICENSE') as license_file:
     license = license_file.read()
 
 requirements = [
-    'pyparsing'
+    'pyparsing',
+    'ioc_fanger'
 ]
 
 setup(

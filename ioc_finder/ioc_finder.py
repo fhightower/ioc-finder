@@ -5,8 +5,9 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+import ioc_fanger
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import ioc_grammars
 
 
@@ -24,6 +25,13 @@ def _remove_items(items, text):
     """Remove each item from the text."""
     for item in items:
         text = text.replace(item, ' ')
+    return text
+
+
+def prepare_text(text):
+    """Fang (https://ioc-fang.hightower.space/) and encode the text in such a way that all Unicode domain names are converted into their punycode representation."""
+    text = ioc_fanger.fang(text)
+    # text = text.encode('idna').decode('utf-8')
     return text
 
 
@@ -127,6 +135,8 @@ def parse_registry_key_paths(text):
 def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_address_from_cidr=True):
     """Find indicators of compromise in the given text."""
     iocs = dict()
+
+    text = prepare_text(text)
 
     # urls
     iocs['urls'] = parse_urls(text)
