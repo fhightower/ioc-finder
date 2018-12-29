@@ -20,6 +20,9 @@ Currently, this package can the following items in a given text:
 - Autonomous System Numbers (ASNs) (in multiple formats such as `asn1234` and `as 1234`)
 - CVEs (e.g. `CVE-2014-1234`)
 - CIDR ranges (currently ipv4 ranges; ipv6 ranges coming soon)
+- Google Adsense Publisher IDs
+- Google Analytics Tracker IDs
+- Bitcoin addresses (P2PKH, P2SH, and Bech32)
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:

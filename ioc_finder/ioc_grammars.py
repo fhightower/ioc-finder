@@ -56,3 +56,12 @@ ipv4_cidr = Combine(ipv4_address('cidr_address') + '/' + Word(nums, max=2)('cidr
 root_key = Or(['HKEY_LOCAL_MACHINE', 'HKLM', 'HKEY_CURRENT_CONFIG', 'HKCC', 'HKEY_CLASSES_ROOT', 'HKCR', 'HKEY_CURRENT_USER', 'HKCU', 'HKEY_USERS', 'HKU', 'HKEY_PERFORMANCE_DATA', 'HKEY_DYN_DATA'])
 registry_key_subpath = OneOrMore(Word('\\') + Word(alphas))
 registry_key_path = Combine(root_key('registry_key_root') + registry_key_subpath('registry_key_subpath'))
+
+# see https://support.google.com/adsense/answer/2923881?hl=en
+google_adsense_publisher_id = Combine('pub-' + Word(nums, exact=16))
+
+# see https://support.google.com/analytics/answer/7372977?hl=en
+google_analytics_tracker_id = Combine('UA-' + Word(nums, min=6)('account_number') + '-' + Word(nums)('property_number'))
+
+# see https://en.bitcoin.it/wiki/Address (and https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#segwit-address-format for more info on Bech32 addresses)
+bitcoin_address = Or([Combine('1' + Word(alphanums, min=25, max=34)), Combine('3' + Word(alphanums, min=25, max=34)), Combine('bc1' + Word(alphanums, min=11, max=71))])

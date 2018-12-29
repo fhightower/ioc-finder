@@ -138,6 +138,24 @@ def parse_registry_key_paths(text):
     return _listify(registry_key_paths)
 
 
+def parse_google_adsense_ids(text):
+    """."""
+    adsense_publisher_ids = ioc_grammars.google_adsense_publisher_id.searchString(text)
+    return _listify(adsense_publisher_ids)
+
+
+def parse_google_analytics_ids(text):
+    """."""
+    analytics_tracker_ids = ioc_grammars.google_analytics_tracker_id.searchString(text)
+    return _listify(analytics_tracker_ids)
+
+
+def parse_bitcoin_addresses(text):
+    """."""
+    bitcoin_addresses = ioc_grammars.bitcoin_address.searchString(text)
+    return _listify(bitcoin_addresses)
+
+
 def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_address_from_cidr=True):
     """Find indicators of compromise in the given text."""
     iocs = dict()
@@ -187,5 +205,8 @@ def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_
     iocs['asns'] = parse_asns(text)
     iocs['cves'] = parse_cves(text)
     iocs['registry_key_paths'] = parse_registry_key_paths(text)
+    iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
+    iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
+    iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
 
     return iocs

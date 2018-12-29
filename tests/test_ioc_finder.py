@@ -155,3 +155,40 @@ def test_registry_key_parsing():
     assert 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows' in iocs['registry_key_paths']
     assert 'HKLM\Software\Microsoft\Windows' in iocs['registry_key_paths']
     assert 'HKCC\Software\Microsoft\Windows' in iocs['registry_key_paths']
+
+
+def test_adsense_publisher_id_parsing():
+    s = "pub-1234567891234567"
+    iocs = find_iocs(s)
+    assert len(iocs['google_adsense_publisher_ids']) == 1
+    iocs['google_adsense_publisher_ids'][0] == 'pub-1234567891234567'
+
+    s = "pub-1234567891234567 pub-9383614236930773"
+    iocs = find_iocs(s)
+    assert len(iocs['google_adsense_publisher_ids']) == 2
+    iocs['google_adsense_publisher_ids'][0] == 'pub-1234567891234567'
+    iocs['google_adsense_publisher_ids'][1] == 'pub-9383614236930773'
+
+
+def test_analytics_publisher_id_parsing():
+    s = "UA-000000-2"
+    iocs = find_iocs(s)
+    assert len(iocs['google_analytics_tracker_ids']) == 1
+    iocs['google_analytics_tracker_ids'][0] == 'UA-000000-2'
+
+    s = "UA-000000-2 UA-00000000-99"
+    iocs = find_iocs(s)
+    assert len(iocs['google_analytics_tracker_ids']) == 2
+    iocs['google_analytics_tracker_ids'][0] == 'UA-000000-2'
+    iocs['google_analytics_tracker_ids'][1] == 'UA-00000000-99'
+
+
+def test_bitcoin_parsing():
+    s = """1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2.
+P2SH type starting with the number 3, eg: 3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy.
+Bech32 type starting with bc1, eg: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"""
+    iocs = find_iocs(s)
+    assert len(iocs['bitcoin_addresses']) == 3
+    iocs['bitcoin_addresses'][0] == '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2'
+    iocs['bitcoin_addresses'][1] == '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'
+    iocs['bitcoin_addresses'][2] == 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'
