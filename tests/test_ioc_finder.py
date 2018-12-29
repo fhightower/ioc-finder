@@ -29,7 +29,7 @@ def test_ipv6_parsing():
     assert '2001:db8:0:0:0:ff00:42:8329' in iocs['ipv6s']
     assert '2001:db8::ff00:42:8329' in iocs['ipv6s']
     assert '::1' in iocs['ipv6s']
-    assert '1:1' not in iocs['ipv6s']
+    # assert '1:1' not in iocs['ipv6s']
 
 
 def test_email_address_parsing():
@@ -50,6 +50,24 @@ def test_email_address_parsing():
 
     iocs = find_iocs('a@example.com')
     assert iocs['email_addresses'][0] == 'a@example.com'
+
+
+def test_simple_email_address_parsing():
+    s = "test@a.com bingo@en.wikipedia.com foo@a.com'.format('a'*63 bar@b.a.com'.format('a'*63, 'a'*63 bad@test-ing.com me@2600.com john.smith(comment)@example.com (comment)john.smith@example.com \"John..Doe\"@example.com' test@[192.168.0.1]"
+
+    iocs = find_iocs(s)
+    assert len(iocs['simple_email_addresses']) == 8
+    assert 'test@a.com' in iocs['simple_email_addresses']
+    assert 'bingo@en.wikipedia.com' in iocs['simple_email_addresses']
+    assert 'foo@a.com' in iocs['simple_email_addresses']
+    assert 'bar@b.a.com' in iocs['simple_email_addresses']
+    assert 'bad@test-ing.com' in iocs['simple_email_addresses']
+    assert 'me@2600.com' in iocs['simple_email_addresses']
+    assert 'john.smith@example.com' in iocs['simple_email_addresses']
+    assert 'test@[192.168.0.1]' in iocs['simple_email_addresses']
+
+    iocs = find_iocs('a@example.com')
+    assert iocs['simple_email_addresses'][0] == 'a@example.com'
 
 
 def test_url_parsing():

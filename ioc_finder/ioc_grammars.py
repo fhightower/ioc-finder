@@ -27,6 +27,9 @@ email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
 email_local_part = Combine(Optional(email_comment)('email_address_comment') + Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"') + Optional(email_comment)('email_address_comment'))
 email_address = Combine(email_local_part('email_address_local_part') + "@" + Or([domain_name, '[' + ipv4_address + ']', '[IPv6:' + ipv6_address + ']'])('email_address_domain'))
 
+simple_email_local_part = Word(alphanums + "+-_.")
+simple_email_address = alpha_numeric_word_start + Combine(simple_email_local_part('email_address_local_part') + "@" + Or([domain_name, '[' + ipv4_address + ']', '[IPv6:' + ipv6_address + ']'])('email_address_domain')) + alpha_numeric_word_end
+
 # todo: build this out
 url_scheme = Word(alphas)
 # todo: move the handling for port to the domain grammar - maybe?

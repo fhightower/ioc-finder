@@ -77,6 +77,12 @@ def parse_email_addresses(text):
     return _listify(email_addresses)
 
 
+def parse_simple_email_addresses(text):
+    """."""
+    simple_email_addresses = ioc_grammars.simple_email_address.searchString(text)
+    return _listify(simple_email_addresses)
+
+
 def parse_md5s(text):
     """."""
     md5s = ioc_grammars.md5.searchString(text)
@@ -150,6 +156,11 @@ def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_
     iocs['email_addresses'] = parse_email_addresses(text)
     if not parse_host_from_email:
         text = _remove_items(iocs['email_addresses'], text)
+
+    # simple addresses
+    iocs['simple_email_addresses'] = parse_simple_email_addresses(text)
+    if not parse_host_from_email:
+        text = _remove_items(iocs['simple_email_addresses'], text)
 
     # cidr ranges
     iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
