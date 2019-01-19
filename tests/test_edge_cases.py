@@ -46,9 +46,9 @@ def test_url_parsing():
     assert len(iocs['urls']) == 1
     assert 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['urls']
 
-    # s = '<link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"/>'
-    # iocs = find_iocs(s)
-    # assert 'http://fonts.googleapis.com/css?family=Lato:400,700' in iocs['urls']
+    s = '<link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"/>'
+    iocs = find_iocs(s)
+    assert 'http://fonts.googleapis.com/css?family=Lato:400,700' in iocs['urls']
 
 
 def test_address_email_address():

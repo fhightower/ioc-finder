@@ -38,7 +38,9 @@ def prepare_text(text):
 def parse_urls(text):
     """."""
     urls = ioc_grammars.url.searchString(text)
-    return _listify(urls)
+    # remove `"` and `'` characters from the end of a URL
+    urls = [url.strip('"').strip("'") for url in _listify(urls)]
+    return urls
 
 
 def _remove_url_paths(urls, text):
