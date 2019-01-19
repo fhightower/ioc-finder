@@ -41,7 +41,7 @@ pip install ioc-finder
 
 ## Usage
 
-To use this package:
+The primary function in this package is the `ioc_finder.find_iocs()` function. A simple usage looks like:
 
 ```python
 from ioc_finder import find_iocs
@@ -51,7 +51,11 @@ print('Domains: {}'.format(iocs['domains']))
 print('URLs: {}'.format(iocs['urls']))
 ```
 
-### Options
+### Inputs
+
+You must pass some text into the `find_iocs()` function as string (the iocs will be parsed from this text). You can also provide the options detailed below.
+
+#### Options
 
 The `find_iocs` takes the following keywords (all of them default to `True`):
 
@@ -60,6 +64,56 @@ The `find_iocs` takes the following keywords (all of them default to `True`):
 - `parse_address_from_cidr` (default=True): Whether or not to parse IP addresses from CIDR ranges (e.g. `0.0.0.1` from `0.0.0.1/24`)
 
 See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py) for more examples.
+
+### Output
+
+The `find_iocs()` returns a dictionary in the following structure:
+
+```json
+{
+    "asns": [],
+    "bitcoin_addresses": [],
+    "cves": [],
+    "domains": [],
+    "email_addresses": [],
+    "google_adsense_publisher_ids": [],
+    "google_analytics_tracker_ids": [],
+    "ipv4_cidrs": [],
+    "ipv4s": [],
+    "ipv6s": [],
+    "md5s": [],
+    "registry_key_paths": [],
+    "sha1s": [],
+    "sha256s": [],
+    "sha512s": [],
+    "simple_email_addresses": [],
+    "urls": []
+}
+```
+
+For example, running the example code shown at the start of the [usage](#usage) section above produces the following output:
+
+```json
+{
+    "asns": [],
+    "bitcoin_addresses": [],
+    "cves": [],
+    "domains": ["example.org", "example.com"],
+    "email_addresses": [],
+    "google_adsense_publisher_ids": [],
+    "google_analytics_tracker_ids": [],
+    "ipv4_cidrs": [],
+    "ipv4s": [],
+    "ipv6s": [],
+    "md5s": [],
+    "registry_key_paths": [],
+    "sha1s": [],
+    "sha256s": [],
+    "sha512s": [],
+    "simple_email_addresses": [],
+    "urls": ["https://example.org/test/bingo.php"]
+}
+```
 
 ## Credits
 
