@@ -104,7 +104,7 @@ def test_url_parsing():
 
     iocs = find_iocs(' '.join(valid_urls))
     assert len(iocs['urls']) == 13
-    # make sure hosts are being parsed from the valid urls as well
+    # make sure domains are being parsed from the valid urls as well
     assert len(iocs['domains']) == 7
 
     iocs = find_iocs(' '.join(invalid_urls))

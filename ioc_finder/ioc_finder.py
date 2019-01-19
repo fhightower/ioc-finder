@@ -158,7 +158,7 @@ def parse_bitcoin_addresses(text):
     return _listify(bitcoin_addresses)
 
 
-def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_address_from_cidr=True):
+def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=True, parse_address_from_cidr=True):
     """Find indicators of compromise in the given text."""
     iocs = dict()
 
@@ -166,20 +166,20 @@ def find_iocs(text, parse_host_from_url=True, parse_host_from_email=True, parse_
 
     # urls
     iocs['urls'] = parse_urls(text)
-    if not parse_host_from_url:
+    if not parse_domain_from_url:
         text = _remove_items(iocs['urls'], text)
-    # even if we want to parse hosts from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
+    # even if we want to parse domain names from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
     else:
         text = _remove_url_paths(iocs['urls'], text)
 
     # email addresses
     iocs['email_addresses'] = parse_email_addresses(text)
-    if not parse_host_from_email:
+    if not parse_domain_from_email_address:
         text = _remove_items(iocs['email_addresses'], text)
 
     # simple addresses
     iocs['simple_email_addresses'] = parse_simple_email_addresses(text)
-    if not parse_host_from_email:
+    if not parse_domain_from_email_address:
         text = _remove_items(iocs['simple_email_addresses'], text)
 
     # cidr ranges

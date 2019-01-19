@@ -85,7 +85,7 @@ def test_url_domain_name_parsing():
     assert 'foo.youtube' in iocs['domains']
 
 
-def test_ipv4_hostname_email_address():
+def test_ipv4_domain_name_email_address():
     s = "bad@[192.168.7.3]"
     iocs = find_iocs(s)
     assert len(iocs['ipv4s']) == 1
