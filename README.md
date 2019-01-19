@@ -27,7 +27,9 @@ Currently, this package can the following items in a given text:
 
 Also provides some helpful features like:
 
-- Ability to remove an indicator type after it is parsed - For example, if you would like to parse all URLs, but do not want to parse the domain name from each URL, you specify this.
+- Option to parse domain name from a URL
+- Option to parse domain name from an email address
+- Option to parse IP address from a CIDR range
 
 ## Installation
 
@@ -48,6 +50,14 @@ iocs = find_iocs(text)
 print('Domains: {}'.format(iocs['domains']))
 print('URLs: {}'.format(iocs['urls']))
 ```
+
+### Options
+
+The `find_iocs` takes the following keywords (all of them default to `True`):
+
+- `parse_domain_from_url` (default=True): Whether or not to parse domain names from URLs (e.g. `example.com` from `https://example.com/test`)
+- `parse_domain_from_email_address` (default=True): Whether or not to parse domain names from email addresses (e.g. `example.com` from `foo@example.com`)
+- `parse_address_from_cidr` (default=True): Whether or not to parse IP addresses from CIDR ranges (e.g. `0.0.0.1` from `0.0.0.1/24`)
 
 See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py) for more examples.
 
