@@ -46,6 +46,10 @@ def test_url_parsing():
     assert len(iocs['urls']) == 1
     assert 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['urls']
 
+    # s = '<link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"/>'
+    # iocs = find_iocs(s)
+    # assert 'http://fonts.googleapis.com/css?family=Lato:400,700' in iocs['urls']
+
 
 def test_address_email_address():
     s = "test@[192.168.2.1]"
@@ -70,6 +74,15 @@ def test_address_domain_url():
     assert 'http://192.64.55.61/test.php' in iocs['urls']
     assert len(iocs['ipv4s']) == 1
     assert '192.64.55.61' in iocs['ipv4s']
+
+
+def test_url_domain_name_parsing():
+    s = "http://foo.youtube/test.php"
+    iocs = find_iocs(s)
+    assert len(iocs['urls']) == 1
+    assert 'http://foo.youtube/test.php' in iocs['urls']
+    assert len(iocs['domains']) == 1
+    assert 'foo.youtube' in iocs['domains']
 
 
 def test_ipv4_hostname_email_address():
@@ -109,7 +122,7 @@ def test_url_boundaries():
     assert len(iocs['urls']) == 1
 
 
-def test_host_parsing():
+def test_domain_parsing():
     s = "Host: dfasdfa (mz-fcb301p.ocn.ad.jp asdfsdafs"
     iocs = find_iocs(s)
     assert iocs['domains'][0] == 'mz-fcb301p.ocn.ad.jp'
@@ -134,3 +147,86 @@ def test_email_address_parsing():
     assert len(iocs['email_addresses']) == 1
     assert iocs['simple_email_addresses'][0] == 'foobar@gmail.com'
     assert len(iocs['simple_email_addresses']) == 1
+
+
+def test_erroneous_ip_address_parsing():
+    # the two tests below make sure that IP addresses are not parsed from strings with decimals in them
+    s = '2018.12.15.14.05.43'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '111.12.15.14.05.43'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '.18.12.15.14'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '18.12.15.1411111111'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '018.12.15.14'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+
+    s = '18.12.15.14.'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+
+    # the three tests below make sure that IP addresses are not parsed from sequences with large numbers in them
+    s = '1112.15.14.05'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '15.1112.14.05'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '15.14.05.1112'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+
+def test_ip_address_systematically():
+    s = '1.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+
+    s = '.1.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    # I would like to match in this situation to capture ip address that are in a sentence
+    s = '1.1.1.1.'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+
+    s = '.1.1.1.1.'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '1.1.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '.1.1.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '1.1.1.1.1.'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '.1.1.1.1.1.'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '1.1.1.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
+    s = '1.1.1.1.a'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from pyparsing import alphanums, alphas, printables, nums, hexnums
-from pyparsing import OneOrMore, Word, Combine, Optional, Or, Regex, WordStart, WordEnd, replaceWith, downcaseTokens
+from pyparsing import OneOrMore, Word, Combine, Optional, Or, Regex, WordStart, WordEnd, replaceWith, downcaseTokens, NotAny
 
 alpha_numeric_word_start = WordStart(wordChars=alphanums)
 alpha_numeric_word_end = WordEnd(wordChars=alphanums)
@@ -13,8 +13,9 @@ tlds = ['aaa', 'aarp', 'abarth', 'abb', 'abbott', 'abbvie', 'abc', 'able', 'abog
 domain_tld = Or(tlds)
 domain_name = Combine(Combine(OneOrMore(label + ('.')))('domain_labels') + domain_tld('tld')) + alpha_numeric_word_end
 
-ipv4_section = Regex('(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)')
-ipv4_address = Combine((ipv4_section + ".") * 3 + ipv4_section)
+ipv4_section = Word(nums, asKeyword=True).addCondition(lambda tokens: int(tokens[0]) < 256)
+# basically, the grammar below says: start any words that start with a '.' or a number; I want to match words that start with a '.' because this will fail later in the grammar and I do not want to match anything that start with a '.'
+ipv4_address = WordStart('.' + nums) + Combine((ipv4_section + '.') * 3 + ipv4_section) + NotAny(Regex('\.\S'))
 
 hexadectet = Word(hexnums, min=1, max=4)
 ipv6_address_full = Combine((hexadectet + ":") * 7 + hexadectet)
@@ -23,7 +24,7 @@ ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')
 ipv6_address = Or([ipv6_address_full, ipv6_address_shortened])
 
 email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
-# the email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted email_local_part (and the double-quotes and backslash should be preceeded by a backslash)
+# the email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted email_local_part (and the double-quotes and backslash should be preceded by a backslash)
 email_local_part = Combine(Optional(email_comment)('email_address_comment') + Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"') + Optional(email_comment)('email_address_comment'))
 email_address = Combine(email_local_part('email_address_local_part') + "@" + Or([domain_name, '[' + ipv4_address + ']', '[IPv6:' + ipv6_address + ']'])('email_address_domain'))
 
