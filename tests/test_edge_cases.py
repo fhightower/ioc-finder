@@ -148,6 +148,13 @@ def test_email_address_parsing():
     assert iocs['simple_email_addresses'][0] == 'foobar@gmail.com'
     assert len(iocs['simple_email_addresses']) == 1
 
+    s = 'smtp.mailfrom=example@example.com'
+    iocs = find_iocs(s)
+    assert iocs['email_addresses'][0] == 'smtp.mailfrom=example@example.com'
+    assert len(iocs['email_addresses']) == 1
+    assert iocs['simple_email_addresses'][0] == 'example@example.com'
+    assert len(iocs['simple_email_addresses']) == 1
+
 
 def test_erroneous_ip_address_parsing():
     # the two tests below make sure that IP addresses are not parsed from strings with decimals in them
