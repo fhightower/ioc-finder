@@ -73,6 +73,7 @@ The `find_iocs()` returns a dictionary in the following structure:
 {
     "asns": [],
     "bitcoin_addresses": [],
+    "complete_email_address": [],
     "cves": [],
     "domains": [],
     "email_addresses": [],
@@ -86,7 +87,6 @@ The `find_iocs()` returns a dictionary in the following structure:
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
-    "simple_email_addresses": [],
     "urls": []
 }
 ```
@@ -97,6 +97,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
 {
     "asns": [],
     "bitcoin_addresses": [],
+    "complete_email_address": [],
     "cves": [],
     "domains": ["example.org", "example.com"],
     "email_addresses": [],
@@ -110,10 +111,15 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
-    "simple_email_addresses": [],
     "urls": ["https://example.org/test/bingo.php"]
 }
 ```
+
+#### Output Details
+
+There are two grammars for email addresses. There is a fairly complete grammar to find email addresses matching the spec (which is very broad). Any of these complete email addresses (e.g. `foo"bar@gmail.com`) will be sent as output to in `complete_email_addresses` key.
+
+Email addresses in the simple form we are familiar with (e.g. `bar@gmail.com`) will be sent as output in the `email_addresses` key.
 
 ## Credits
 

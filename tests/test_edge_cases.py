@@ -19,8 +19,8 @@ def test_ioc_finder(text_a):
     assert 'example.org' in iocs['domains']
     assert 'bad.com' in iocs['domains']
 
-    assert len(iocs['email_addresses']) == 1
-    assert 'bad12312@example.org' in iocs['email_addresses']
+    assert len(iocs['complete_email_addresses']) == 1
+    assert 'bad12312@example.org' in iocs['complete_email_addresses']
 
     assert len(iocs['ipv4s']) == 2
     assert '1.2.3.4' in iocs['ipv4s']
@@ -54,15 +54,15 @@ def test_url_parsing():
 def test_address_email_address():
     s = "test@[192.168.2.1]"
     iocs = find_iocs(s)
-    assert len(iocs['email_addresses']) == 1
-    assert 'test@[192.168.2.1]' in iocs['email_addresses']
+    assert len(iocs['complete_email_addresses']) == 1
+    assert 'test@[192.168.2.1]' in iocs['complete_email_addresses']
     assert len(iocs['ipv4s']) == 1
     assert '192.168.2.1' in iocs['ipv4s']
 
     s = "jsmith@[IPv6:2001:db8::1]"
     iocs = find_iocs(s)
-    assert len(iocs['email_addresses']) == 1
-    assert 'jsmith@[IPv6:2001:db8::1]' in iocs['email_addresses']
+    assert len(iocs['complete_email_addresses']) == 1
+    assert 'jsmith@[IPv6:2001:db8::1]' in iocs['complete_email_addresses']
     assert len(iocs['ipv6s']) == 1
     # assert '2001:db8::1' in iocs['ipv6s']
 
@@ -90,8 +90,8 @@ def test_ipv4_domain_name_email_address():
     iocs = find_iocs(s)
     assert len(iocs['ipv4s']) == 1
     assert '192.168.7.3' in iocs['ipv4s']
-    assert len(iocs['email_addresses']) == 1
-    assert 'bad@[192.168.7.3]' in iocs['email_addresses']
+    assert len(iocs['complete_email_addresses']) == 1
+    assert 'bad@[192.168.7.3]' in iocs['complete_email_addresses']
 
 
 def test_unicode_domain_name():
@@ -136,24 +136,24 @@ def test_domain_parsing():
 def test_email_address_parsing():
     s = 'my email is: foo"bar@gmail.com'
     iocs = find_iocs(s)
-    assert iocs['email_addresses'][0] == 'foo"bar@gmail.com'
+    assert iocs['complete_email_addresses'][0] == 'foo"bar@gmail.com'
+    assert len(iocs['complete_email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'bar@gmail.com'
     assert len(iocs['email_addresses']) == 1
-    assert iocs['simple_email_addresses'][0] == 'bar@gmail.com'
-    assert len(iocs['simple_email_addresses']) == 1
 
     s = '"foobar@gmail.com'
     iocs = find_iocs(s)
-    assert iocs['email_addresses'][0] == '"foobar@gmail.com'
+    assert iocs['complete_email_addresses'][0] == '"foobar@gmail.com'
+    assert len(iocs['complete_email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'foobar@gmail.com'
     assert len(iocs['email_addresses']) == 1
-    assert iocs['simple_email_addresses'][0] == 'foobar@gmail.com'
-    assert len(iocs['simple_email_addresses']) == 1
 
     s = 'smtp.mailfrom=example@example.com'
     iocs = find_iocs(s)
-    assert iocs['email_addresses'][0] == 'smtp.mailfrom=example@example.com'
+    assert iocs['complete_email_addresses'][0] == 'smtp.mailfrom=example@example.com'
+    assert len(iocs['complete_email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'example@example.com'
     assert len(iocs['email_addresses']) == 1
-    assert iocs['simple_email_addresses'][0] == 'example@example.com'
-    assert len(iocs['simple_email_addresses']) == 1
 
 
 def test_erroneous_ip_address_parsing():
