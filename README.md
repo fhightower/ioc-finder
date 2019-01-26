@@ -126,3 +126,11 @@ Email addresses in the simple form we are familiar with (e.g. `bar@gmail.com`) w
 This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and Floyd Hightower's [python-project-template](https://gitlab.com/fhightower-templates/python-project-template) project template.
 
 Previous iterations of this package were inspired by [https://github.com/mosesschwartz/extract_iocs](https://github.com/mosesschwartz/extract_iocs).
+
+## Similar Projects
+
+There are a number of projects available to find Indicators of Compromise. Your mileage may vary with them. If there are things that another package can do that you would like to see in this package, [let me know](https://github.com/fhightower/ioc-finder/issues) (or [contact me](https://hightower.space/contact/)). Here are a few other ones:
+
+- [https://github.com/InQuest/python-iocextract](https://github.com/InQuest/python-iocextract)
+- [https://github.com/sroberts/cacador](https://github.com/sroberts/cacador)
+- [https://github.com/armbues/ioc_parser](https://github.com/armbues/ioc_parser)
