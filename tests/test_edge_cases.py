@@ -125,6 +125,27 @@ def test_file_hash_order():
     assert iocs['sha1s'][0] == 'b'*40
 
 
+def test_file_hash_parsing():
+    s = 'this is a test{}'.format('a'*32)
+    iocs = find_iocs(s)
+    assert len(iocs['md5s']) == 0
+
+    s = 'this is a test {}'.format('a'*32)
+    iocs = find_iocs(s)
+    assert len(iocs['md5s']) == 1
+    assert iocs['md5s'][0] == 'a'*32
+
+    s = 'this is a test "{}"'.format('a'*32)
+    iocs = find_iocs(s)
+    assert len(iocs['md5s']) == 1
+    assert iocs['md5s'][0] == 'a'*32
+
+    s = 'this is a test {}.'.format('a'*32)
+    iocs = find_iocs(s)
+    assert len(iocs['md5s']) == 1
+    assert iocs['md5s'][0] == 'a'*32
+
+
 def test_url_boundaries():
     """Make sure the boundaries for a url are correct."""
     s = """http://192.168.0.1/test/bad.html</a><br></div>"""
@@ -142,6 +163,21 @@ def test_domain_parsing():
     s = "smtp.mailfrom"
     iocs = find_iocs(s)
     assert len(iocs['domains']) == 0
+
+    s = "bar.com"
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert iocs['domains'][0] == 'bar.com'
+
+    s = 'bar.com"'
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert iocs['domains'][0] == 'bar.com'
+
+    s = "bar.com'"
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert iocs['domains'][0] == 'bar.com'
 
 
 def test_email_address_parsing():
@@ -166,17 +202,24 @@ def test_email_address_parsing():
 
     s = '"foobar@gmail.com'
     iocs = find_iocs(s)
-    assert iocs['complete_email_addresses'][0] == '"foobar@gmail.com'
     assert len(iocs['complete_email_addresses']) == 1
-    assert iocs['email_addresses'][0] == 'foobar@gmail.com'
+    assert iocs['complete_email_addresses'][0] == '"foobar@gmail.com'
     assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'foobar@gmail.com'
 
     s = 'smtp.mailfrom=example@example.com'
     iocs = find_iocs(s)
-    assert iocs['complete_email_addresses'][0] == 'smtp.mailfrom=example@example.com'
     assert len(iocs['complete_email_addresses']) == 1
-    assert iocs['email_addresses'][0] == 'example@example.com'
+    assert iocs['complete_email_addresses'][0] == 'smtp.mailfrom=example@example.com'
     assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'example@example.com'
+
+    s = '"foo@bar.com"'
+    iocs = find_iocs(s)
+    assert len(iocs['complete_email_addresses']) == 1
+    assert iocs['complete_email_addresses'][0] == '"foo@bar.com'
+    assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'foo@bar.com'
 
 
 def test_erroneous_ip_address_parsing():
@@ -260,3 +303,18 @@ def test_ip_address_systematically():
     s = '1.1.1.1.a'
     iocs = find_iocs(s)
     assert len(iocs['ipv4s']) == 0
+
+
+def test_asn_parsing():
+    s = 'NWD2HUBCAS8.ad.analog.com'
+    iocs = find_iocs(s)
+    assert len(iocs['asns']) == 0
+
+    s = 'here is an asn: "AS8"'
+    iocs = find_iocs(s)
+    assert len(iocs['asns']) == 1
+    assert iocs['asns'][0] == 'ASN8'
+
+    s = 'here is an asn: AS8foobar'
+    iocs = find_iocs(s)
+    assert len(iocs['asns']) == 0
