@@ -41,6 +41,10 @@ pip install ioc-finder
 
 ## Usage
 
+This package can be used in [python](#Python) or via a [command-line interface](#Command-Line Interface).
+
+### Python
+
 The primary function in this package is the `ioc_finder.find_iocs()` function. A simple usage looks like:
 
 ```python
@@ -51,11 +55,11 @@ print('Domains: {}'.format(iocs['domains']))
 print('URLs: {}'.format(iocs['urls']))
 ```
 
-### Inputs
+#### Inputs
 
 You must pass some text into the `find_iocs()` function as string (the iocs will be parsed from this text). You can also provide the options detailed below.
 
-#### Options
+##### Options
 
 The `find_iocs` takes the following keywords (all of them default to `True`):
 
@@ -65,7 +69,7 @@ The `find_iocs` takes the following keywords (all of them default to `True`):
 
 See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py) for more examples.
 
-### Output
+#### Output
 
 The `find_iocs()` returns a dictionary in the following structure:
 
@@ -115,11 +119,65 @@ For example, running the example code shown at the start of the [usage](#usage) 
 }
 ```
 
-#### Output Details
+##### Output Details
 
 There are two grammars for email addresses. There is a fairly complete grammar to find email addresses matching the spec (which is very broad). Any of these complete email addresses (e.g. `foo"bar@gmail.com`) will be sent as output to in `complete_email_addresses` key.
 
 Email addresses in the simple form we are familiar with (e.g. `bar@gmail.com`) will be sent as output in the `email_addresses` key.
+
+### Command-Line Interface
+
+The ioc-finder package can be used from a command line like:
+
+```
+ioc-finder "This is just an example.com https://example.org/test/bingo.php"
+```
+
+This will return:
+
+```json
+{
+    "asns": [],
+    "bitcoin_addresses": [],
+    "complete_email_addresses": [],
+    "cves": [],
+    "domains": [
+        "example.com",
+        "example.org"
+    ],
+    "email_addresses": [],
+    "google_adsense_publisher_ids": [],
+    "google_analytics_tracker_ids": [],
+    "ipv4_cidrs": [],
+    "ipv4s": [],
+    "ipv6s": [],
+    "md5s": [],
+    "registry_key_paths": [],
+    "sha1s": [],
+    "sha256s": [],
+    "sha512s": [],
+    "urls": [
+        "https://example.org/test/bingo.php"
+    ]
+}
+```
+
+Here are the usage instructions for the CLI:
+
+```
+Usage: ioc-finder [OPTIONS] TEXT
+
+  CLI interface for parsing indicators of compromise.
+
+Options:
+  --no_url_domain_parsing         Using this flag will not parse domain names
+                                  from URLs
+  --no_email_addr_domain_parsing  Using this flag will not parse domain names
+                                  from email addresses
+  --no_cidr_address_parsing       Using this flag will not parse IP addresses
+                                  from CIDR ranges
+  --help                          Show this message and exit.
+```
 
 ## Credits
 
