@@ -187,6 +187,25 @@ This package was created with [Cookiecutter](https://github.com/audreyr/cookiecu
 
 Previous iterations of this package were inspired by [https://github.com/mosesschwartz/extract_iocs](https://github.com/mosesschwartz/extract_iocs).
 
+## Other Helpful Projects
+
+You may also be interested in [https://github.com/ioc-fang/ioc_fanger](https://github.com/ioc-fang/ioc_fanger), a project to fang and defang indicators of compromise. For example,
+
+defanging:
+
+```
+example.com => example[.]com
+https://example.com => hXXps://example[.]com
+```
+
+and fanging:
+
+```
+example[.]com => example.com
+example(.)com => example.com
+me AT example(.)com => me@example.com
+```
+
 ## Similar Projects
 
 There are a number of projects available to find Indicators of Compromise. Your mileage may vary with them. If there are things that another package can do that you would like to see in this package, [let me know](https://github.com/fhightower/ioc-finder/issues) (or [contact me](https://hightower.space/contact/)). Here are a few other ones:
