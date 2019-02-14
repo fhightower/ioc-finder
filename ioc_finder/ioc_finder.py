@@ -160,19 +160,34 @@ def parse_bitcoin_addresses(text):
     return _listify(bitcoin_addresses)
 
 
+def parse_xmpp_addresses(text):
+    """."""
+    xmpp_addresses = ioc_grammars.xmpp_address.searchString(text)
+    return _listify(xmpp_addresses)
+
+
+def _remove_xmpp_local_part(xmpp_addresses, text):
+    """Remove the local part of each xmpp_address from the text."""
+    for address in xmpp_addresses:
+        text = text.replace(address.split('@')[0] + '@', ' ')
+
+    return text
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
 @click.option('--no_email_addr_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from email addresses')
 @click.option('--no_cidr_address_parsing', is_flag=True, help='Using this flag will not parse IP addresses from CIDR ranges')
-def cli_find_iocs(text, no_url_domain_parsing, no_email_addr_domain_parsing, no_cidr_address_parsing):
+@click.option('--no_xmpp_addr_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from XMPP addresses')
+def cli_find_iocs(text, no_url_domain_parsing, no_email_addr_domain_parsing, no_cidr_address_parsing, no_xmpp_addr_domain_parsing):
     """CLI interface for parsing indicators of compromise."""
-    iocs = find_iocs(text, not no_url_domain_parsing, not no_email_addr_domain_parsing, not no_cidr_address_parsing)
+    iocs = find_iocs(text, not no_url_domain_parsing, not no_email_addr_domain_parsing, not no_cidr_address_parsing, not no_xmpp_addr_domain_parsing)
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
 
 
-def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=True, parse_address_from_cidr=True):
+def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=True, parse_address_from_cidr=True, parse_domain_name_from_xmpp_address=True):
     """Find indicators of compromise in the given text."""
     iocs = dict()
 
@@ -185,6 +200,14 @@ def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=
     # even if we want to parse domain names from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
     else:
         text = _remove_url_paths(iocs['urls'], text)
+
+    # xmpp addresses
+    iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
+    if not parse_domain_name_from_xmpp_address:
+        text = _remove_items(iocs['xmpp_addresses'], text)
+    # even if we want to parse domain names from the xmpp_address, we don't want them also being caught as email addresses so we'll remove everything before the `@`
+    else:
+        text = _remove_xmpp_local_part(iocs['xmpp_addresses'], text)
 
     # complete email addresses
     iocs['complete_email_addresses'] = parse_complete_email_addresses(text)

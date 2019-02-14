@@ -42,5 +42,6 @@ def test_cli_without_domain_from_url_parsing():
     "sha512s": [],
     "urls": [
         "https://example.org/test/bingo.php"
-    ]
+    ],
+    "xmpp_addresses": []
 }"""

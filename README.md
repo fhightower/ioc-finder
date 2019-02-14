@@ -23,6 +23,7 @@ Currently, this package can the following items in a given text:
 - Google Adsense Publisher IDs
 - Google Analytics Tracker IDs
 - Bitcoin addresses (P2PKH, P2SH, and Bech32)
+- XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -91,7 +92,8 @@ The `find_iocs()` returns a dictionary in the following structure:
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
-    "urls": []
+    "urls": [],
+    "xmpp_addresses": []
 }
 ```
 
@@ -115,7 +117,8 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
-    "urls": ["https://example.org/test/bingo.php"]
+    "urls": ["https://example.org/test/bingo.php"],
+    "xmpp_addresses": []
 }
 ```
 
@@ -158,7 +161,8 @@ This will return:
     "sha512s": [],
     "urls": [
         "https://example.org/test/bingo.php"
-    ]
+    ],
+    "xmpp_addresses": []
 }
 ```
 
@@ -176,6 +180,8 @@ Options:
                                   from email addresses
   --no_cidr_address_parsing       Using this flag will not parse IP addresses
                                   from CIDR ranges
+  --no_xmpp_addr_domain_parsing   Using this flag will not parse domain names
+                                  from XMPP addresses
   --help                          Show this message and exit.
 ```
 
@@ -187,7 +193,7 @@ This package was created with [Cookiecutter](https://github.com/audreyr/cookiecu
 
 Previous iterations of this package were inspired by [https://github.com/mosesschwartz/extract_iocs](https://github.com/mosesschwartz/extract_iocs).
 
-## Other Helpful Projects
+### Other Helpful Projects
 
 You may also be interested in [https://github.com/ioc-fang/ioc_fanger](https://github.com/ioc-fang/ioc_fanger), a project to fang and defang indicators of compromise. For example,
 
@@ -206,7 +212,7 @@ example(.)com => example.com
 me AT example(.)com => me@example.com
 ```
 
-## Similar Projects
+### Similar Projects
 
 There are a number of projects available to find Indicators of Compromise. Your mileage may vary with them. If there are things that another package can do that you would like to see in this package, [let me know](https://github.com/fhightower/ioc-finder/issues) (or [contact me](https://hightower.space/contact/)). Here are a few other ones:
 

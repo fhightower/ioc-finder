@@ -192,3 +192,24 @@ Bech32 type starting with bc1, eg: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"""
     iocs['bitcoin_addresses'][0] == '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2'
     iocs['bitcoin_addresses'][1] == '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'
     iocs['bitcoin_addresses'][2] == 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'
+
+
+def test_xmpp_address_parsing():
+    s = """foo@swissjabber.de bar@jabber.zone bom@jabber.sow.as me@example.com"""
+    iocs = find_iocs(s)
+    assert len(iocs['xmpp_addresses']) == 3
+    iocs['xmpp_addresses'][0] == 'foo@swissjabber.de'
+    iocs['xmpp_addresses'][1] == 'bar@jabber.zone'
+    iocs['xmpp_addresses'][2] == 'bom@jabber.sow.as'
+    assert len(iocs['domains']) == 4
+    # make sure the xmpp addresses are not also parsed as email addresses
+    assert len(iocs['email_addresses']) == 1
+
+    iocs = find_iocs(s, parse_domain_name_from_xmpp_address=False)
+    assert len(iocs['xmpp_addresses']) == 3
+    iocs['xmpp_addresses'][0] == 'foo@swissjabber.de'
+    iocs['xmpp_addresses'][1] == 'bar@jabber.zone'
+    iocs['xmpp_addresses'][2] == 'bom@jabber.sow.as'
+    assert len(iocs['domains']) == 1
+    # make sure the xmpp addresses are not also parsed as email addresses
+    assert len(iocs['email_addresses']) == 1

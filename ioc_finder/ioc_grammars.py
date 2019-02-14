@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import copy
+
 from pyparsing import alphanums, alphas, printables, nums, hexnums
 from pyparsing import OneOrMore, Word, Combine, Optional, Or, Regex, WordStart, WordEnd, replaceWith, downcaseTokens, NotAny
 
@@ -66,3 +68,7 @@ google_analytics_tracker_id = alphanum_word_start + Combine('UA-' + Word(nums, m
 
 # see https://en.bitcoin.it/wiki/Address (and https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#segwit-address-format for more info on Bech32 addresses)
 bitcoin_address = alphanum_word_start + Or([Combine('1' + Word(alphanums, min=25, max=34)), Combine('3' + Word(alphanums, min=25, max=34)), Combine('bc1' + Word(alphanums, min=11, max=71))]) + alphanum_word_end
+
+# see https://github.com/fhightower/ioc-finder/issues/18
+xmpp_domain_name = copy.deepcopy(domain_name).addCondition(lambda tokens: 'jabber' in tokens[0] or 'xmpp' in tokens[0])
+xmpp_address = alphanum_word_start + Combine(email_local_part('email_address_local_part') + "@" + xmpp_domain_name('jabber_address_domain'))
