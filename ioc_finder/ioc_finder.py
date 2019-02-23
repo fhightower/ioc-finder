@@ -174,6 +174,12 @@ def _remove_xmpp_local_part(xmpp_addresses, text):
     return text
 
 
+def parse_mac_addresses(text):
+    """."""
+    mac_addresses = ioc_grammars.mac_address.searchString(text)
+    return _listify(mac_addresses)
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
@@ -247,5 +253,6 @@ def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=
     iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
     iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
     iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
+    iocs['mac_addresses'] = parse_mac_addresses(text)
 
     return iocs

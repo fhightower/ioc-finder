@@ -213,3 +213,21 @@ def test_xmpp_address_parsing():
     assert len(iocs['domains']) == 1
     # make sure the xmpp addresses are not also parsed as email addresses
     assert len(iocs['email_addresses']) == 1
+
+
+def test_mac_address_parsing():
+    s = 'AA-F2-C9-A6-B3-4F AB:F2:C9:A6:B3:4F ACF2.C9A6.B34F'
+
+    iocs = find_iocs(s)
+    assert len(iocs['mac_addresses']) == 3
+    iocs['mac_addresses'][0] == 'AA-F2-C9-A6-B3-4F'
+    iocs['mac_addresses'][1] == 'AB:F2:C9:A6:B3:4F'
+    iocs['mac_addresses'][2] == 'ACF2.C9A6.B34F'
+
+    # same thing, just lower-case
+    s = 'aa-f2-c9-a6-b3-4f ab:f2:c9:a6:b3:4f acf2.c9a6.b34f'
+    iocs = find_iocs(s)
+    assert len(iocs['mac_addresses']) == 3
+    iocs['mac_addresses'][0] == 'aa-f2-c9-a6-b3-4f'
+    iocs['mac_addresses'][1] == 'ab:f2:c9:a6:b3:4f'
+    iocs['mac_addresses'][2] == 'acf2.c9a6.b34f'

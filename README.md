@@ -24,6 +24,7 @@ Currently, this package can the following items in a given text:
 - Google Analytics Tracker IDs
 - Bitcoin addresses (P2PKH, P2SH, and Bech32)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
+- MAC addresses
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -93,7 +94,8 @@ The `find_iocs()` returns a dictionary in the following structure:
     "sha256s": [],
     "sha512s": [],
     "urls": [],
-    "xmpp_addresses": []
+    "xmpp_addresses": [],
+    "mac_addresses": []
 }
 ```
 
@@ -118,7 +120,8 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "sha256s": [],
     "sha512s": [],
     "urls": ["https://example.org/test/bingo.php"],
-    "xmpp_addresses": []
+    "xmpp_addresses": [],
+    "mac_addresses": []
 }
 ```
 
@@ -162,7 +165,8 @@ This will return:
     "urls": [
         "https://example.org/test/bingo.php"
     ],
-    "xmpp_addresses": []
+    "xmpp_addresses": [],
+    "mac_addresses": []
 }
 ```
 

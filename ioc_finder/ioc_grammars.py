@@ -72,3 +72,10 @@ bitcoin_address = alphanum_word_start + Or([Combine('1' + Word(alphanums, min=25
 # see https://github.com/fhightower/ioc-finder/issues/18
 xmpp_domain_name = copy.deepcopy(domain_name).addCondition(lambda tokens: 'jabber' in tokens[0] or 'xmpp' in tokens[0])
 xmpp_address = alphanum_word_start + Combine(email_local_part('email_address_local_part') + "@" + xmpp_domain_name('jabber_address_domain'))
+
+mac_address_section = Or([Word(hexnums, exact=2), Word(hexnums, exact=4)])
+# handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
+mac_address_16_bit_section = Combine((mac_address_section + Or(['-', ':'])) * 5 + mac_address_section)
+# handles xxxx.xxxx.xxxx
+mac_address_32_bit_section = Combine((mac_address_section + '.') * 2 + mac_address_section)
+mac_address = Or([mac_address_16_bit_section, mac_address_32_bit_section])
