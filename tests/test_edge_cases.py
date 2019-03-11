@@ -9,7 +9,9 @@ from ioc_finder import find_iocs
 @pytest.fixture
 def text_a():
     """Provide some generic text for the tests below."""
-    return 'example.com is a nice domain if you consider http://bad.com/test/bingo.php to be bad. {} {} {} 1.2.3.4 192.64.55.61 bad12312@example.org'.format('a'*32, 'b'*40, 'c'*64)
+    return 'example.com is a nice domain if you consider http://bad.com/test/bingo.php to be bad. {} {} {} 1.2.3.4 192.64.55.61 bad12312@example.org'.format(
+        'a' * 32, 'b' * 40, 'c' * 64
+    )
 
 
 def test_ioc_finder(text_a):
@@ -49,6 +51,25 @@ def test_url_parsing():
     s = '<link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"/>'
     iocs = find_iocs(s)
     assert 'http://fonts.googleapis.com/css?family=Lato:400,700' in iocs['urls']
+
+
+def test_schemeless_url_parsing():
+    """Test parsing URLs without a scheme."""
+    s = "github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh"
+    iocs = find_iocs(s)
+    assert len(iocs['urls']) == 1
+    assert 'github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['urls']
+
+    s = 'github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh hightower.space/projects'
+    iocs = find_iocs(s)
+    assert len(iocs['urls']) == 2
+    assert 'hightower.space/projects' in iocs['urls']
+    assert 'github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['urls']
+
+    s = 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh hightower.space/projects'
+    iocs = find_iocs(s, parse_urls_without_scheme=False)
+    assert len(iocs['urls']) == 1
+    assert 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh' in iocs['urls']
 
 
 def test_address_email_address():
@@ -119,31 +140,31 @@ def test_ioc_deduplication():
 
 
 def test_file_hash_order():
-    s = "{} {}".format('a'*32, 'b'*40)
+    s = "{} {}".format('a' * 32, 'b' * 40)
     iocs = find_iocs(s)
-    assert iocs['md5s'][0] == 'a'*32
-    assert iocs['sha1s'][0] == 'b'*40
+    assert iocs['md5s'][0] == 'a' * 32
+    assert iocs['sha1s'][0] == 'b' * 40
 
 
 def test_file_hash_parsing():
-    s = 'this is a test{}'.format('a'*32)
+    s = 'this is a test{}'.format('a' * 32)
     iocs = find_iocs(s)
     assert len(iocs['md5s']) == 0
 
-    s = 'this is a test {}'.format('a'*32)
+    s = 'this is a test {}'.format('a' * 32)
     iocs = find_iocs(s)
     assert len(iocs['md5s']) == 1
-    assert iocs['md5s'][0] == 'a'*32
+    assert iocs['md5s'][0] == 'a' * 32
 
-    s = 'this is a test "{}"'.format('a'*32)
+    s = 'this is a test "{}"'.format('a' * 32)
     iocs = find_iocs(s)
     assert len(iocs['md5s']) == 1
-    assert iocs['md5s'][0] == 'a'*32
+    assert iocs['md5s'][0] == 'a' * 32
 
-    s = 'this is a test {}.'.format('a'*32)
+    s = 'this is a test {}.'.format('a' * 32)
     iocs = find_iocs(s)
     assert len(iocs['md5s']) == 1
-    assert iocs['md5s'][0] == 'a'*32
+    assert iocs['md5s'][0] == 'a' * 32
 
 
 def test_url_boundaries():

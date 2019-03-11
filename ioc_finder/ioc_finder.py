@@ -37,23 +37,31 @@ def prepare_text(text):
     return text
 
 
-def parse_urls(text):
+def parse_urls(text, parse_urls_without_scheme=True):
     """."""
-    urls = ioc_grammars.url.searchString(text)
+    if parse_urls_without_scheme:
+        urls = ioc_grammars.scheme_less_url.searchString(text)
+    else:
+        urls = ioc_grammars.url.searchString(text)
     # remove `"` and `'` characters from the end of a URL
     urls = [url.strip('"').strip("'") for url in _listify(urls)]
     return urls
 
 
-def _remove_url_paths(urls, text):
+def _remove_url_paths(urls, text, parse_urls_without_scheme=True):
     """Remove the path from each url from the text."""
     for url in urls:
-        parsed_url = ioc_grammars.url.parseString(url)
+        if parse_urls_without_scheme:
+            parsed_url = ioc_grammars.scheme_less_url.parseString(url)
+        else:
+            parsed_url = ioc_grammars.url.parseString(url)
         url_path = parsed_url.url_path
 
-        if len(url_path) > 1:
+        # handle situations where the parsed url is likely a cidr range
+        if parse_urls_without_scheme and parse_ipv4_cidrs(str(url)):
+            pass
+        elif len(url_path) > 1:
             text = text.replace(url_path, ' ')
-
     return text
 
 
@@ -202,8 +210,14 @@ def parse_mac_addresses(text):
     is_flag=True,
     help='Using this flag will not parse domain names from XMPP addresses',
 )
+@click.option('--no_urls_without_schemes', is_flag=True, help='Using this flag will not parse URLs without schemes')
 def cli_find_iocs(
-    text, no_url_domain_parsing, no_email_addr_domain_parsing, no_cidr_address_parsing, no_xmpp_addr_domain_parsing
+    text,
+    no_url_domain_parsing,
+    no_email_addr_domain_parsing,
+    no_cidr_address_parsing,
+    no_xmpp_addr_domain_parsing,
+    no_urls_without_schemes,
 ):
     """CLI interface for parsing indicators of compromise."""
     iocs = find_iocs(
@@ -212,6 +226,7 @@ def cli_find_iocs(
         not no_email_addr_domain_parsing,
         not no_cidr_address_parsing,
         not no_xmpp_addr_domain_parsing,
+        not no_urls_without_schemes,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
@@ -223,6 +238,7 @@ def find_iocs(
     parse_domain_from_email_address=True,
     parse_address_from_cidr=True,
     parse_domain_name_from_xmpp_address=True,
+    parse_urls_without_scheme=True,
 ):
     """Find indicators of compromise in the given text."""
     iocs = dict()
@@ -230,12 +246,12 @@ def find_iocs(
     text = prepare_text(text)
 
     # urls
-    iocs['urls'] = parse_urls(text)
+    iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
     if not parse_domain_from_url:
         text = _remove_items(iocs['urls'], text)
     # even if we want to parse domain names from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
     else:
-        text = _remove_url_paths(iocs['urls'], text)
+        text = _remove_url_paths(iocs['urls'], text, parse_urls_without_scheme)
 
     # xmpp addresses
     iocs['xmpp_addresses'] = parse_xmpp_addresses(text)

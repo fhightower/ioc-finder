@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
+
 from click.testing import CliRunner
 
 from ioc_finder import ioc_finder
@@ -18,10 +20,15 @@ def test_ioc_parsing_cli():
 
 def test_cli_without_domain_from_url_parsing():
     runner = CliRunner()
-    result = runner.invoke(ioc_finder.cli_find_iocs, ["This is just an example.com https://example.org/test/bingo.php", "--no_url_domain_parsing"])
+    result = runner.invoke(
+        ioc_finder.cli_find_iocs,
+        ["This is just an example.com https://example.org/test/bingo.php", "--no_url_domain_parsing"],
+    )
     assert result.exit_code == 0
     print(result.output.strip())
-    assert result.output.strip() == """{
+    assert (
+        result.output.strip()
+        == """{
     "asns": [],
     "bitcoin_addresses": [],
     "complete_email_addresses": [],
@@ -47,3 +54,28 @@ def test_cli_without_domain_from_url_parsing():
     ],
     "xmpp_addresses": []
 }"""
+    )
+
+
+def test_cli_parsing_urls_without_scheme():
+    runner = CliRunner()
+    result = runner.invoke(ioc_finder.cli_find_iocs, ["This is just an example.com example.org/test/bingo.php"])
+    assert result.exit_code == 0
+    print(result.output.strip())
+    json_results = json.loads(result.output.strip())
+    assert 'example.com' in json_results['domains']
+    assert 'example.org' in json_results['domains']
+    assert 'example.org/test/bingo.php' in json_results['urls']
+
+
+def test_cli_disabling_parsing_urls_without_scheme():
+    runner = CliRunner()
+    result = runner.invoke(
+        ioc_finder.cli_find_iocs,
+        ["This is just an example.com example.org/test/bingo.php", "--no_urls_without_schemes"],
+    )
+    assert result.exit_code == 0
+    print(result.output.strip())
+    json_results = json.loads(result.output.strip())
+    assert 'example.com' in json_results['domains']
+    assert 'example.org' in json_results['domains']

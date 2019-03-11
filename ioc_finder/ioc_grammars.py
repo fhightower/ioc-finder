@@ -82,6 +82,20 @@ url = alphanum_word_start + Combine(
     + Optional(Combine('/' + Optional(url_path)))('url_path')
     + (Optional(Combine('?' + url_query)('url_query')) & Optional(Combine('#' + url_fragment)('url_fragment')))
 )
+scheme_less_url = alphanum_word_start + Combine(
+    Or(
+        [
+            Combine(
+                url_scheme('url_scheme')
+                + '://'
+                + url_authority('url_authority')
+                + Optional(Combine('/' + Optional(url_path)))('url_path')
+            ),
+            Combine(url_authority('url_authority') + Combine('/' + Optional(url_path))('url_path')),
+        ]
+    )
+    + (Optional(Combine('?' + url_query)('url_query')) & Optional(Combine('#' + url_fragment)('url_fragment')))
+)
 
 md5 = alphanum_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
 sha1 = alphanum_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
