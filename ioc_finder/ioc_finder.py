@@ -111,6 +111,12 @@ def parse_sha512s(text):
     return _listify(sha512s)
 
 
+def parse_ssdeeps(text):
+    """."""
+    ssdeeps = ioc_grammars.ssdeep.searchString(text)
+    return _listify(ssdeeps)
+
+
 def parse_asns(text):
     """."""
     asns = ioc_grammars.asn.searchString(text)
@@ -245,6 +251,7 @@ def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=
     iocs['sha256s'] = parse_sha256s(text)
     iocs['sha1s'] = parse_sha1s(text)
     iocs['md5s'] = parse_md5s(text)
+    iocs['ssdeeps'] = parse_ssdeeps(text)
 
     # misc
     iocs['asns'] = parse_asns(text)

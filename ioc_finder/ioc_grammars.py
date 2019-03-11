@@ -78,4 +78,6 @@ mac_address_section = Or([Word(hexnums, exact=2), Word(hexnums, exact=4)])
 mac_address_16_bit_section = Combine((mac_address_section + Or(['-', ':'])) * 5 + mac_address_section)
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((mac_address_section + '.') * 2 + mac_address_section)
-mac_address = Or([mac_address_16_bit_section, mac_address_32_bit_section])
+mac_address = alphanum_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + alphanum_word_end
+
+ssdeep = alphanum_word_start + Word(nums) + ':' + Word(alphanums + '+/:') + alphanum_word_end

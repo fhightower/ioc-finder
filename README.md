@@ -25,6 +25,7 @@ Currently, this package can the following items in a given text:
 - Bitcoin addresses (P2PKH, P2SH, and Bech32)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - MAC addresses
+- SSDeep Hashes
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -88,14 +89,15 @@ The `find_iocs()` returns a dictionary in the following structure:
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],
+    "mac_addresses": [],
     "md5s": [],
     "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "ssdeeps": [],
     "urls": [],
-    "xmpp_addresses": [],
-    "mac_addresses": []
+    "xmpp_addresses": []
 }
 ```
 
@@ -114,14 +116,15 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],
+    "mac_addresses": [],
     "md5s": [],
     "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "ssdeeps": [],
     "urls": ["https://example.org/test/bingo.php"],
-    "xmpp_addresses": [],
-    "mac_addresses": []
+    "xmpp_addresses": []
 }
 ```
 

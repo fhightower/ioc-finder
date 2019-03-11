@@ -231,3 +231,22 @@ def test_mac_address_parsing():
     iocs['mac_addresses'][0] == 'aa-f2-c9-a6-b3-4f'
     iocs['mac_addresses'][1] == 'ab:f2:c9:a6:b3:4f'
     iocs['mac_addresses'][2] == 'acf2.c9a6.b34f'
+
+
+def test_ssdeep_parsing():
+    s = "1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U"
+    iocs = find_iocs(s)
+    assert len(iocs['ssdeeps']) == 1
+    iocs['ssdeeps'][0] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
+
+    s = "ahdfadsfa 1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U,000/000/000000001 adfasf"
+    iocs = find_iocs(s)
+    assert len(iocs['ssdeeps']) == 1
+    iocs['ssdeeps'][0] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
+
+    s = """c2b257868686c861d43c6cf3de146b8812778c8283f7d
+Threat  Zepakab/Zebrocy Downloader
+ssdeep  12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4Po/VU6RkqaQ6F"""
+    iocs = find_iocs(s)
+    assert len(iocs['ssdeeps']) == 1
+    iocs['ssdeeps'][0] == '12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4Po/VU6RkqaQ6F'
