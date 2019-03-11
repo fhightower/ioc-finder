@@ -189,17 +189,41 @@ def parse_mac_addresses(text):
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
-@click.option('--no_email_addr_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from email addresses')
-@click.option('--no_cidr_address_parsing', is_flag=True, help='Using this flag will not parse IP addresses from CIDR ranges')
-@click.option('--no_xmpp_addr_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from XMPP addresses')
-def cli_find_iocs(text, no_url_domain_parsing, no_email_addr_domain_parsing, no_cidr_address_parsing, no_xmpp_addr_domain_parsing):
+@click.option(
+    '--no_email_addr_domain_parsing',
+    is_flag=True,
+    help='Using this flag will not parse domain names from email addresses',
+)
+@click.option(
+    '--no_cidr_address_parsing', is_flag=True, help='Using this flag will not parse IP addresses from CIDR ranges'
+)
+@click.option(
+    '--no_xmpp_addr_domain_parsing',
+    is_flag=True,
+    help='Using this flag will not parse domain names from XMPP addresses',
+)
+def cli_find_iocs(
+    text, no_url_domain_parsing, no_email_addr_domain_parsing, no_cidr_address_parsing, no_xmpp_addr_domain_parsing
+):
     """CLI interface for parsing indicators of compromise."""
-    iocs = find_iocs(text, not no_url_domain_parsing, not no_email_addr_domain_parsing, not no_cidr_address_parsing, not no_xmpp_addr_domain_parsing)
+    iocs = find_iocs(
+        text,
+        not no_url_domain_parsing,
+        not no_email_addr_domain_parsing,
+        not no_cidr_address_parsing,
+        not no_xmpp_addr_domain_parsing,
+    )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
 
 
-def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=True, parse_address_from_cidr=True, parse_domain_name_from_xmpp_address=True):
+def find_iocs(
+    text,
+    parse_domain_from_url=True,
+    parse_domain_from_email_address=True,
+    parse_address_from_cidr=True,
+    parse_domain_name_from_xmpp_address=True,
+):
     """Find indicators of compromise in the given text."""
     iocs = dict()
 
@@ -237,7 +261,7 @@ def find_iocs(text, parse_domain_from_url=True, parse_domain_from_email_address=
         text = _remove_items(iocs['ipv4_cidrs'], text)
     # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
     # if not parse_address_from_cidr:
-        # text = _remove_items(iocs['ipv6_cidrs'], text)
+    # text = _remove_items(iocs['ipv6_cidrs'], text)
 
     # domains
     iocs['domains'] = parse_domain_names(text)
