@@ -35,6 +35,7 @@ def test_cli_without_domain_from_url_parsing():
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],
+    "mac_addresses": [],
     "md5s": [],
     "registry_key_paths": [],
     "sha1s": [],

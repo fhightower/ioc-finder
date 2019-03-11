@@ -153,6 +153,18 @@ def test_url_boundaries():
     assert iocs['urls'][0] == 'http://192.168.0.1/test/bad.html'
     assert len(iocs['urls']) == 1
 
+    s = """<IMg SRc="https://i.imgur.com/abc.png#4827766048"/><br>
+<IMg SRc="https://i.imgur.com/def.png#4827766048"/><br>"""
+    iocs = find_iocs(s)
+    assert 'https://i.imgur.com/abc.png#4827766048' in iocs['urls']
+    assert 'https://i.imgur.com/def.png#4827766048' in iocs['urls']
+    assert len(iocs['urls']) == 2
+
+    s = """<IMg SRc="https://i.imgur.com/abc.png"/><br>"""
+    iocs = find_iocs(s)
+    assert 'https://i.imgur.com/abc.png' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
 
 def test_domain_parsing():
     s = "Host: dfasdfa (mz-fcb301p.ocn.ad.jp asdfsdafs"
