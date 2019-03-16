@@ -52,6 +52,15 @@ def test_url_parsing():
     iocs = find_iocs(s)
     assert 'http://fonts.googleapis.com/css?family=Lato:400,700' in iocs['urls']
 
+    s = '<link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"/>'
+    iocs = find_iocs(s)
+    assert 'http://fonts.googleapis.com/css?family=Lato:400,700' in iocs['urls']
+
+    s = '<a href="https://bit.ly/12345#abcd" target="_blank" style="text-decoration:none;;">'
+    results = find_iocs(s)
+    assert len(results['urls']) == 1
+    assert 'https://bit.ly/12345#abcd' in results['urls']
+
 
 def test_schemeless_url_parsing():
     """Test parsing URLs without a scheme."""
