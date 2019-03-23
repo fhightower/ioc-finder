@@ -43,9 +43,23 @@ def parse_urls(text, parse_urls_without_scheme=True):
         urls = ioc_grammars.scheme_less_url.searchString(text)
     else:
         urls = ioc_grammars.url.searchString(text)
-    # remove `"` and `'` characters from the end of a URL
-    urls = [url.strip('"').strip("'") for url in _listify(urls)]
-    return urls
+    urls = _listify(urls)
+
+    clean_urls = []
+
+    # clean the url
+    for url in urls:
+        # remove `"` and `'` characters from the end of a URL
+        url = url.rstrip('"').rstrip("'")
+
+        # remove a final ')' if there is a '(' in the url
+        if url.endswith(')') and '(' not in url:
+            url = url.rstrip(')')
+
+        clean_urls.append(url)
+
+    # return the cleaned urls - I deduplicate them again because the structure of the URL may have changed when it was cleaned
+    return _deduplicate(clean_urls)
 
 
 def _remove_url_paths(urls, text, parse_urls_without_scheme=True):

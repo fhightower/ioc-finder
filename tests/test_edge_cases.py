@@ -61,6 +61,21 @@ def test_url_parsing():
     assert len(results['urls']) == 1
     assert 'https://bit.ly/12345#abcd' in results['urls']
 
+    s = '<a href="https://bit.ly/12345" target="_blank" style="text-decoration:none;;">'
+    results = find_iocs(s)
+    assert len(results['urls']) == 1
+    assert 'https://bit.ly/12345' in results['urls']
+
+    s = '<a href="https://bit.ly" target="_blank" style="text-decoration:none;;">'
+    results = find_iocs(s)
+    assert len(results['urls']) == 1
+    assert 'https://bit.ly' in results['urls']
+
+    s = '<a href="https://bit.ly/" target="_blank" style="text-decoration:none;;">'
+    results = find_iocs(s)
+    assert len(results['urls']) == 1
+    assert 'https://bit.ly/' in results['urls']
+
 
 def test_schemeless_url_parsing():
     """Test parsing URLs without a scheme."""
@@ -193,6 +208,26 @@ def test_url_boundaries():
     s = """<IMg SRc="https://i.imgur.com/abc.png"/><br>"""
     iocs = find_iocs(s)
     assert 'https://i.imgur.com/abc.png' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
+    s = """(https://i.imgur.com/abc.png)"""
+    iocs = find_iocs(s)
+    assert 'https://i.imgur.com/abc.png' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
+    s = """(https://i.imgur.com/abc.png#abc)"""
+    iocs = find_iocs(s)
+    assert 'https://i.imgur.com/abc.png#abc' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
+    s = """[https://i.imgur.com/abc.png](https://i.imgur.com/abc.png)"""
+    iocs = find_iocs(s)
+    assert 'https://i.imgur.com/abc.png' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
+    s = """[https://i.imgur.com/abc.png#abc](https://i.imgur.com/abc.png#abc)"""
+    iocs = find_iocs(s)
+    assert 'https://i.imgur.com/abc.png#abc' in iocs['urls']
     assert len(iocs['urls']) == 1
 
 
