@@ -148,10 +148,10 @@ root_key = Or(
         'HKEY_DYN_DATA',
     ]
 )
-registry_key_subpath = OneOrMore(Word('\\') + Word(alphas))
+registry_key_subpath = OneOrMore(Word('\\') + Word(alphanums))
 registry_key_path = (
     alphanum_word_start
-    + Combine(root_key('registry_key_root') + registry_key_subpath('registry_key_subpath'))
+    + Combine(Optional('<').setParseAction(replaceWith('')) + root_key('registry_key_root') + Optional('>').setParseAction(replaceWith('')) + registry_key_subpath('registry_key_subpath'))
     + alphanum_word_end
 )
 

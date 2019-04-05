@@ -424,3 +424,25 @@ def test_onion_parsing():
     assert len(iocs['urls']) == 1
     assert 'http://foo.onion/test' in iocs['urls']
     assert 'foo.onion' in iocs['domains']
+
+
+def test_registry_key_abbreviations():
+    s = """<HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED
+Value Name: ShowSuperHidden
+<HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED
+Value Name: HideFileExt
+<HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED
+Value Name: SuperHidden
+<HKLM>\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED\FOLDER\HIDEFILEEXT
+Value Name: DefaultValue
+<HKLM>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\POLICIES\EXPLORER\RUN
+Value Name: PC
+<HKLM>\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN
+Value Name: avscan"""
+
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 4
+    assert 'HKCU\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED' in iocs['registry_key_paths']
+    assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED\FOLDER\HIDEFILEEXT' in iocs['registry_key_paths']
+    assert 'HKLM\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\POLICIES\EXPLORER\RUN' in iocs['registry_key_paths']
+    assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
