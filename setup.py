@@ -17,7 +17,7 @@ requirements = [
 
 setup(
     name='ioc_finder',
-    version='1.2.7',
+    version='1.2.8',
     description="Python package for finding and parsing indicators of compromise from text.",
     entry_points={
         'console_scripts': [
