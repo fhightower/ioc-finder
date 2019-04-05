@@ -32,7 +32,7 @@ domain_name = (
     + alphanum_word_end
 )
 
-ipv4_section = Word(nums, asKeyword=True).addCondition(lambda tokens: int(tokens[0]) < 256)
+ipv4_section = Word(nums, asKeyword=True, max=3).setParseAction(lambda x: str(int(x[0]))).addCondition(lambda tokens: int(tokens[0]) < 256)
 # basically, the grammar below says: start any words that start with a '.' or a number; I want to match words that start with a '.' because this will fail later in the grammar and I do not want to match anything that start with a '.'
 ipv4_address = (
     alphanum_word_start

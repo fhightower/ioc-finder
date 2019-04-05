@@ -396,6 +396,25 @@ def test_ip_address_systematically():
     iocs = find_iocs(s)
     assert len(iocs['ipv4s']) == 0
 
+    s = '1.01.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+    assert '1.1.1.1' in iocs['ipv4s']
+
+    s = '01.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+    assert '1.1.1.1' in iocs['ipv4s']
+
+    s = '01.01.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 1
+    assert '1.1.1.1' in iocs['ipv4s']
+
+    s = '0001.1.1.1'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv4s']) == 0
+
 
 def test_asn_parsing():
     s = 'NWD2HUBCAS8.ad.analog.com'
