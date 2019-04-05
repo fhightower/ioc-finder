@@ -1534,6 +1534,7 @@ tlds = [
     'zone',
     'zuerich',
     'zw',
+    'onion',
 ]
 
 schemes = [

@@ -395,3 +395,17 @@ def test_asn_parsing():
     s = 'here is an asn: AS8foobar'
     iocs = find_iocs(s)
     assert len(iocs['asns']) == 0
+
+
+def test_onion_parsing():
+    s = 'foo.onion'
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert 'foo.onion' in iocs['domains']
+
+    s = 'http://foo.onion/test'
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert len(iocs['urls']) == 1
+    assert 'http://foo.onion/test' in iocs['urls']
+    assert 'foo.onion' in iocs['domains']
