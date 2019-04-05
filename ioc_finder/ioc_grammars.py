@@ -72,7 +72,7 @@ url_scheme = Or(schemes)
 # todo: move the handling for port to the domain grammar - maybe?
 port = Combine(':' + Word(nums))
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)('port'))
-url_path = Combine(OneOrMore(Word(alphanums + "$-_.+!*'(),") + Optional('/')))
+url_path = Combine(OneOrMore(Word(alphanums + "$-_.+!*'(),/") + Optional('/')))
 url_query = Word(printables, excludeChars='#"\']')
 url_fragment = Word(printables, excludeChars='?"\']')
 url = alphanum_word_start + Combine(

@@ -76,6 +76,11 @@ def test_url_parsing():
     assert len(results['urls']) == 1
     assert 'https://bit.ly/' in results['urls']
 
+    s = 'http://example.com//test'
+    results = find_iocs(s)
+    assert len(results['urls']) == 1
+    assert 'http://example.com//test' in results['urls']
+
 
 def test_schemeless_url_parsing():
     """Test parsing URLs without a scheme."""
