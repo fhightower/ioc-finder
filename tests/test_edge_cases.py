@@ -298,6 +298,16 @@ def test_email_address_parsing():
     assert len(iocs['email_addresses']) == 1
     assert iocs['email_addresses'][0] == 'foo@bar.com'
 
+    # making sure that the `parse_domain_from_email_address` argument is working properly
+    s = 'foo@bar.com'
+    iocs = find_iocs(s)
+    assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'foo@bar.com'
+    s = 'foo@bar.com'
+    iocs = find_iocs(s, parse_domain_from_email_address=False)
+    assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'foo@bar.com'
+
 
 def test_erroneous_ip_address_parsing():
     # the two tests below make sure that IP addresses are not parsed from strings with decimals in them
