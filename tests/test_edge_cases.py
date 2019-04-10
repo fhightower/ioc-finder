@@ -478,6 +478,9 @@ Value Name: avscan"""
     iocs = find_iocs(s)
     assert len(iocs['registry_key_paths']) == 4
     assert 'HKCU\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED' in iocs['registry_key_paths']
-    assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED\FOLDER\HIDEFILEEXT' in iocs['registry_key_paths']
+    assert (
+        'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED\FOLDER\HIDEFILEEXT'
+        in iocs['registry_key_paths']
+    )
     assert 'HKLM\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\POLICIES\EXPLORER\RUN' in iocs['registry_key_paths']
     assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']

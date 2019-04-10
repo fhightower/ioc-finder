@@ -40,7 +40,7 @@ VALID_URLS = [
     "http://-.~_!$&'()*+,;=:%40:80%2f::::::@example.com",
     'http://1337.net',
     'http://a.b-c.de',
-    'http://223.255.255.254'
+    'http://223.255.255.254',
 ]
 
 
@@ -90,7 +90,7 @@ INVALID_URLS = [
     'http://.www.foo.bar/',
     'http://www.foo.bar./',
     'http://.www.foo.bar./',
-    'http://10.1.1.1'
+    'http://10.1.1.1',
 ]
 
 

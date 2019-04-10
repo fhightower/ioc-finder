@@ -263,12 +263,20 @@ ssdeep  12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4
     iocs = find_iocs(s)
     print(iocs['ssdeeps'])
     assert len(iocs['ssdeeps']) == 9
-    iocs['ssdeeps'][0] == '393216:EW/eKCo9QgoHfHYebwoyC0QStQYEb+G8j3wfVOglnimQyCK+mteYREDWXKF2b:MKg3lbwoyCnCkNHlnimfCSQx8b'
+    iocs['ssdeeps'][
+        0
+    ] == '393216:EW/eKCo9QgoHfHYebwoyC0QStQYEb+G8j3wfVOglnimQyCK+mteYREDWXKF2b:MKg3lbwoyCnCkNHlnimfCSQx8b'
     iocs['ssdeeps'][1] == '196608:AGSE26mYSK0iwH8HW9TDl0vnvCZwZEkzzeap7R:Ak28siwH8eRSn25k3eg'
-    iocs['ssdeeps'][2] == '98304:O1OCzezOgr4XMP7Af0+Kh7MzplFKuu5XcS9QnCD/VWR6yf4OB6S/mwRTwjf0ih87:k/Y4XMT7YguEXqCD/VWR6yf4Ux/mwR0S'
+    iocs['ssdeeps'][
+        2
+    ] == '98304:O1OCzezOgr4XMP7Af0+Kh7MzplFKuu5XcS9QnCD/VWR6yf4OB6S/mwRTwjf0ih87:k/Y4XMT7YguEXqCD/VWR6yf4Ux/mwR0S'
     iocs['ssdeeps'][3] == '96:ukILJhn54RewghSib4xGEHVLFNs+4tihJW6jJenUQrsIvpMMjUg:uk0Jx54usxJHh4gJrJenUQrs2pvIg'
     iocs['ssdeeps'][4] == '196608:rNI4QlKQbWQobu0u3QRBBibfv+Z4Hjy5M+IjunAadLLtt42fAtQSqFhx:rNkK2obu0uBb3K4H28yAGc4RSax'
-    iocs['ssdeeps'][5] == '1536:mFbhArcCMbR0S/kjzU6El4mUIR2JPmvY3lpKa38fTXcTns+b3tfZyCLtRs:obNCMbWpU6SzFAPV3lpCjCsQRZyQt6'
+    iocs['ssdeeps'][
+        5
+    ] == '1536:mFbhArcCMbR0S/kjzU6El4mUIR2JPmvY3lpKa38fTXcTns+b3tfZyCLtRs:obNCMbWpU6SzFAPV3lpCjCsQRZyQt6'
     iocs['ssdeeps'][6] == '48:CScrEd3jk5BsRSFCWfVsEWABbbpnWSgSX45dc6b5Qla9A+o5R6k7CyNRD5J:XcrEdzHRSFr9sE7XnsDe1CyNRNJ'
-    iocs['ssdeeps'][7] == '24:N8Rw5AF4REesFtPP6k216xoWya1oxOKHHwa8peRK8FdigZY5tODrRRK8RfMfde8:N8Rw5AF4+XPyooa2EKnwaGeRJFYpfwzQ'
+    iocs['ssdeeps'][
+        7
+    ] == '24:N8Rw5AF4REesFtPP6k216xoWya1oxOKHHwa8peRK8FdigZY5tODrRRK8RfMfde8:N8Rw5AF4+XPyooa2EKnwaGeRJFYpfwzQ'
     iocs['ssdeeps'][8] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
