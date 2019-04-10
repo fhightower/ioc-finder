@@ -3,19 +3,20 @@
 
 import copy
 
-from pyparsing import alphanums, alphas, printables, nums, hexnums
+from pyparsing import alphanums, printables, nums, hexnums
 from pyparsing import (
-    OneOrMore,
-    Word,
     Combine,
+    downcaseTokens,
+    FollowedBy,
+    NotAny,
+    OneOrMore,
     Optional,
     Or,
     Regex,
-    WordStart,
-    WordEnd,
     replaceWith,
-    downcaseTokens,
-    NotAny,
+    Word,
+    WordEnd,
+    WordStart,
 )
 
 from data_lists import tlds, schemes
@@ -28,11 +29,17 @@ label = Word(initChars=alphanums, bodyChars=alphanums + '-', max=63)
 domain_tld = Or(tlds)
 domain_name = (
     alphanum_word_start
-    + Combine(Combine(OneOrMore(label + ('.')))('domain_labels') + domain_tld('tld'))
+    + Combine(
+        Combine(OneOrMore(label + ('.' + FollowedBy(Word(alphanums + '-')))))('domain_labels') + domain_tld('tld')
+    )
     + alphanum_word_end
 )
 
-ipv4_section = Word(nums, asKeyword=True, max=3).setParseAction(lambda x: str(int(x[0]))).addCondition(lambda tokens: int(tokens[0]) < 256)
+ipv4_section = (
+    Word(nums, asKeyword=True, max=3)
+    .setParseAction(lambda x: str(int(x[0])))
+    .addCondition(lambda tokens: int(tokens[0]) < 256)
+)
 # basically, the grammar below says: start any words that start with a '.' or a number; I want to match words that start with a '.' because this will fail later in the grammar and I do not want to match anything that start with a '.'
 ipv4_address = (
     alphanum_word_start
@@ -151,7 +158,12 @@ root_key = Or(
 registry_key_subpath = OneOrMore(Word('\\') + Word(alphanums))
 registry_key_path = (
     alphanum_word_start
-    + Combine(Optional('<').setParseAction(replaceWith('')) + root_key('registry_key_root') + Optional('>').setParseAction(replaceWith('')) + registry_key_subpath('registry_key_subpath'))
+    + Combine(
+        Optional('<').setParseAction(replaceWith(''))
+        + root_key('registry_key_root')
+        + Optional('>').setParseAction(replaceWith(''))
+        + registry_key_subpath('registry_key_subpath')
+    )
     + alphanum_word_end
 )
 
