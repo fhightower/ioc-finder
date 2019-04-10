@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import copy
-
 from pyparsing import alphanums, printables, nums, hexnums
 from pyparsing import (
     Combine,
@@ -191,10 +189,9 @@ bitcoin_address = (
 )
 
 # see https://github.com/fhightower/ioc-finder/issues/18
-xmpp_domain_name = copy.deepcopy(domain_name).addCondition(lambda tokens: 'jabber' in tokens[0] or 'xmpp' in tokens[0])
 xmpp_address = alphanum_word_start + Combine(
-    email_local_part('email_address_local_part') + "@" + xmpp_domain_name('jabber_address_domain')
-)
+    email_local_part('email_address_local_part') + "@" + domain_name('jabber_address_domain')
+).addCondition(lambda tokens: 'jabber' in tokens[0].split('@')[-1] or 'xmpp' in tokens[0].split('@')[-1])
 
 mac_address_section = Or([Word(hexnums, exact=2), Word(hexnums, exact=4)])
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
