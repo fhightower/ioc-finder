@@ -235,6 +235,16 @@ def test_url_boundaries():
     assert 'https://i.imgur.com/abc.png#abc' in iocs['urls']
     assert len(iocs['urls']) == 1
 
+    s = "DownloadString('https://hacks4all[.]net/rdp.ps1');g $I"
+    iocs = find_iocs(s)
+    assert 'https://hacks4all.net/rdp.ps1' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
+    s = 'DownloadString("https://hacks4all[.]net/rdp.ps1");g $I'
+    iocs = find_iocs(s)
+    assert 'https://hacks4all.net/rdp.ps1' in iocs['urls']
+    assert len(iocs['urls']) == 1
+
 
 def test_domain_parsing():
     s = "Host: dfasdfa (mz-fcb301p.ocn.ad.jp asdfsdafs"
