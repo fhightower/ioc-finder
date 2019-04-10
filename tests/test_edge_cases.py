@@ -134,7 +134,7 @@ def test_address_email_address():
     assert len(iocs['email_addresses']) == 1
     assert 'jsmith@[IPv6:2001:db8::1]' in iocs['email_addresses']
     assert len(iocs['ipv6s']) == 1
-    # assert '2001:db8::1' in iocs['ipv6s']
+    assert '2001:db8::1' in iocs['ipv6s']
 
 
 def test_address_domain_url():
@@ -159,7 +159,7 @@ def test_unicode_domain_name():
     s = "ȩxample.com"
     iocs = find_iocs(s)
     assert len(iocs['domains']) == 1
-    # assert '\\u0229xample.com' in iocs['domains']
+    assert '\\u0229xample.com' in iocs['domains']
 
 
 def test_ioc_deduplication():
@@ -271,6 +271,11 @@ def test_domain_parsing():
     assert len(iocs['domains']) == 1
     assert iocs['domains'][0] == 'bar.com'
 
+    s = "bar.com."
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert iocs['domains'][0] == 'bar.com'
+
 
 def test_email_address_parsing():
     s = 'my email is: foo"bar@gmail.com'
@@ -314,11 +319,12 @@ def test_email_address_parsing():
     assert iocs['email_addresses'][0] == 'foo@bar.com'
 
     # making sure that the `parse_domain_from_email_address` argument is working properly
-    s = 'foo@bar.com'
+    s = 'foo@bar.com.'
     iocs = find_iocs(s)
     assert len(iocs['email_addresses']) == 1
     assert iocs['email_addresses'][0] == 'foo@bar.com'
-    s = 'foo@bar.com'
+
+    s = '"foo@bar.com'
     iocs = find_iocs(s, parse_domain_from_email_address=False)
     assert len(iocs['email_addresses']) == 1
     assert iocs['email_addresses'][0] == 'foo@bar.com'
