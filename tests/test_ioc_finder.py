@@ -36,20 +36,20 @@ def test_email_address_parsing():
     s = "test@a.com bingo@en.wikipedia.com foo@a.com'.format('a'*63 bar@b.a.com'.format('a'*63, 'a'*63 bad@test-ing.com me@2600.com john.smith(comment)@example.com (comment)john.smith@example.com \"John..Doe\"@example.com' test@[192.168.0.1]"
 
     iocs = find_iocs(s)
-    assert len(iocs['complete_email_addresses']) == 10
-    assert 'test@a.com' in iocs['complete_email_addresses']
-    assert 'bingo@en.wikipedia.com' in iocs['complete_email_addresses']
-    assert 'foo@a.com' in iocs['complete_email_addresses']
-    assert 'bar@b.a.com' in iocs['complete_email_addresses']
-    assert 'bad@test-ing.com' in iocs['complete_email_addresses']
-    assert 'me@2600.com' in iocs['complete_email_addresses']
-    assert 'john.smith(comment)@example.com' in iocs['complete_email_addresses']
-    assert '(comment)john.smith@example.com' in iocs['complete_email_addresses']
-    assert '\"John..Doe\"@example.com' in iocs['complete_email_addresses']
-    assert 'test@[192.168.0.1]' in iocs['complete_email_addresses']
+    assert len(iocs['email_addresses_complete']) == 10
+    assert 'test@a.com' in iocs['email_addresses_complete']
+    assert 'bingo@en.wikipedia.com' in iocs['email_addresses_complete']
+    assert 'foo@a.com' in iocs['email_addresses_complete']
+    assert 'bar@b.a.com' in iocs['email_addresses_complete']
+    assert 'bad@test-ing.com' in iocs['email_addresses_complete']
+    assert 'me@2600.com' in iocs['email_addresses_complete']
+    assert 'john.smith(comment)@example.com' in iocs['email_addresses_complete']
+    assert '(comment)john.smith@example.com' in iocs['email_addresses_complete']
+    assert '\"John..Doe\"@example.com' in iocs['email_addresses_complete']
+    assert 'test@[192.168.0.1]' in iocs['email_addresses_complete']
 
     iocs = find_iocs('a@example.com')
-    assert iocs['complete_email_addresses'][0] == 'a@example.com'
+    assert iocs['email_addresses_complete'][0] == 'a@example.com'
 
 
 def test_simple_email_address_parsing():

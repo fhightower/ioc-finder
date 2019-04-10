@@ -82,10 +82,10 @@ The `find_iocs()` returns a dictionary in the following structure:
 {
     "asns": [],
     "bitcoin_addresses": [],
-    "complete_email_address": [],
     "cves": [],
     "domains": [],
     "email_addresses": [],
+    "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "ipv4_cidrs": [],
@@ -109,10 +109,10 @@ For example, running the example code shown at the start of the [usage](#usage) 
 {
     "asns": [],
     "bitcoin_addresses": [],
-    "complete_email_address": [],
     "cves": [],
     "domains": ["example.org", "example.com"],
     "email_addresses": [],
+    "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "ipv4_cidrs": [],
@@ -132,7 +132,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
 
 ##### Output Details
 
-There are two grammars for email addresses. There is a fairly complete grammar to find email addresses matching the spec (which is very broad). Any of these complete email addresses (e.g. `foo"bar@gmail.com`) will be sent as output to in `complete_email_addresses` key.
+There are two grammars for email addresses. There is a fairly complete grammar to find email addresses matching the spec (which is very broad). Any of these complete email addresses (e.g. `foo"bar@gmail.com`) will be sent as output to in `email_addresses_complete` key.
 
 Email addresses in the simple form we are familiar with (e.g. `bar@gmail.com`) will be sent as output in the `email_addresses` key.
 
@@ -150,13 +150,13 @@ This will return:
 {
     "asns": [],
     "bitcoin_addresses": [],
-    "complete_email_addresses": [],
     "cves": [],
     "domains": [
         "example.com",
         "example.org"
     ],
     "email_addresses": [],
+    "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "ipv4_cidrs": [],

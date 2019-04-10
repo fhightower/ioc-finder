@@ -31,12 +31,12 @@ def test_cli_without_domain_from_url_parsing():
         == """{
     "asns": [],
     "bitcoin_addresses": [],
-    "complete_email_addresses": [],
     "cves": [],
     "domains": [
         "example.com"
     ],
     "email_addresses": [],
+    "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "ipv4_cidrs": [],

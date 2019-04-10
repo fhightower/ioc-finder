@@ -276,12 +276,12 @@ def find_iocs(
         text = _remove_xmpp_local_part(iocs['xmpp_addresses'], text)
 
     # complete email addresses
-    iocs['complete_email_addresses'] = parse_complete_email_addresses(text)
+    iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
 
     # simple email addresses
     iocs['email_addresses'] = parse_email_addresses(text)
     if not parse_domain_from_email_address:
-        text = _remove_items(iocs['complete_email_addresses'], text)
+        text = _remove_items(iocs['email_addresses_complete'], text)
         text = _remove_items(iocs['email_addresses'], text)
 
     # cidr ranges
