@@ -446,6 +446,11 @@ def test_asn_parsing():
     iocs = find_iocs(s)
     assert len(iocs['asns']) == 0
 
+    s = 'as8'
+    iocs = find_iocs(s)
+    assert len(iocs['asns']) == 1
+    assert iocs['asns'][0] == 'ASN8'
+
 
 def test_onion_parsing():
     s = 'foo.onion'
@@ -484,3 +489,61 @@ Value Name: avscan"""
     )
     assert 'HKLM\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\POLICIES\EXPLORER\RUN' in iocs['registry_key_paths']
     assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
+
+
+def test_deduplication_of_indicators_with_different_cases():
+    s = 'example.com Example.com exAmplE.com'
+    iocs = find_iocs(s)
+    assert len(iocs['domains']) == 1
+    assert iocs['domains'][0] == 'example.com'
+
+    s = 'bad@example.com bad@Example.com bad@exAmplE.com'
+    iocs = find_iocs(s)
+    assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'bad@example.com'
+
+    s = 'bad@example.com Bad@example.com'
+    iocs = find_iocs(s)
+    assert len(iocs['email_addresses']) == 1
+    assert 'bad@example.com' in iocs['email_addresses']
+
+    s = 'http://example.com/test http://EXAMple.com/test'
+    iocs = find_iocs(s)
+    assert len(iocs['urls']) == 1
+    assert iocs['urls'][0] == 'http://example.com/test'
+
+    s = 'http://example.com/test http://EXAMple.com/TEST'
+    iocs = find_iocs(s)
+    assert len(iocs['urls']) == 2
+    assert 'http://example.com/test' in iocs['urls']
+    assert 'http://example.com/TEST' in iocs['urls']
+
+
+def test_google_adsense_publisher_ids():
+    s = "PUB-1234567891234567"
+    iocs = find_iocs(s)
+    assert len(iocs['google_adsense_publisher_ids']) == 1
+    assert iocs['google_adsense_publisher_ids'][0] == 'pub-1234567891234567'
+
+    s = "pUb-1234567891234567"
+    iocs = find_iocs(s)
+    assert len(iocs['google_adsense_publisher_ids']) == 0
+
+
+def test_google_analyitics_tracker_ids():
+    s = "ua-000000-1"
+    iocs = find_iocs(s)
+    assert len(iocs['google_analytics_tracker_ids']) == 1
+    assert iocs['google_analytics_tracker_ids'][0] == 'UA-000000-1'
+
+
+def test_google_casing_deduplication():
+    s = "pub-1234567891234567 PUB-1234567891234567 pUb-1234567891234567"
+    iocs = find_iocs(s)
+    assert len(iocs['google_adsense_publisher_ids']) == 1
+    assert iocs['google_adsense_publisher_ids'][0] == 'pub-1234567891234567'
+
+    s = "UA-000000-1 ua-000000-1"
+    iocs = find_iocs(s)
+    assert len(iocs['google_analytics_tracker_ids']) == 1
+    assert iocs['google_analytics_tracker_ids'][0] == 'UA-000000-1'

@@ -12,6 +12,7 @@ from pyparsing import (
     Or,
     Regex,
     replaceWith,
+    upcaseTokens,
     Word,
     WordEnd,
     WordStart,
@@ -31,7 +32,7 @@ domain_name = (
         Combine(OneOrMore(label + ('.' + FollowedBy(Word(alphanums + '-')))))('domain_labels') + domain_tld('tld')
     )
     + alphanum_word_end
-)
+).setParseAction(downcaseTokens)
 
 ipv4_section = (
     Word(nums, asKeyword=True, max=3)
@@ -59,14 +60,14 @@ complete_email_local_part = Combine(
     Optional(complete_email_comment)('email_address_comment')
     + Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"')
     + Optional(complete_email_comment)('email_address_comment')
-)
+).setParseAction(downcaseTokens)
 complete_email_address = Combine(
     complete_email_local_part('email_address_local_part')
     + "@"
     + Or([domain_name, '[' + ipv4_address + ']', '[IPv6:' + ipv6_address + ']'])('email_address_domain')
 )
 
-email_local_part = Word(alphanums + "+-_.")
+email_local_part = Word(alphanums + "+-_.").setParseAction(downcaseTokens)
 email_address = alphanum_word_start + Combine(
     email_local_part('email_address_local_part')
     + "@"
@@ -166,12 +167,12 @@ registry_key_path = (
 )
 
 # see https://support.google.com/adsense/answer/2923881?hl=en
-google_adsense_publisher_id = alphanum_word_start + Combine('pub-' + Word(nums, exact=16)) + alphanum_word_end
+google_adsense_publisher_id = alphanum_word_start + Combine(Or(['pub-', 'PUB-']) + Word(nums, exact=16)).setParseAction(downcaseTokens) + alphanum_word_end
 
 # see https://support.google.com/analytics/answer/7372977?hl=en
 google_analytics_tracker_id = (
     alphanum_word_start
-    + Combine('UA-' + Word(nums, min=6)('account_number') + '-' + Word(nums)('property_number'))
+    + Combine(Or(['UA-', 'ua-']) + Word(nums, min=6)('account_number') + '-' + Word(nums)('property_number')).setParseAction(upcaseTokens)
     + alphanum_word_end
 )
 
