@@ -60,7 +60,7 @@ complete_email_local_part = Combine(
     Optional(complete_email_comment)('email_address_comment')
     + Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"')
     + Optional(complete_email_comment)('email_address_comment')
-).setParseAction(downcaseTokens)
+)
 complete_email_address = Combine(
     complete_email_local_part('email_address_local_part')
     + "@"
@@ -167,12 +167,18 @@ registry_key_path = (
 )
 
 # see https://support.google.com/adsense/answer/2923881?hl=en
-google_adsense_publisher_id = alphanum_word_start + Combine(Or(['pub-', 'PUB-']) + Word(nums, exact=16)).setParseAction(downcaseTokens) + alphanum_word_end
+google_adsense_publisher_id = (
+    alphanum_word_start
+    + Combine(Or(['pub-', 'PUB-']) + Word(nums, exact=16)).setParseAction(downcaseTokens)
+    + alphanum_word_end
+)
 
 # see https://support.google.com/analytics/answer/7372977?hl=en
 google_analytics_tracker_id = (
     alphanum_word_start
-    + Combine(Or(['UA-', 'ua-']) + Word(nums, min=6)('account_number') + '-' + Word(nums)('property_number')).setParseAction(upcaseTokens)
+    + Combine(
+        Or(['UA-', 'ua-']) + Word(nums, min=6)('account_number') + '-' + Word(nums)('property_number')
+    ).setParseAction(upcaseTokens)
     + alphanum_word_end
 )
 

@@ -29,7 +29,7 @@ def test_ipv6_parsing():
     assert '2001:db8:0:0:0:ff00:42:8329' in iocs['ipv6s']
     assert '2001:db8::ff00:42:8329' in iocs['ipv6s']
     assert '::1' in iocs['ipv6s']
-    # assert '1:1' not in iocs['ipv6s']
+    assert '1:1' not in iocs['ipv6s']
 
 
 def test_email_address_parsing():
@@ -50,6 +50,12 @@ def test_email_address_parsing():
 
     iocs = find_iocs('a@example.com')
     assert iocs['email_addresses_complete'][0] == 'a@example.com'
+
+
+def test_complex_email_address_parsing():
+    s = 'john.smith(comment)@example.com'
+    iocs = find_iocs(s)
+    assert 'john.smith(comment)@example.com' in iocs['email_addresses_complete']
 
 
 def test_simple_email_address_parsing():
@@ -130,11 +136,14 @@ def test_asn_parsing():
 
 
 def test_cve_parsing():
-    s = "cve-2014-290902 cve 2014-290902 cve-1999-2909023422 cve 2999-290902 CVE 1928-290902"
+    s = "cve-2014-1000 cve 2014-1001 cve-1999-1002 CVE 2999-1003 CVE 1928-1004"
     iocs = find_iocs(s)
-    assert len(iocs['cves']) == 4
-    assert 'CVE-2014-290902' in iocs['cves']
-    assert 'CVE-1928-290902' in iocs['cves']
+    assert len(iocs['cves']) == 5
+    assert 'CVE-2014-1000' in iocs['cves']
+    assert 'CVE-2014-1001' in iocs['cves']
+    assert 'CVE-1999-1002' in iocs['cves']
+    assert 'CVE-2999-1003' in iocs['cves']
+    assert 'CVE-1928-1004' in iocs['cves']
 
 
 def test_ipv4_cidr_parsing():
@@ -151,7 +160,6 @@ def test_registry_key_parsing():
     s = "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
     iocs = find_iocs(s)
     assert len(iocs['registry_key_paths']) == 3
-    print("iocs {}".format(iocs))
     assert 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows' in iocs['registry_key_paths']
     assert 'HKLM\Software\Microsoft\Windows' in iocs['registry_key_paths']
     assert 'HKCC\Software\Microsoft\Windows' in iocs['registry_key_paths']
@@ -166,21 +174,21 @@ def test_adsense_publisher_id_parsing():
     s = "pub-1234567891234567 pub-9383614236930773"
     iocs = find_iocs(s)
     assert len(iocs['google_adsense_publisher_ids']) == 2
-    iocs['google_adsense_publisher_ids'][0] == 'pub-1234567891234567'
-    iocs['google_adsense_publisher_ids'][1] == 'pub-9383614236930773'
+    assert 'pub-1234567891234567' in iocs['google_adsense_publisher_ids']
+    assert 'pub-9383614236930773' in iocs['google_adsense_publisher_ids']
 
 
 def test_analytics_publisher_id_parsing():
     s = "UA-000000-2"
     iocs = find_iocs(s)
     assert len(iocs['google_analytics_tracker_ids']) == 1
-    iocs['google_analytics_tracker_ids'][0] == 'UA-000000-2'
+    assert iocs['google_analytics_tracker_ids'][0] == 'UA-000000-2'
 
     s = "UA-000000-2 UA-00000000-99"
     iocs = find_iocs(s)
     assert len(iocs['google_analytics_tracker_ids']) == 2
-    iocs['google_analytics_tracker_ids'][0] == 'UA-000000-2'
-    iocs['google_analytics_tracker_ids'][1] == 'UA-00000000-99'
+    assert 'UA-000000-2' in iocs['google_analytics_tracker_ids']
+    assert 'UA-00000000-99' in iocs['google_analytics_tracker_ids']
 
 
 def test_bitcoin_parsing():
@@ -189,27 +197,27 @@ P2SH type starting with the number 3, eg: 3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy.
 Bech32 type starting with bc1, eg: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq"""
     iocs = find_iocs(s)
     assert len(iocs['bitcoin_addresses']) == 3
-    iocs['bitcoin_addresses'][0] == '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2'
-    iocs['bitcoin_addresses'][1] == '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'
-    iocs['bitcoin_addresses'][2] == 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq'
+    assert '1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2' in iocs['bitcoin_addresses']
+    assert '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy' in iocs['bitcoin_addresses']
+    assert 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq' in iocs['bitcoin_addresses']
 
 
 def test_xmpp_address_parsing():
     s = """foo@swissjabber.de bar@jabber.zone bom@jabber.sow.as me@example.com"""
     iocs = find_iocs(s)
     assert len(iocs['xmpp_addresses']) == 3
-    iocs['xmpp_addresses'][0] == 'foo@swissjabber.de'
-    iocs['xmpp_addresses'][1] == 'bar@jabber.zone'
-    iocs['xmpp_addresses'][2] == 'bom@jabber.sow.as'
+    assert 'foo@swissjabber.de' in iocs['xmpp_addresses']
+    assert 'bar@jabber.zone' in iocs['xmpp_addresses']
+    assert 'bom@jabber.sow.as' in iocs['xmpp_addresses']
     assert len(iocs['domains']) == 4
     # make sure the xmpp addresses are not also parsed as email addresses
     assert len(iocs['email_addresses']) == 1
 
     iocs = find_iocs(s, parse_domain_name_from_xmpp_address=False)
     assert len(iocs['xmpp_addresses']) == 3
-    iocs['xmpp_addresses'][0] == 'foo@swissjabber.de'
-    iocs['xmpp_addresses'][1] == 'bar@jabber.zone'
-    iocs['xmpp_addresses'][2] == 'bom@jabber.sow.as'
+    assert 'foo@swissjabber.de' in iocs['xmpp_addresses']
+    assert 'bar@jabber.zone' in iocs['xmpp_addresses']
+    assert 'bom@jabber.sow.as' in iocs['xmpp_addresses']
     assert len(iocs['domains']) == 1
     # make sure the xmpp addresses are not also parsed as email addresses
     assert len(iocs['email_addresses']) == 1
@@ -220,36 +228,36 @@ def test_mac_address_parsing():
 
     iocs = find_iocs(s)
     assert len(iocs['mac_addresses']) == 3
-    iocs['mac_addresses'][0] == 'AA-F2-C9-A6-B3-4F'
-    iocs['mac_addresses'][1] == 'AB:F2:C9:A6:B3:4F'
-    iocs['mac_addresses'][2] == 'ACF2.C9A6.B34F'
+    assert 'AA-F2-C9-A6-B3-4F' in iocs['mac_addresses']
+    assert 'AB:F2:C9:A6:B3:4F' in iocs['mac_addresses']
+    assert 'ACF2.C9A6.B34F' in iocs['mac_addresses']
 
     # same thing, just lower-case
     s = 'aa-f2-c9-a6-b3-4f ab:f2:c9:a6:b3:4f acf2.c9a6.b34f'
     iocs = find_iocs(s)
     assert len(iocs['mac_addresses']) == 3
-    iocs['mac_addresses'][0] == 'aa-f2-c9-a6-b3-4f'
-    iocs['mac_addresses'][1] == 'ab:f2:c9:a6:b3:4f'
-    iocs['mac_addresses'][2] == 'acf2.c9a6.b34f'
+    assert 'aa-f2-c9-a6-b3-4f' in iocs['mac_addresses']
+    assert 'ab:f2:c9:a6:b3:4f' in iocs['mac_addresses']
+    assert 'acf2.c9a6.b34f' in iocs['mac_addresses']
 
 
 def test_ssdeep_parsing():
     s = "1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U"
     iocs = find_iocs(s)
     assert len(iocs['ssdeeps']) == 1
-    iocs['ssdeeps'][0] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
+    assert iocs['ssdeeps'][0] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
 
     s = "ahdfadsfa 1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U,000/000/000000001 adfasf"
     iocs = find_iocs(s)
     assert len(iocs['ssdeeps']) == 1
-    iocs['ssdeeps'][0] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
+    assert iocs['ssdeeps'][0] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
 
     s = """c2b257868686c861d43c6cf3de146b8812778c8283f7d
 Threat  Zepakab/Zebrocy Downloader
 ssdeep  12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4Po/VU6RkqaQ6F"""
     iocs = find_iocs(s)
     assert len(iocs['ssdeeps']) == 1
-    iocs['ssdeeps'][0] == '12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4Po/VU6RkqaQ6F'
+    assert iocs['ssdeeps'][0] == '12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4Po/VU6RkqaQ6F'
 
     s = """393216:EW/eKCo9QgoHfHYebwoyC0QStQYEb+G8j3wfVOglnimQyCK+mteYREDWXKF2b:MKg3lbwoyCnCkNHlnimfCSQx8b,"000/000/000000001"
 196608:AGSE26mYSK0iwH8HW9TDl0vnvCZwZEkzzeap7R:Ak28siwH8eRSn25k3eg,"000/000/000000002"
@@ -261,22 +269,29 @@ ssdeep  12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4
 24:N8Rw5AF4REesFtPP6k216xoWya1oxOKHHwa8peRK8FdigZY5tODrRRK8RfMfde8:N8Rw5AF4+XPyooa2EKnwaGeRJFYpfwzQ,"000/000/000000008"
 1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U,"000/000/000000009"""
     iocs = find_iocs(s)
-    print(iocs['ssdeeps'])
     assert len(iocs['ssdeeps']) == 9
-    iocs['ssdeeps'][
-        0
-    ] == '393216:EW/eKCo9QgoHfHYebwoyC0QStQYEb+G8j3wfVOglnimQyCK+mteYREDWXKF2b:MKg3lbwoyCnCkNHlnimfCSQx8b'
-    iocs['ssdeeps'][1] == '196608:AGSE26mYSK0iwH8HW9TDl0vnvCZwZEkzzeap7R:Ak28siwH8eRSn25k3eg'
-    iocs['ssdeeps'][
-        2
-    ] == '98304:O1OCzezOgr4XMP7Af0+Kh7MzplFKuu5XcS9QnCD/VWR6yf4OB6S/mwRTwjf0ih87:k/Y4XMT7YguEXqCD/VWR6yf4Ux/mwR0S'
-    iocs['ssdeeps'][3] == '96:ukILJhn54RewghSib4xGEHVLFNs+4tihJW6jJenUQrsIvpMMjUg:uk0Jx54usxJHh4gJrJenUQrs2pvIg'
-    iocs['ssdeeps'][4] == '196608:rNI4QlKQbWQobu0u3QRBBibfv+Z4Hjy5M+IjunAadLLtt42fAtQSqFhx:rNkK2obu0uBb3K4H28yAGc4RSax'
-    iocs['ssdeeps'][
-        5
-    ] == '1536:mFbhArcCMbR0S/kjzU6El4mUIR2JPmvY3lpKa38fTXcTns+b3tfZyCLtRs:obNCMbWpU6SzFAPV3lpCjCsQRZyQt6'
-    iocs['ssdeeps'][6] == '48:CScrEd3jk5BsRSFCWfVsEWABbbpnWSgSX45dc6b5Qla9A+o5R6k7CyNRD5J:XcrEdzHRSFr9sE7XnsDe1CyNRNJ'
-    iocs['ssdeeps'][
-        7
-    ] == '24:N8Rw5AF4REesFtPP6k216xoWya1oxOKHHwa8peRK8FdigZY5tODrRRK8RfMfde8:N8Rw5AF4+XPyooa2EKnwaGeRJFYpfwzQ'
-    iocs['ssdeeps'][8] == '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U'
+    assert (
+        '393216:EW/eKCo9QgoHfHYebwoyC0QStQYEb+G8j3wfVOglnimQyCK+mteYREDWXKF2b:MKg3lbwoyCnCkNHlnimfCSQx8b'
+        in iocs['ssdeeps']
+    )
+    assert '196608:AGSE26mYSK0iwH8HW9TDl0vnvCZwZEkzzeap7R:Ak28siwH8eRSn25k3eg' in iocs['ssdeeps']
+    assert (
+        '98304:O1OCzezOgr4XMP7Af0+Kh7MzplFKuu5XcS9QnCD/VWR6yf4OB6S/mwRTwjf0ih87:k/Y4XMT7YguEXqCD/VWR6yf4Ux/mwR0S'
+        in iocs['ssdeeps']
+    )
+    assert '96:ukILJhn54RewghSib4xGEHVLFNs+4tihJW6jJenUQrsIvpMMjUg:uk0Jx54usxJHh4gJrJenUQrs2pvIg' in iocs['ssdeeps']
+    assert (
+        '196608:rNI4QlKQbWQobu0u3QRBBibfv+Z4Hjy5M+IjunAadLLtt42fAtQSqFhx:rNkK2obu0uBb3K4H28yAGc4RSax' in iocs['ssdeeps']
+    )
+    assert (
+        '1536:mFbhArcCMbR0S/kjzU6El4mUIR2JPmvY3lpKa38fTXcTns+b3tfZyCLtRs:obNCMbWpU6SzFAPV3lpCjCsQRZyQt6'
+        in iocs['ssdeeps']
+    )
+    assert (
+        '48:CScrEd3jk5BsRSFCWfVsEWABbbpnWSgSX45dc6b5Qla9A+o5R6k7CyNRD5J:XcrEdzHRSFr9sE7XnsDe1CyNRNJ' in iocs['ssdeeps']
+    )
+    assert (
+        '24:N8Rw5AF4REesFtPP6k216xoWya1oxOKHHwa8peRK8FdigZY5tODrRRK8RfMfde8:N8Rw5AF4+XPyooa2EKnwaGeRJFYpfwzQ'
+        in iocs['ssdeeps']
+    )
+    assert '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U' in iocs['ssdeeps']
