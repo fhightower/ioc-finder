@@ -104,6 +104,7 @@ scheme_less_url = alphanum_word_start + Combine(
 )
 
 md5 = alphanum_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
+imphash = Combine(Or(['imphash', 'import hash']) + Optional(Word(printables, excludeChars=alphanums)) + md5('hash'), joinString=' ', adjacent=False)
 sha1 = alphanum_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
 sha256 = alphanum_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
 sha512 = alphanum_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end

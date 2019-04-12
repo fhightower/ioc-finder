@@ -109,6 +109,20 @@ def parse_email_addresses(text):
     return _listify(email_addresses)
 
 
+# there is a trailing underscore on this function to differentiate it from the argument with the same name
+def parse_imphashes_(text):
+    """."""
+    full_imphash_instances = ioc_grammars.imphash.searchString(text.lower())
+    full_imphash_instances = _listify(full_imphash_instances)
+
+    imphashes = []
+
+    for imphash in full_imphash_instances:
+        imphashes.append(ioc_grammars.imphash.parseString(imphash).hash[0])
+
+    return imphashes
+
+
 def parse_md5s(text):
     """."""
     md5s = ioc_grammars.md5.searchString(text)
@@ -253,6 +267,7 @@ def find_iocs(
     parse_address_from_cidr=True,
     parse_domain_name_from_xmpp_address=True,
     parse_urls_without_scheme=True,
+    parse_imphashes=True,
 ):
     """Find indicators of compromise in the given text."""
     iocs = dict()
@@ -277,7 +292,6 @@ def find_iocs(
 
     # complete email addresses
     iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
-
     # simple email addresses
     iocs['email_addresses'] = parse_email_addresses(text)
     if not parse_domain_from_email_address:
@@ -300,6 +314,11 @@ def find_iocs(
     iocs['ipv6s'] = parse_ipv6_addresses(text)
 
     # file hashes
+    if parse_imphashes:
+        iocs['imphashes'] = parse_imphashes_(text)
+        # remove the imphashes so they are not also parsed as md5s
+        text = _remove_items(iocs['imphashes'], text)
+
     iocs['sha512s'] = parse_sha512s(text)
     iocs['sha256s'] = parse_sha256s(text)
     iocs['sha1s'] = parse_sha1s(text)

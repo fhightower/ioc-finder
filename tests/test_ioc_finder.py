@@ -295,3 +295,21 @@ ssdeep  12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4
         in iocs['ssdeeps']
     )
     assert '1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U' in iocs['ssdeeps']
+
+
+def test_imphash_parsing():
+    names = ['imphash', 'import hash']
+    templates = ["""SHA-256 093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a
+Dropper {}: 18ddf28a71089acdbab5038f58044c0a
+C2 IP: 210.209.127.8:443""", '{}: 18ddf28a71089acdbab5038f58044c0a', '{} 18ddf28a71089acdbab5038f58044c0a', '{}  18ddf28a71089acdbab5038f58044c0a', '{}:     18ddf28a71089acdbab5038f58044c0a', '{}\t18ddf28a71089acdbab5038f58044c0a', '{}\n18ddf28a71089acdbab5038f58044c0a', '{} - 18ddf28a71089acdbab5038f58044c0a']
+
+    for template in templates:
+        for name in names:
+            print(template)
+            iocs = find_iocs(template.format(name))
+            assert len(iocs['imphashes']) == 1
+            assert iocs['imphashes'] == ['18ddf28a71089acdbab5038f58044c0a']
+
+            iocs = find_iocs(template.format(name.upper()))
+            assert len(iocs['imphashes']) == 1
+            assert iocs['imphashes'] == ['18ddf28a71089acdbab5038f58044c0a']
