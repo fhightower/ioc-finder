@@ -547,3 +547,17 @@ def test_google_casing_deduplication():
     iocs = find_iocs(s)
     assert len(iocs['google_analytics_tracker_ids']) == 1
     assert iocs['google_analytics_tracker_ids'][0] == 'UA-000000-1'
+
+
+def test_not_parsing_imphash():
+    s = 'imphash 18ddf28a71089acdbab5038f58044c0a'
+    iocs = find_iocs(s, parse_imphashes=False)
+    assert 'imphashes' not in iocs
+    assert len(iocs['md5s']) == 1
+
+
+def test_not_parsing_authentihash():
+    s = 'authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4'
+    iocs = find_iocs(s, parse_authentihashes=False)
+    assert 'authentihashes' not in iocs
+    assert len(iocs['sha256s']) == 1

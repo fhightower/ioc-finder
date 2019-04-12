@@ -30,6 +30,7 @@ def test_cli_without_domain_from_url_parsing():
         result.output.strip()
         == """{
     "asns": [],
+    "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
     "domains": [
@@ -39,6 +40,7 @@ def test_cli_without_domain_from_url_parsing():
     "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
+    "imphashes": [],
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],

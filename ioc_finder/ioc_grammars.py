@@ -107,6 +107,7 @@ md5 = alphanum_word_start + Word(hexnums, exact=32).setParseAction(downcaseToken
 imphash = Combine(Or(['imphash', 'import hash']) + Optional(Word(printables, excludeChars=alphanums)) + md5('hash'), joinString=' ', adjacent=False)
 sha1 = alphanum_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
 sha256 = alphanum_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
+authentihash = Combine(Or(['authentihash']) + Optional(Word(printables, excludeChars=alphanums)) + sha256('hash'), joinString=' ', adjacent=False)
 sha512 = alphanum_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end
 
 year = Word('12') + Word(nums, exact=3)

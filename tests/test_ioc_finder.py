@@ -309,7 +309,27 @@ C2 IP: 210.209.127.8:443""", '{}: 18ddf28a71089acdbab5038f58044c0a', '{} 18ddf28
             iocs = find_iocs(template.format(name))
             assert len(iocs['imphashes']) == 1
             assert iocs['imphashes'] == ['18ddf28a71089acdbab5038f58044c0a']
+            assert len(iocs['md5s']) == 0
 
             iocs = find_iocs(template.format(name.upper()))
             assert len(iocs['imphashes']) == 1
             assert iocs['imphashes'] == ['18ddf28a71089acdbab5038f58044c0a']
+            assert len(iocs['md5s']) == 0
+
+
+def test_authentihash():
+    names = ['authentihash']
+    templates = ['{} 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}   3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}: 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}:     3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{} - 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}-3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}\t3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}\n3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4']
+
+    for template in templates:
+        for name in names:
+            print(template)
+            iocs = find_iocs(template.format(name))
+            assert len(iocs['authentihashes']) == 1
+            assert iocs['authentihashes'] == ['3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4']
+            assert len(iocs['sha256s']) == 0
+
+            iocs = find_iocs(template.format(name.upper()))
+            assert len(iocs['authentihashes']) == 1
+            assert iocs['authentihashes'] == ['3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4']
+            assert len(iocs['sha256s']) == 0

@@ -15,7 +15,7 @@ Currently, this package can the following items in a given text:
 - Email addresses (both standard format (e.g. `test@example.com`) and an email with an IP address as the domain (e.g. `test@[192.168.0.1]`))
 - Domain names (support for Unicode domain names (e.g. `ȩxample.com`) is coming soon)
 - URLs (URLs with and without schemes)
-- File hashes (md5, sha1, sha256, and sha512)
+- File hashes (md5, sha1, sha256, sha512, and [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html), and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx))
 - Registry Key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
 - Autonomous System Numbers (ASNs) (in multiple formats such as `asn1234` and `as 1234`)
 - CVEs (e.g. `CVE-2014-1234`)
@@ -34,6 +34,7 @@ Also provides some helpful features like:
 - Option to parse domain name from an email address
 - Option to parse IP address from a CIDR range
 - Option to parse URLs without a scheme (e.g. without `https://`)
+- Option to parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx)
 
 ## Installation
 
@@ -71,6 +72,8 @@ The `find_iocs` takes the following keywords (all of them default to `True`):
 - `parse_domain_from_email_address` (default=True): Whether or not to parse domain names from email addresses (e.g. `example.com` from `foo@example.com`)
 - `parse_address_from_cidr` (default=True): Whether or not to parse IP addresses from CIDR ranges (e.g. `0.0.0.1` from `0.0.0.1/24`)
 - `parse_urls_without_scheme` (default=True): Whether or not to parse URLs without a scheme (see [https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Generic_syntax](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Generic_syntax)) (e.g. `hightower.space/projects`)
+- `parse_imphashes` (default=True): Parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) (which look like md5s, but are preceded by 'imphash' or 'import hash')
+- `parse_authentihashes` (default=True): Parse [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx) (which look like sha256s, but are preceded with 'authentihash')
 
 See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py) for more examples.
 
@@ -81,6 +84,7 @@ The `find_iocs()` returns a dictionary in the following structure:
 ```json
 {
     "asns": [],
+    "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
     "domains": [],
@@ -88,6 +92,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
+    "imphashes": [],
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],
@@ -108,6 +113,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
 ```json
 {
     "asns": [],
+    "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
     "domains": ["example.org", "example.com"],
@@ -115,6 +121,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
+    "imphashes": [],
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],
@@ -149,6 +156,7 @@ This will return:
 ```json
 {
     "asns": [],
+    "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
     "domains": [
@@ -159,6 +167,7 @@ This will return:
     "email_addresses_complete": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
+    "imphashes": [],
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],

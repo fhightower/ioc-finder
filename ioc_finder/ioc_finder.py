@@ -123,6 +123,20 @@ def parse_imphashes_(text):
     return imphashes
 
 
+# there is a trailing underscore on this function to differentiate it from the argument with the same name
+def parse_authentihashes_(text):
+    """."""
+    full_authentihash_instances = ioc_grammars.authentihash.searchString(text.lower())
+    full_authentihash_instances = _listify(full_authentihash_instances)
+
+    authentihashes = []
+
+    for authentihash in full_authentihash_instances:
+        authentihashes.append(ioc_grammars.authentihash.parseString(authentihash).hash[0])
+
+    return authentihashes
+
+
 def parse_md5s(text):
     """."""
     md5s = ioc_grammars.md5.searchString(text)
@@ -268,6 +282,7 @@ def find_iocs(
     parse_domain_name_from_xmpp_address=True,
     parse_urls_without_scheme=True,
     parse_imphashes=True,
+    parse_authentihashes=True,
 ):
     """Find indicators of compromise in the given text."""
     iocs = dict()
@@ -318,6 +333,11 @@ def find_iocs(
         iocs['imphashes'] = parse_imphashes_(text)
         # remove the imphashes so they are not also parsed as md5s
         text = _remove_items(iocs['imphashes'], text)
+
+    if parse_authentihashes:
+        iocs['authentihashes'] = parse_authentihashes_(text)
+        # remove the authentihashes so they are not also parsed as sha256s
+        text = _remove_items(iocs['authentihashes'], text)
 
     iocs['sha512s'] = parse_sha512s(text)
     iocs['sha256s'] = parse_sha256s(text)
