@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from pyparsing import alphanums, printables, nums, hexnums
+from pyparsing import alphas, alphanums, printables, nums, hexnums
 from pyparsing import (
     Combine,
     downcaseTokens,
@@ -16,6 +16,7 @@ from pyparsing import (
     Word,
     WordEnd,
     WordStart,
+    ZeroOrMore,
 )
 
 from data_lists import tlds, schemes
@@ -202,11 +203,11 @@ xmpp_address = alphanum_word_start + Combine(
     email_local_part('email_address_local_part') + "@" + domain_name('jabber_address_domain')
 ).addCondition(lambda tokens: 'jabber' in tokens[0].split('@')[-1] or 'xmpp' in tokens[0].split('@')[-1])
 
-mac_address_section = Or([Word(hexnums, exact=2), Word(hexnums, exact=4)])
+# the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
-mac_address_16_bit_section = Combine((mac_address_section + Or(['-', ':'])) * 5 + mac_address_section)
+mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(['-', ':'])) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
-mac_address_32_bit_section = Combine((mac_address_section + '.') * 2 + mac_address_section)
+mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + '.') * 2 + Word(hexnums, exact=4))
 mac_address = alphanum_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + alphanum_word_end
 
 ssdeep = alphanum_word_start + Combine(Word(nums) + ':' + Word(alphanums + '+/:'))

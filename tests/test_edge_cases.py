@@ -574,3 +574,9 @@ def test_not_parsing_authentihash():
     iocs = find_iocs(s, parse_authentihashes=False)
     assert 'authentihashes' not in iocs
     assert len(iocs['sha256s']) == 1
+
+
+def test_mac_address_parsing():
+    s = '2019.02.15'
+    iocs = find_iocs(s)
+    assert len(iocs['mac_addresses']) == 0
