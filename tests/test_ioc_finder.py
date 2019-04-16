@@ -333,3 +333,23 @@ def test_authentihash():
             assert len(iocs['authentihashes']) == 1
             assert iocs['authentihashes'] == ['3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4']
             assert len(iocs['sha256s']) == 0
+
+
+def test_user_agents():
+    s = 'Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1)'
+    iocs = find_iocs(s)
+    assert len(iocs['user_agents']) == 1
+    assert iocs['user_agents'] == ['Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1)']
+
+    s = 'mozilla/5.0 (windows nt 6.1; wow64) applewebkit/535.11 (khtml, like gecko) chrome/17.0.963.56 safari/535.11 mozilla/5.0 (windows nt 6.1; wow64; rv:11.0) gecko firefox/11.0'
+    iocs = find_iocs(s)
+    assert len(iocs['user_agents']) == 2
+    assert 'mozilla/5.0 (windows nt 6.1; wow64) applewebkit/535.11 (khtml, like gecko) chrome/17.0.963.56 safari/535.11' in iocs['user_agents']
+    assert 'mozilla/5.0 (windows nt 6.1; wow64; rv:11.0) gecko firefox/11.0' in iocs['user_agents']
+
+    # test the same thing as above but with different casing to make sure the cases are matched and maintained properly
+    s = 'Mozilla/5.0 (Windows nt 6.1; wow64) Applewebkit/535.11 (khtml, like Gecko) Chrome/17.0.963.56 Safari/535.11 Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0'
+    iocs = find_iocs(s)
+    assert len(iocs['user_agents']) == 2
+    assert 'Mozilla/5.0 (Windows nt 6.1; wow64) Applewebkit/535.11 (khtml, like Gecko) Chrome/17.0.963.56 Safari/535.11' in iocs['user_agents']
+    assert 'Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0' in iocs['user_agents']

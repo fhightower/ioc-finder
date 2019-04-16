@@ -236,6 +236,13 @@ def parse_mac_addresses(text):
     return _listify(mac_addresses)
 
 
+def parse_user_agents(text):
+    """."""
+    user_agents = ioc_grammars.user_agent.searchString(text)
+    print('user_agents {}'.format(user_agents))
+    return _listify(user_agents)
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
@@ -353,5 +360,6 @@ def find_iocs(
     iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
     iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
     iocs['mac_addresses'] = parse_mac_addresses(text)
+    iocs['user_agents'] = parse_user_agents(text)
 
     return iocs

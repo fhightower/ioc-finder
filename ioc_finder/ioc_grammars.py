@@ -211,3 +211,9 @@ mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + '.') * 2 + Word(h
 mac_address = alphanum_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + alphanum_word_end
 
 ssdeep = alphanum_word_start + Combine(Word(nums) + ':' + Word(alphanums + '+/:'))
+
+user_agent_platform_version = Regex('[0-9]+(\.[0-9]*)*')
+user_agent_start = Combine(Regex('[Mm]ozilla/') + user_agent_platform_version)
+user_agent_details = Regex('\(.+?\)')
+user_agent_platform = Combine(alphanum_word_start + Regex('[a-zA-Z]{2,}/?').addCondition(lambda tokens: tokens[0].lower().strip('/') != 'mozilla') + Optional(user_agent_platform_version))
+user_agent = Combine(user_agent_start + user_agent_details + ZeroOrMore(user_agent_platform + Optional(user_agent_details)), joinString=' ', adjacent=False)
