@@ -239,7 +239,6 @@ def parse_mac_addresses(text):
 def parse_user_agents(text):
     """."""
     user_agents = ioc_grammars.user_agent.searchString(text)
-    print('user_agents {}'.format(user_agents))
     return _listify(user_agents)
 
 

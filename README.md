@@ -26,6 +26,7 @@ Currently, this package can the following items in a given text:
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - MAC addresses
 - SSDeep Hashes
+- User agents
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -104,6 +105,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "sha512s": [],
     "ssdeeps": [],
     "urls": [],
+    "user_agents": [],
     "xmpp_addresses": []
 }
 ```
@@ -133,6 +135,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "sha512s": [],
     "ssdeeps": [],
     "urls": ["https://example.org/test/bingo.php"],
+    "user_agents": [],
     "xmpp_addresses": []
 }
 ```
@@ -179,6 +182,7 @@ This will return:
     "urls": [
         "https://example.org/test/bingo.php"
     ],
+    "user_agents": [],
     "xmpp_addresses": [],
     "mac_addresses": []
 }
