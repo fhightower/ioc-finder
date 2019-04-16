@@ -67,7 +67,7 @@ complete_email_address = Combine(
     + Or([domain_name, '[' + ipv4_address + ']', '[IPv6:' + ipv6_address + ']'])('email_address_domain')
 )
 
-email_local_part = Word(alphanums + "+-_.").setParseAction(downcaseTokens)
+email_local_part = Word(alphanums, bodyChars=alphanums + "+-_.").setParseAction(downcaseTokens)
 email_address = alphanum_word_start + Combine(
     email_local_part('email_address_local_part')
     + "@"

@@ -320,14 +320,27 @@ def test_email_address_parsing():
 
     # making sure that the `parse_domain_from_email_address` argument is working properly
     s = 'foo@bar.com.'
+    iocs = find_iocs(s, parse_domain_from_email_address=False)
+    assert len(iocs['email_addresses']) == 1
+    assert iocs['email_addresses'][0] == 'foo@bar.com'
+    assert len(iocs['domains']) == 0
+
+    s = '"foo@bar.com'
     iocs = find_iocs(s)
     assert len(iocs['email_addresses']) == 1
     assert iocs['email_addresses'][0] == 'foo@bar.com'
 
-    s = '"foo@bar.com'
-    iocs = find_iocs(s, parse_domain_from_email_address=False)
+    # validating https://github.com/fhightower/ioc-finder/issues/40 is fixed
+    s = '-----foo@bar.com'
+    iocs = find_iocs(s)
     assert len(iocs['email_addresses']) == 1
     assert iocs['email_addresses'][0] == 'foo@bar.com'
+
+    s = 'foo-burt@bar.com f-1@bar.com'
+    iocs = find_iocs(s)
+    assert len(iocs['email_addresses']) == 2
+    assert 'foo-burt@bar.com' in iocs['email_addresses']
+    assert 'f-1@bar.com' in iocs['email_addresses']
 
 
 def test_erroneous_ip_address_parsing():
