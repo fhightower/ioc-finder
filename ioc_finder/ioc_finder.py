@@ -259,6 +259,8 @@ def parse_user_agents(text):
     help='Using this flag will not parse domain names from XMPP addresses',
 )
 @click.option('--no_urls_without_schemes', is_flag=True, help='Using this flag will not parse URLs without schemes')
+@click.option('--no_import_hashes', is_flag=True, help='Using this flag will not parse import hashes')
+@click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihash')
 def cli_find_iocs(
     text,
     no_url_domain_parsing,
@@ -266,6 +268,9 @@ def cli_find_iocs(
     no_cidr_address_parsing,
     no_xmpp_addr_domain_parsing,
     no_urls_without_schemes,
+    # TODO: add support for import and authentihashes via CLI
+    no_import_hashes,
+    no_authentihashes,
 ):
     """CLI interface for parsing indicators of compromise."""
     iocs = find_iocs(
@@ -275,6 +280,8 @@ def cli_find_iocs(
         not no_cidr_address_parsing,
         not no_xmpp_addr_domain_parsing,
         not no_urls_without_schemes,
+        not no_import_hashes,
+        not no_authentihashes,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
