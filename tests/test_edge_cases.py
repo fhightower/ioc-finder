@@ -195,6 +195,10 @@ def test_file_hash_parsing():
     assert len(iocs['md5s']) == 1
     assert iocs['md5s'][0] == 'a' * 32
 
+    s = '0x1a1db93766e31994507511c9c70a1dd94465cf6d'
+    iocs = find_iocs(s)
+    assert len(iocs['sha1s']) == 1
+
 
 def test_url_boundaries():
     """Make sure the boundaries for a url are correct."""

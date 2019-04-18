@@ -104,12 +104,14 @@ scheme_less_url = alphanum_word_start + Combine(
     + (Optional(Combine('?' + url_query)('url_query')) & Optional(Combine('#' + url_fragment)('url_fragment')))
 )
 
-md5 = alphanum_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
+# this allows for matching file hashes preceeded with an 'x' or 'X' (https://github.com/fhightower/ioc-finder/issues/41)
+file_hash_word_start = WordStart(wordChars=alphanums.replace('x', '').replace('X', ''))
+md5 = file_hash_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
 imphash = Combine(Or(['imphash', 'import hash']) + Optional(Word(printables, excludeChars=alphanums)) + md5('hash'), joinString=' ', adjacent=False)
-sha1 = alphanum_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
-sha256 = alphanum_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
+sha1 = file_hash_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
+sha256 = file_hash_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
 authentihash = Combine(Or(['authentihash']) + Optional(Word(printables, excludeChars=alphanums)) + sha256('hash'), joinString=' ', adjacent=False)
-sha512 = alphanum_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end
+sha512 = file_hash_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end
 
 year = Word('12') + Word(nums, exact=3)
 cve = (
