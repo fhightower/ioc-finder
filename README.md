@@ -11,22 +11,23 @@ Parse [indicators of compromise](https://searchsecurity.techtarget.com/definitio
 
 Currently, this package can the following items in a given text:
 
-- IP address (IPv4 and IPv6)
-- Email addresses (both standard format (e.g. `test@example.com`) and an email with an IP address as the domain (e.g. `test@[192.168.0.1]`))
-- Domain names (support for Unicode domain names (e.g. `ȩxample.com`) is coming soon)
-- URLs (URLs with and without schemes)
-- File hashes (md5, sha1, sha256, sha512, and [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html), and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx))
-- Registry Key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
 - Autonomous System Numbers (ASNs) (in multiple formats such as `asn1234` and `as 1234`)
-- CVEs (e.g. `CVE-2014-1234`)
+- Bitcoin addresses (P2PKH, P2SH, and Bech32)
 - CIDR ranges (currently ipv4 ranges; ipv6 ranges coming soon)
+- CVEs (e.g. `CVE-2014-1234`)
+- Domain names (support for Unicode domain names (e.g. `ȩxample.com`) is coming soon)
+- Email addresses (both standard format (e.g. `test@example.com`) and an email with an IP address as the domain (e.g. `test@[192.168.0.1]`))
+- File hashes (md5, sha1, sha256, sha512, and [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html), and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx))
+- File paths (*beta*)
 - Google Adsense Publisher IDs
 - Google Analytics Tracker IDs
-- Bitcoin addresses (P2PKH, P2SH, and Bech32)
+- IP address (IPv4 and IPv6)
+- MAC addresses (*beta*)
+- Registry Key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
+- SSDeep Hashes (*beta*)
+- URLs (URLs with and without schemes)
+- User agents (*beta*)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
-- MAC addresses
-- SSDeep Hashes
-- User agents
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -91,6 +92,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "domains": [],
     "email_addresses": [],
     "email_addresses_complete": [],
+    "file_paths": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "imphashes": [],
@@ -121,6 +123,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "domains": ["example.org", "example.com"],
     "email_addresses": [],
     "email_addresses_complete": [],
+    "file_paths": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "imphashes": [],
@@ -168,6 +171,7 @@ This will return:
     ],
     "email_addresses": [],
     "email_addresses_complete": [],
+    "file_paths": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "imphashes": [],

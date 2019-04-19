@@ -584,3 +584,27 @@ def test_mac_address_parsing():
     s = '2019.02.15'
     iocs = find_iocs(s)
     assert len(iocs['mac_addresses']) == 0
+
+
+def test_windows_file_paths():
+    s = r'test C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin is a bad file path'
+    iocs = find_iocs(s)
+    assert len(iocs['file_paths']) == 1
+    assert iocs['file_paths'][0] == r'C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin'
+
+    s = r'test C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\ is a bad file path'
+    iocs = find_iocs(s)
+    assert len(iocs['file_paths']) == 1
+    assert iocs['file_paths'][0] == 'C:\\Users\\<username>\\AppData\\Roaming\\Macromedia\\Flash Player\\macromedia\\bin\\'
+
+
+def test_unix_file_paths():
+    s = r'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e file'
+    iocs = find_iocs(s)
+    assert len(iocs['file_paths']) == 1
+    assert iocs['file_paths'][0] == r'/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e'
+
+    s = r'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/ file'
+    iocs = find_iocs(s)
+    assert len(iocs['file_paths']) == 1
+    assert iocs['file_paths'][0] == r'/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/'

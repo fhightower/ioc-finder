@@ -219,3 +219,10 @@ user_agent_start = Combine(Regex('[Mm]ozilla/') + user_agent_platform_version)
 user_agent_details = Regex('\(.+?\)')
 user_agent_platform = Combine(alphanum_word_start + Regex('[a-zA-Z]{2,}/?').addCondition(lambda tokens: tokens[0].lower().strip('/') != 'mozilla') + Optional(user_agent_platform_version))
 user_agent = Combine(user_agent_start + user_agent_details + ZeroOrMore(user_agent_platform + Optional(user_agent_details)), joinString=' ', adjacent=False)
+
+# https://github.com/fhightower/ioc-finder/issues/13
+# TODO: improve the windows_file_path grammar - it is pretty naive right now... the file_ending is very basic and it would be nice to have a list of common file endings, the windows_file_path grammar assumes that a path will not have a '.' in it (other than in the file name at the end), and the windows_file_path grammar assumes that the path will have a file name at the end (it will not match directory paths well)
+file_ending = Word(alphas, max=5)
+windows_file_path = Combine(Word(alphas, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
+unix_file_path = Combine(Or(['~', '/']) + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
+file_paths = Or([windows_file_path, unix_file_path]) + alphanum_word_end

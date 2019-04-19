@@ -38,6 +38,7 @@ def test_cli_without_domain_from_url_parsing():
     ],
     "email_addresses": [],
     "email_addresses_complete": [],
+    "file_paths": [],
     "google_adsense_publisher_ids": [],
     "google_analytics_tracker_ids": [],
     "imphashes": [],

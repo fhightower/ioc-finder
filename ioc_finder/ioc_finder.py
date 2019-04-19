@@ -242,6 +242,12 @@ def parse_user_agents(text):
     return _listify(user_agents)
 
 
+def parse_file_paths(text):
+    """."""
+    file_paths = ioc_grammars.file_paths.searchString(text)
+    return _listify(file_paths)
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
@@ -367,5 +373,6 @@ def find_iocs(
     iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
     iocs['mac_addresses'] = parse_mac_addresses(text)
     iocs['user_agents'] = parse_user_agents(text)
+    iocs['file_paths'] = parse_file_paths(text)
 
     return iocs
