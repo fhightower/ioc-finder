@@ -244,8 +244,14 @@ def parse_user_agents(text):
 
 def parse_file_paths(text):
     """."""
-    file_paths = ioc_grammars.file_paths.searchString(text)
+    file_paths = ioc_grammars.file_path.searchString(text)
     return _listify(file_paths)
+
+
+def parse_phone_numbers(text):
+    """."""
+    phone_numbers = ioc_grammars.phone_number.searchString(text[::-1])
+    return [phone_number[::-1] for phone_number in _listify(phone_numbers)]
 
 
 @click.command()
@@ -374,5 +380,6 @@ def find_iocs(
     iocs['mac_addresses'] = parse_mac_addresses(text)
     iocs['user_agents'] = parse_user_agents(text)
     iocs['file_paths'] = parse_file_paths(text)
+    iocs['phone_numbers'] = parse_phone_numbers(text)
 
     return iocs

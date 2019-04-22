@@ -225,4 +225,9 @@ user_agent = Combine(user_agent_start + user_agent_details + ZeroOrMore(user_age
 file_ending = Word(alphas, max=5)
 windows_file_path = Combine(Word(alphas, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
 unix_file_path = Combine(Or(['~', '/']) + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
-file_paths = Or([windows_file_path, unix_file_path]) + alphanum_word_end
+file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
+
+# be aware that the phone_number grammar assumes that the text being sent to it has been reversed
+phone_number_connector = Word(' .-', max=3)
+phone_number_format_1 = Combine(Word(nums) + phone_number_connector + Word(nums) + Optional(phone_number_connector + Optional(')') + Word(nums) + Optional('(')))
+phone_number = Or([phone_number_format_1])

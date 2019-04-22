@@ -23,6 +23,7 @@ Currently, this package can the following items in a given text:
 - Google Analytics Tracker IDs
 - IP address (IPv4 and IPv6)
 - MAC addresses (*beta*)
+- Phone numbers (*beta*)
 - Registry Key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
 - SSDeep Hashes (*beta*)
 - URLs (URLs with and without schemes)
@@ -101,6 +102,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "ipv6s": [],
     "mac_addresses": [],
     "md5s": [],
+    "phone_numbers": [],
     "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
@@ -132,6 +134,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "ipv6s": [],
     "mac_addresses": [],
     "md5s": [],
+    "phone_numbers": [],
     "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
@@ -179,6 +182,7 @@ This will return:
     "ipv4s": [],
     "ipv6s": [],
     "md5s": [],
+    "phone_numbers": [],
     "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],

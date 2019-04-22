@@ -400,3 +400,21 @@ C:\Windows\SysWOW64\f9jwqSbS.exe"""
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 1
     assert '/etc/init.d/.rebootime' in iocs['file_paths']
+
+
+def test_phone_numbers():
+    phone_number_blocks = [
+        ['123', '4567'],
+        ['123', '456', '7890'],
+        ['(123)', '456', '7890'],
+    ]
+
+    block_connectors = ['-', ' - ', '.', ' . ', ' ']
+
+    for block in phone_number_blocks:
+        for connector in block_connectors:
+            phone_number = connector.join(block)
+            print(phone_number)
+            iocs = find_iocs(phone_number)
+            assert len(iocs['phone_numbers']) == 1
+            assert iocs['phone_numbers'][0] == phone_number
