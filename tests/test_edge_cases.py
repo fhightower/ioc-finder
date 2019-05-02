@@ -612,3 +612,9 @@ def test_unix_file_paths():
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 1
     assert iocs['file_paths'][0] == r'/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/'
+
+
+def test_phone_number_parsing():
+    s = '3-2-1 0.02'
+    iocs = find_iocs(s)
+    assert len(iocs['phone_numbers']) == 0
