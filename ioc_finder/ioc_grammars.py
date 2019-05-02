@@ -55,10 +55,8 @@ hexadectet = Word(hexnums, min=1, max=4)
 ipv6_address_full = alphanum_word_start + Combine((hexadectet + ":") * 7 + hexadectet)
 
 ipv6_shortened_word_start = copy.deepcopy(alphanum_word_start)
-# we add ':' to make sure that ipv6 addresses starting with ':' are captured (e.g. "::1")
-ipv6_shortened_word_start.wordChars.add(':')
 # the condition on the end of this grammar is designed to make sure that any shortened ipv6 addresses have '::' in them
-ipv6_address_shortened = ipv6_shortened_word_start + Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(lambda tokens: tokens[0].count('::') > 0)
+ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(lambda tokens: tokens[0].count('::') > 0)
 
 ipv6_address = Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(':') > 1) + alphanum_word_end
 

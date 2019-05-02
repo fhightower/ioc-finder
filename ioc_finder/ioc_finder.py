@@ -318,7 +318,7 @@ def find_iocs(
     iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
     if not parse_domain_from_url:
         text = _remove_items(iocs['urls'], text)
-    # even if we want to parse domain names from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
+    # even if we want to parse domain names from the urls, we need to remove the urls's paths to make sure no domain names are incorrectly parsed from the urls's paths
     else:
         text = _remove_url_paths(iocs['urls'], text, parse_urls_without_scheme)
 
@@ -337,6 +337,8 @@ def find_iocs(
     if not parse_domain_from_email_address:
         text = _remove_items(iocs['email_addresses_complete'], text)
         text = _remove_items(iocs['email_addresses'], text)
+    # after parsing the email addresses, we need to remove the '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
+    text = _remove_items(['[IPv6:'], text)
 
     # cidr ranges
     iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
