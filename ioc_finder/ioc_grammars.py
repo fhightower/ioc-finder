@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import copy
+
 from pyparsing import alphas, alphanums, printables, nums, hexnums
 from pyparsing import (
     Combine,
@@ -223,8 +225,16 @@ user_agent = Combine(user_agent_start + user_agent_details + ZeroOrMore(user_age
 # https://github.com/fhightower/ioc-finder/issues/13
 # TODO: improve the windows_file_path grammar - it is pretty naive right now... the file_ending is very basic and it would be nice to have a list of common file endings, the windows_file_path grammar assumes that a path will not have a '.' in it (other than in the file name at the end), and the windows_file_path grammar assumes that the path will have a file name at the end (it will not match directory paths well)
 file_ending = Word(alphas, max=5)
-windows_file_path = Combine(Word(alphas, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
-unix_file_path = Combine(Or(['~', '/']) + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
+windows_file_path = alphanum_word_start + Combine(Word(alphanums, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
+
+# we need to add '/' and '~' to the alphanum_word_start so that the grammar will match words starting with '/' and '~'
+# we add ':' to the alphanum_word_start because we want to avoid parsing urls are file paths (e.g. "//twitter.com" from "https://twitter.com/")
+unix_file_path_wordstart = copy.deepcopy(alphanum_word_start)
+unix_file_path_wordstart.wordChars.add(':')
+unix_file_path_wordstart.wordChars.add('/')
+unix_file_path_wordstart.wordChars.add('~')
+
+unix_file_path = unix_file_path_wordstart + Combine(Or(['~', '/']) + Word(printables.replace('.', '') + ' ') + '.' + file_ending).addCondition(lambda tokens: '//' not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
 
 # be aware that the phone_number grammar assumes that the text being sent to it has been reversed

@@ -599,6 +599,10 @@ def test_windows_file_paths():
 
 
 def test_unix_file_paths():
+    s = 'https://twitter.com/'
+    iocs = find_iocs(s)
+    assert len(iocs['file_paths']) == 0
+
     s = r'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e file'
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 1

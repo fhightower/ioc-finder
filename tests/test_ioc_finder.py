@@ -355,7 +355,7 @@ def test_user_agents():
     assert 'Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0' in iocs['user_agents']
 
 
-def test_file_names():
+def test_file_paths():
     s = r"""C:\Users\<username>\AppData \Local\Microsoft\Windows\shedaudio.exe
 
 C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\flashplayer.exe
