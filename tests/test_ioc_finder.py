@@ -23,7 +23,7 @@ def test_ipv4_parsing():
 def test_ipv6_parsing():
     s = "2001:0db8:0000:0000:0000:ff00:0042:8329 testing 2001:db8:0:0:0:ff00:42:8329 shfaldkafsdfa 2001:db8::ff00:42:8329 asdfadfas afkj;fl ::1 kljfkadf 1:1"
     iocs = find_iocs(s)
-    assert len(iocs['ipv6s']) == 5
+    assert len(iocs['ipv6s']) == 4
     # TODO: the following 3 ipv6s addresses are the same representation of the same thing; I need to deduplicate these more thoroughly in the parsing function
     assert '2001:0db8:0000:0000:0000:ff00:0042:8329' in iocs['ipv6s']
     assert '2001:db8:0:0:0:ff00:42:8329' in iocs['ipv6s']

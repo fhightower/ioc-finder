@@ -618,3 +618,9 @@ def test_phone_number_parsing():
     s = '3-2-1 0.02'
     iocs = find_iocs(s)
     assert len(iocs['phone_numbers']) == 0
+
+
+def test_ipv6_parsing():
+    s = '11:04:10 -0500'
+    iocs = find_iocs(s)
+    assert len(iocs['ipv6s']) == 0

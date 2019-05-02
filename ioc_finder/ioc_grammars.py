@@ -53,9 +53,14 @@ ipv4_address = (
 
 hexadectet = Word(hexnums, min=1, max=4)
 ipv6_address_full = alphanum_word_start + Combine((hexadectet + ":") * 7 + hexadectet)
-# todo: the ipv6_address_shortened grammar needs some fine-tuning so it doesn't pull in content too broadly
-ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet)
-ipv6_address = Or([ipv6_address_full, ipv6_address_shortened]) + alphanum_word_end
+
+ipv6_shortened_word_start = copy.deepcopy(alphanum_word_start)
+# we add ':' to make sure that ipv6 addresses starting with ':' are captured (e.g. "::1")
+ipv6_shortened_word_start.wordChars.add(':')
+# the condition on the end of this grammar is designed to make sure that any shortened ipv6 addresses have '::' in them
+ipv6_address_shortened = ipv6_shortened_word_start + Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(lambda tokens: tokens[0].count('::') > 0)
+
+ipv6_address = Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(':') > 1) + alphanum_word_end
 
 complete_email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
 # the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted complete_email_local_part (and the double-quotes and backslash should be preceded by a backslash)
