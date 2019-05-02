@@ -599,6 +599,7 @@ def test_windows_file_paths():
 
 
 def test_unix_file_paths():
+    # https://github.com/fhightower/ioc-finder/issues/42
     s = 'https://twitter.com/'
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 0
@@ -615,12 +616,21 @@ def test_unix_file_paths():
 
 
 def test_phone_number_parsing():
+    # https://github.com/fhightower/ioc-finder/issues/43
     s = '3-2-1 0.02'
     iocs = find_iocs(s)
     assert len(iocs['phone_numbers']) == 0
 
 
 def test_ipv6_parsing():
+    # https://github.com/fhightower/ioc-finder/issues/37
     s = '11:04:10 -0500'
     iocs = find_iocs(s)
     assert len(iocs['ipv6s']) == 0
+
+
+def test_ssdeep_parsing():
+    # https://github.com/fhightower/ioc-finder/issues/36
+    s = '11:04:10 -0500'
+    iocs = find_iocs(s)
+    assert len(iocs['ssdeeps']) == 0

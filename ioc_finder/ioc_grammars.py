@@ -217,7 +217,9 @@ mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(['-', ':'])) *
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + '.') * 2 + Word(hexnums, exact=4))
 mac_address = alphanum_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + alphanum_word_end
 
-ssdeep = alphanum_word_start + Combine(Word(nums) + ':' + Word(alphanums + '+/:'))
+# the structure of an ssdeep hash is: chunksize:chunk:double_chunk
+# we add a condition to the ssdeep grammar to make sure that the second section of the grammar (the chunk) is at least as big if not bigger than the third section (the double_chunk)
+ssdeep = alphanum_word_start + Combine(Word(nums) + ':' + Word(alphanums + '/+', min=3) + ':' + Word(alphanums + '/+', min=3)).addCondition(lambda tokens: len(tokens[0].split(':')[1]) >= len(tokens[0].split(':')[2]))
 
 user_agent_platform_version = Regex('[0-9]+(\.[0-9]*)*')
 user_agent_start = Combine(Regex('[Mm]ozilla/') + user_agent_platform_version)
