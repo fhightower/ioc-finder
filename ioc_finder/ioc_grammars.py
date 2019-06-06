@@ -164,7 +164,7 @@ root_key = Or(
         'HKEY_DYN_DATA',
     ]
 )
-registry_key_subpath = OneOrMore(Word('\\') + Word(alphanums))
+registry_key_subpath = OneOrMore(Word('\\') + Word(alphanums) + Optional(Word(' ', max=1) + Word(alphanums).addCondition(lambda tokens: tokens[0] not in root_key)))
 registry_key_path = (
     alphanum_word_start
     + Combine(

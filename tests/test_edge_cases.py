@@ -508,6 +508,34 @@ Value Name: avscan"""
     assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
 
 
+def test_issue_46_registry_key_with_space_parsing():
+    """Make sure that Registry Keys with a space in them are parsed properly. See: https://github.com/fhightower/ioc-finder/issues/46."""
+    s = """HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 1
+    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
+
+    s = """HKLM\SOFTWARE\Microsoft\Windows  NT\CurrentVersion\Console\ConsoleIME"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 1
+    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
+
+    s = """HKLM\SOFTWARE\Microsoft\Windows ... NT\CurrentVersion\Console\ConsoleIME"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 1
+    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
+
+    s = """Found a registry key like <HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED on the windows box"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 1
+    assert iocs['registry_key_paths'][0] == 'HKCU\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED'
+
+    s = """Found a registry key like HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME on the windows box"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 1
+    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
+
+
 def test_deduplication_of_indicators_with_different_cases():
     s = 'example.com Example.com exAmplE.com'
     iocs = find_iocs(s)

@@ -194,8 +194,18 @@ def parse_ipv4_cidrs(text):
 
 def parse_registry_key_paths(text):
     """."""
-    registry_key_paths = ioc_grammars.registry_key_path.searchString(text)
-    return _listify(registry_key_paths)
+    parsed_registry_key_paths = ioc_grammars.registry_key_path.searchString(text)
+    full_parsed_registry_key_paths = _listify(parsed_registry_key_paths)
+
+    registry_key_paths = []
+    for registry_key_path in full_parsed_registry_key_paths:
+        # if there is a space in the last section of the parsed registry key path, remove it so that content after a registry key path is not also pulled in... this is a limitation of the grammar: it will not parse a registry key path with a space in the final section (the section after the final '\')
+        if ' ' in registry_key_path.split('\\')[-1]:
+            registry_key_paths.append(' '.join(registry_key_path.split(' ')[:-1]))
+        else:
+            registry_key_paths.append(registry_key_path)
+
+    return registry_key_paths
 
 
 def parse_google_adsense_ids(text):
