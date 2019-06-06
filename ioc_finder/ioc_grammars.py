@@ -56,9 +56,14 @@ ipv6_address_full = alphanum_word_start + Combine((hexadectet + ":") * 7 + hexad
 
 ipv6_shortened_word_start = copy.deepcopy(alphanum_word_start)
 # the condition on the end of this grammar is designed to make sure that any shortened ipv6 addresses have '::' in them
-ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(lambda tokens: tokens[0].count('::') > 0)
+ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(
+    lambda tokens: tokens[0].count('::') > 0
+)
 
-ipv6_address = Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(':') > 1) + alphanum_word_end
+ipv6_address = (
+    Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(':') > 1)
+    + alphanum_word_end
+)
 
 complete_email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
 # the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted complete_email_local_part (and the double-quotes and backslash should be preceded by a backslash)
@@ -112,10 +117,18 @@ scheme_less_url = alphanum_word_start + Combine(
 # this allows for matching file hashes preceeded with an 'x' or 'X' (https://github.com/fhightower/ioc-finder/issues/41)
 file_hash_word_start = WordStart(wordChars=alphanums.replace('x', '').replace('X', ''))
 md5 = file_hash_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
-imphash = Combine(Or(['imphash', 'import hash']) + Optional(Word(printables, excludeChars=alphanums)) + md5('hash'), joinString=' ', adjacent=False)
+imphash = Combine(
+    Or(['imphash', 'import hash']) + Optional(Word(printables, excludeChars=alphanums)) + md5('hash'),
+    joinString=' ',
+    adjacent=False,
+)
 sha1 = file_hash_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
 sha256 = file_hash_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
-authentihash = Combine(Or(['authentihash']) + Optional(Word(printables, excludeChars=alphanums)) + sha256('hash'), joinString=' ', adjacent=False)
+authentihash = Combine(
+    Or(['authentihash']) + Optional(Word(printables, excludeChars=alphanums)) + sha256('hash'),
+    joinString=' ',
+    adjacent=False,
+)
 sha512 = file_hash_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end
 
 year = Word('12') + Word(nums, exact=3)
@@ -164,7 +177,11 @@ root_key = Or(
         'HKEY_DYN_DATA',
     ]
 )
-registry_key_subpath = OneOrMore(Word('\\') + Word(alphanums) + Optional(Word(' ', max=1) + Word(alphanums).addCondition(lambda tokens: tokens[0] not in root_key)))
+registry_key_subpath = OneOrMore(
+    Word('\\')
+    + Word(alphanums)
+    + Optional(Word(' ', max=1) + Word(alphanums).addCondition(lambda tokens: tokens[0] not in root_key))
+)
 registry_key_path = (
     alphanum_word_start
     + Combine(
@@ -219,18 +236,30 @@ mac_address = alphanum_word_start + Or([mac_address_16_bit_section, mac_address_
 
 # the structure of an ssdeep hash is: chunksize:chunk:double_chunk
 # we add a condition to the ssdeep grammar to make sure that the second section of the grammar (the chunk) is at least as big if not bigger than the third section (the double_chunk)
-ssdeep = alphanum_word_start + Combine(Word(nums) + ':' + Word(alphanums + '/+', min=3) + ':' + Word(alphanums + '/+', min=3)).addCondition(lambda tokens: len(tokens[0].split(':')[1]) >= len(tokens[0].split(':')[2]))
+ssdeep = alphanum_word_start + Combine(
+    Word(nums) + ':' + Word(alphanums + '/+', min=3) + ':' + Word(alphanums + '/+', min=3)
+).addCondition(lambda tokens: len(tokens[0].split(':')[1]) >= len(tokens[0].split(':')[2]))
 
 user_agent_platform_version = Regex('[0-9]+(\.[0-9]*)*')
 user_agent_start = Combine(Regex('[Mm]ozilla/') + user_agent_platform_version)
 user_agent_details = Regex('\(.+?\)')
-user_agent_platform = Combine(alphanum_word_start + Regex('[a-zA-Z]{2,}/?').addCondition(lambda tokens: tokens[0].lower().strip('/') != 'mozilla') + Optional(user_agent_platform_version))
-user_agent = Combine(user_agent_start + user_agent_details + ZeroOrMore(user_agent_platform + Optional(user_agent_details)), joinString=' ', adjacent=False)
+user_agent_platform = Combine(
+    alphanum_word_start
+    + Regex('[a-zA-Z]{2,}/?').addCondition(lambda tokens: tokens[0].lower().strip('/') != 'mozilla')
+    + Optional(user_agent_platform_version)
+)
+user_agent = Combine(
+    user_agent_start + user_agent_details + ZeroOrMore(user_agent_platform + Optional(user_agent_details)),
+    joinString=' ',
+    adjacent=False,
+)
 
 # https://github.com/fhightower/ioc-finder/issues/13
 # TODO: improve the windows_file_path grammar - it is pretty naive right now... the file_ending is very basic and it would be nice to have a list of common file endings, the windows_file_path grammar assumes that a path will not have a '.' in it (other than in the file name at the end), and the windows_file_path grammar assumes that the path will have a file name at the end (it will not match directory paths well)
 file_ending = Word(alphas, max=5)
-windows_file_path = alphanum_word_start + Combine(Word(alphanums, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending)
+windows_file_path = alphanum_word_start + Combine(
+    Word(alphanums, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending
+)
 
 # we need to add '/' and '~' to the alphanum_word_start so that the grammar will match words starting with '/' and '~'
 # we add ':' to the alphanum_word_start because we want to avoid parsing urls are file paths (e.g. "//twitter.com" from "https://twitter.com/")
@@ -239,11 +268,18 @@ unix_file_path_wordstart.wordChars.add(':')
 unix_file_path_wordstart.wordChars.add('/')
 unix_file_path_wordstart.wordChars.add('~')
 
-unix_file_path = unix_file_path_wordstart + Combine(Or(['~', '/']) + Word(printables.replace('.', '') + ' ') + '.' + file_ending).addCondition(lambda tokens: '//' not in tokens[0])
+unix_file_path = unix_file_path_wordstart + Combine(
+    Or(['~', '/']) + Word(printables.replace('.', '') + ' ') + '.' + file_ending
+).addCondition(lambda tokens: '//' not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
 
 # be aware that the phone_number grammar assumes that the text being sent to it has been reversed
 phone_number_connector = Word(' .-', max=3)
-phone_number_format_1 = Combine(Word(nums, exact=4) + phone_number_connector + Word(nums, exact=3) + Optional(phone_number_connector + Optional(')') + Word(nums) + Optional('(')))
+phone_number_format_1 = Combine(
+    Word(nums, exact=4)
+    + phone_number_connector
+    + Word(nums, exact=3)
+    + Optional(phone_number_connector + Optional(')') + Word(nums) + Optional('('))
+)
 
 phone_number = Or([phone_number_format_1])
