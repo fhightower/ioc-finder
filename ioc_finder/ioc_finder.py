@@ -290,7 +290,6 @@ def cli_find_iocs(
     no_cidr_address_parsing,
     no_xmpp_addr_domain_parsing,
     no_urls_without_schemes,
-    # TODO: add support for import and authentihashes via CLI
     no_import_hashes,
     no_authentihashes,
 ):

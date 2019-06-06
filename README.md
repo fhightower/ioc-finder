@@ -39,6 +39,11 @@ Also provides some helpful features like:
 - Option to parse URLs without a scheme (e.g. without `https://`)
 - Option to parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx)
 
+## Known Limitations
+
+- When parsing registry key paths, this library will NOT properly parse a registry key path where the last section contains a space. For example, `<hkcu>\software\microsoft\windows\currentversion\explorer\advanced on` will be parsed as `<hkcu>\software\microsoft\windows\currentversion\explorer\advanced` (the space in the final section is removed).
+- The items listed above (in the "Capabilities" section) that are postceded by "(*beta*)" are not very robust and may still have major issues. Any feedback or issues related to these items are much appreciated.
+
 ## Installation
 
 To install this package:
