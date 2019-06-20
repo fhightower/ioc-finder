@@ -44,6 +44,22 @@ Also provides some helpful features like:
 - When parsing registry key paths, this library will NOT properly parse a registry key path where the last section contains a space. For example, `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced on` will be parsed as `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced` (the space in the final section is removed).
 - The items listed above (in the "Capabilities" section) that are postceded by "(*beta*)" are not very robust and may still have major issues. Any feedback or issues related to these items are much appreciated.
 
+## Python2 Support
+
+All versions of the IOC Finder package *before* version 2.x are compatible with python2.7 . **Beware: version 1.x of the IOC Finder package is no longer maintained.** This means that any bug fixes or improvements will **not** be back-ported to previous versions.
+
+To install a specific version of the IOC Finder package (or any other one) via pip, use the following formula:
+
+```
+pip install ioc-finder==<VERSION NUMBER>
+```
+
+For example:
+
+```
+pip install ioc-finder==1.2.18
+```
+
 ## Installation
 
 To install this package:
