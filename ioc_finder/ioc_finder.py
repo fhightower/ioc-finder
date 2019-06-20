@@ -81,7 +81,7 @@ def _remove_url_paths(urls, text, parse_urls_without_scheme=True):
 
 def parse_domain_names(text):
     """."""
-    domains = ioc_grammars.domain_name.searchString(text)
+    domains = ioc_grammars.domain_name.searchString(text.lower())
     return _listify(domains)
 
 

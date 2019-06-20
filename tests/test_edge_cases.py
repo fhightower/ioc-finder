@@ -280,6 +280,14 @@ def test_domain_parsing():
     assert len(iocs['domains']) == 1
     assert iocs['domains'][0] == 'bar.com'
 
+    # make sure domains of different casings are properly parsed: https://github.com/fhightower/ioc-finder/issues/47
+    iocs = find_iocs("BAR.com")
+    assert iocs['domains'] == ['bar.com']
+    iocs = find_iocs("bar.COM")
+    assert iocs['domains'] == ['bar.com']
+    iocs = find_iocs("BAR.COM")
+    assert iocs['domains'] == ['bar.com']
+
 
 def test_email_address_parsing():
     s = 'my email is: foo"bar@gmail.com'
