@@ -3,6 +3,7 @@
 """Python package for finding indicators of compromise in text."""
 
 import json
+import multiprocessing
 import os
 import sys
 
@@ -11,6 +12,8 @@ import ioc_fanger
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import ioc_grammars
+
+MULTIPROCESSING_TIMEOUT = 120
 
 
 def _deduplicate(indicator_list):
@@ -355,14 +358,7 @@ def find_iocs(
         text = _remove_items(iocs['ipv4_cidrs'], text)
     # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
     # if not parse_address_from_cidr:
-    # text = _remove_items(iocs['ipv6_cidrs'], text)
-
-    # domains
-    iocs['domains'] = parse_domain_names(text)
-
-    # ip addresses
-    iocs['ipv4s'] = parse_ipv4_addresses(text)
-    iocs['ipv6s'] = parse_ipv6_addresses(text)
+        # text = _remove_items(iocs['ipv6_cidrs'], text)
 
     # file hashes
     if parse_imphashes:
@@ -375,22 +371,51 @@ def find_iocs(
         # remove the authentihashes so they are not also parsed as sha256s
         text = _remove_items(iocs['authentihashes'], text)
 
-    iocs['sha512s'] = parse_sha512s(text)
-    iocs['sha256s'] = parse_sha256s(text)
-    iocs['sha1s'] = parse_sha1s(text)
-    iocs['md5s'] = parse_md5s(text)
-    iocs['ssdeeps'] = parse_ssdeeps(text)
+    with multiprocessing.Pool() as pool:
+        # domains
+        domains_results = pool.apply_async(parse_domain_names, [text])
 
-    # misc
-    iocs['asns'] = parse_asns(text)
-    iocs['cves'] = parse_cves(text)
-    iocs['registry_key_paths'] = parse_registry_key_paths(text)
-    iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
-    iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
-    iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
-    iocs['mac_addresses'] = parse_mac_addresses(text)
-    iocs['user_agents'] = parse_user_agents(text)
-    iocs['file_paths'] = parse_file_paths(text)
-    iocs['phone_numbers'] = parse_phone_numbers(text)
+        # ip addresses
+        ipv4s_results = pool.apply_async(parse_ipv4_addresses, [text])
+        ipv6s_results = pool.apply_async(parse_ipv6_addresses, [text])
+
+        # file hashes
+        sha512s_results = pool.apply_async(parse_sha512s, [text])
+        sha256s_results = pool.apply_async(parse_sha256s, [text])
+        sha1s_results = pool.apply_async(parse_sha1s, [text])
+        md5s_results = pool.apply_async(parse_md5s, [text])
+        ssdeeps_results = pool.apply_async(parse_ssdeeps, [text])
+
+        # misc
+        asns_results = pool.apply_async(parse_asns, [text])
+        cves_results = pool.apply_async(parse_cves, [text])
+        registry_key_paths_results = pool.apply_async(parse_registry_key_paths, [text])
+        google_adsense_publisher_ids_results = pool.apply_async(parse_google_adsense_ids, [text])
+        google_analytics_tracker_ids_results = pool.apply_async(parse_google_analytics_ids, [text])
+        bitcoin_addresses_results = pool.apply_async(parse_bitcoin_addresses, [text])
+        mac_addresses_results = pool.apply_async(parse_mac_addresses, [text])
+        user_agents_results = pool.apply_async(parse_user_agents, [text])
+        file_paths_results = pool.apply_async(parse_file_paths, [text])
+        phone_numbers_results = pool.apply_async(parse_phone_numbers, [text])
+
+        # get and record the results
+        iocs['domains'] = domains_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['ipv4s'] = ipv4s_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['ipv6s'] = ipv6s_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['sha512s'] = sha512s_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['sha256s'] = sha256s_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['sha1s'] = sha1s_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['md5s'] = md5s_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['ssdeeps'] = ssdeeps_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['asns'] = asns_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['cves'] = cves_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['registry_key_paths'] = registry_key_paths_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['google_adsense_publisher_ids'] = google_adsense_publisher_ids_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['google_analytics_tracker_ids'] = google_analytics_tracker_ids_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['bitcoin_addresses'] = bitcoin_addresses_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['mac_addresses'] = mac_addresses_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['user_agents'] = user_agents_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['file_paths'] = file_paths_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['phone_numbers'] = phone_numbers_results.get(MULTIPROCESSING_TIMEOUT)
 
     return iocs
