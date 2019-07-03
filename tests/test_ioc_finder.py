@@ -418,3 +418,33 @@ def test_phone_numbers():
             iocs = find_iocs(phone_number)
             assert len(iocs['phone_numbers']) == 1
             assert iocs['phone_numbers'][0] == phone_number
+
+
+def test_attack_techniques():
+    s = """
+ID  Name    Description
+T1329   Acquire and/or use 3rd party infrastructure services    
+A wide variety of cloud, virtual private services, hosting, compute, and storage solutions are available. Additionally botnets are available for rent or purchase. Use of these solutions allow an adversary to stage, launch, and execute an attack from infrastructure that does not physically tie back to them and can be rapidly provisioned, modified, and shut down.
+
+T1307   Acquire and/or use 3rd party infrastructure services    
+A wide variety of cloud, virtual private services, hosting, compute, and storage solutions are available. Additionally botnets are available for rent or purchase. Use of these solutions allow an adversary to stage, launch, and execute an attack from infrastructure that does not physically tie back to them and can be rapidly provisioned, modified, and shut down.
+
+T1308"""
+    results = find_iocs(s)
+    assert len(results['attack_techniques']) == 3
+    assert 'T1329' in results['attack_techniques']
+    assert 'T1307' in results['attack_techniques']
+    assert 'T1308' in results['attack_techniques']
+
+
+def test_attack_tactics():
+    s = """
+    ID  Name    Description
+    TA0012  Priority Definition Planning    Priority definition planning consists of the process of determining the set of Key Intelligence Topics (KIT) or Key Intelligence Questions (KIQ) required for meeting key strategic, operational, or tactical goals. Leadership outlines the priority definition (may be considered a goal) around which the adversary designs target selection and a plan to achieve. An analyst may outline the priority definition when in the course of determining gaps in existing KITs or KIQs.
+    TA0013  Priority Definition Direction   Priority definition direction consists of the process of collecting and assigning requirements for meeting Key Intelligence Topics (KIT) or Key Intelligence Questions (KIQ) as determined by leadership.
+    TA0014  Targ"""
+    results = find_iocs(s)
+    assert len(results['attack_tactics']) == 3
+    assert 'TA0012' in results['attack_tactics']
+    assert 'TA0013' in results['attack_tactics']
+    assert 'TA0014' in results['attack_tactics']

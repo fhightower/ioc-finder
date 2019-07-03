@@ -267,6 +267,18 @@ def parse_phone_numbers(text):
     return [phone_number[::-1] for phone_number in _listify(phone_numbers)]
 
 
+def parse_attack_techniques(text):
+    """."""
+    attack_techniques = ioc_grammars.attack_technique.searchString(text)
+    return _listify(attack_techniques)
+
+
+def parse_attack_tactics(text):
+    """."""
+    attack_tactics = ioc_grammars.attack_tactic.searchString(text)
+    return _listify(attack_tactics)
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
@@ -397,6 +409,8 @@ def find_iocs(
         user_agents_results = pool.apply_async(parse_user_agents, [text])
         file_paths_results = pool.apply_async(parse_file_paths, [text])
         phone_numbers_results = pool.apply_async(parse_phone_numbers, [text])
+        attack_techniques_results = pool.apply_async(parse_attack_techniques, [text])
+        attack_tactics_results = pool.apply_async(parse_attack_tactics, [text])
 
         # get and record the results
         iocs['domains'] = domains_results.get(MULTIPROCESSING_TIMEOUT)
@@ -417,5 +431,7 @@ def find_iocs(
         iocs['user_agents'] = user_agents_results.get(MULTIPROCESSING_TIMEOUT)
         iocs['file_paths'] = file_paths_results.get(MULTIPROCESSING_TIMEOUT)
         iocs['phone_numbers'] = phone_numbers_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['attack_techniques'] = attack_techniques_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['attack_tactics'] = attack_tactics_results.get(MULTIPROCESSING_TIMEOUT)
 
     return iocs

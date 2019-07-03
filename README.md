@@ -24,11 +24,12 @@ Currently, this package can the following items in a given text:
 - IP address (IPv4 and IPv6)
 - MAC addresses (*beta*)
 - Phone numbers (*beta*)
-- Registry Key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
-- SSDeep Hashes (*beta*)
+- Registry key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
+- SSDeep hashes (*beta*)
 - URLs (URLs with and without schemes)
 - User agents (*beta*)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
+- MITRE ATT&CK tactics and techniques (see [more info](https://attack.mitre.org/))
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -108,6 +109,8 @@ The `find_iocs()` returns a dictionary in the following structure:
 ```json
 {
     "asns": [],
+    "attack_tactics": [],
+    "attack_techniques": [],
     "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
@@ -140,6 +143,8 @@ For example, running the example code shown at the start of the [usage](#usage) 
 ```json
 {
     "asns": [],
+    "attack_tactics": [],
+    "attack_techniques": [],
     "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
@@ -186,6 +191,8 @@ This will return:
 ```json
 {
     "asns": [],
+    "attack_tactics": [],
+    "attack_techniques": [],
     "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
@@ -202,18 +209,19 @@ This will return:
     "ipv4_cidrs": [],
     "ipv4s": [],
     "ipv6s": [],
+    "mac_addresses": [],
     "md5s": [],
     "phone_numbers": [],
     "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "ssdeeps": [],
     "urls": [
         "https://example.org/test/bingo.php"
     ],
     "user_agents": [],
-    "xmpp_addresses": [],
-    "mac_addresses": []
+    "xmpp_addresses": []
 }
 ```
 

@@ -283,3 +283,6 @@ phone_number_format_1 = Combine(
 )
 
 phone_number = Or([phone_number_format_1])
+
+attack_technique = alphanum_word_start + Combine('T' + Word(nums, exact=4)) + alphanum_word_end
+attack_tactic = alphanum_word_start + Combine('TA' + Word(nums, exact=4)) + alphanum_word_end
