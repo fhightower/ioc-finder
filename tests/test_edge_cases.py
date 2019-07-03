@@ -543,6 +543,10 @@ def test_issue_46_registry_key_with_space_parsing():
     assert len(iocs['registry_key_paths']) == 1
     assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
 
+    s = 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe'
+    iocs = find_iocs(s)
+    assert iocs['registry_key_paths'] == ['HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe']
+
 
 def test_deduplication_of_indicators_with_different_cases():
     s = 'example.com Example.com exAmplE.com'

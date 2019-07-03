@@ -48,18 +48,18 @@ def parse():
     ioc_finder.find_iocs(s)
 
 
-def test_execution_times():
-    """Test how long it takes for the ioc finder package to run."""
-    times = []
-    n = 50
+# def test_execution_times():
+#     """Test how long it takes for the ioc finder package to run."""
+#     times = []
+#     n = 50
 
-    for i in range(0, n):
-        start_time = time.time()
-        parse()
-        end_time = time.time()
-        times.append(end_time - start_time)
+#     for i in range(0, n):
+#         start_time = time.time()
+#         parse()
+#         end_time = time.time()
+#         times.append(end_time - start_time)
 
-    print(times)
-    print('Average time: {}'.format(sum(times) / n))
-    # fail the tests so that the times are printed
-    assert 1 == 2
+#     print(times)
+#     print('Average time: {}'.format(sum(times) / n))
+#     # fail the tests so that the times are printed
+#     assert 1 == 2
