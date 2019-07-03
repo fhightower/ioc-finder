@@ -14,6 +14,52 @@ def text_a():
     )
 
 
+def test_attack_parsing():
+    # make sure attack techniques preceded by some alpha-num. character are not parsed
+    s = """FOOT1329"""
+    results = find_iocs(s)
+    assert len(results['attack_techniques']) == 0
+
+    s = """AT0001"""
+    results = find_iocs(s)
+    assert len(results['attack_tactics']) == 0
+
+    # make sure attack techniques postceded by some alpha-num. character are not parsed
+    s = """T1329FUN"""
+    results = find_iocs(s)
+    assert len(results['attack_techniques']) == 0
+
+    # make sure attack techniques preceeded by some alpha-num. character are not parsed
+    s = """foot1329"""
+    results = find_iocs(s)
+    assert len(results['attack_techniques']) == 0
+
+    # test lower-case matching
+    s = """t1329"""
+    results = find_iocs(s)
+    assert results['attack_techniques'] == ['t1329']
+
+    # make sure attack techniques preceeded by some alpha-num. character are not parsed
+    s = """FOOTA0001"""
+    results = find_iocs(s)
+    assert len(results['attack_tactics']) == 0
+
+    # make sure attack tactics postceded by some alpha-num. character are not parsed
+    s = """TA0001FUN"""
+    results = find_iocs(s)
+    assert len(results['attack_tactics']) == 0
+
+    # make sure attack techniques preceeded by some alpha-num. character are not parsed
+    s = """foota0001"""
+    results = find_iocs(s)
+    assert len(results['attack_tactics']) == 0
+
+    # test lower-case matching
+    s = """ta0001"""
+    results = find_iocs(s)
+    assert results['attack_tactics'] == ['ta0001']
+
+
 def test_ioc_finder(text_a):
     iocs = find_iocs(text_a)
     assert len(iocs['domains']) == 3
