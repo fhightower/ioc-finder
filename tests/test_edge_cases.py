@@ -14,15 +14,11 @@ def text_a():
     )
 
 
-def test_attack_parsing():
+def test_attack_techniques():
     # make sure attack techniques preceded by some alpha-num. character are not parsed
     s = """FOOT1329"""
     results = find_iocs(s)
     assert len(results['attack_techniques']) == 0
-
-    s = """AT0001"""
-    results = find_iocs(s)
-    assert len(results['attack_tactics']) == 0
 
     # make sure attack techniques postceded by some alpha-num. character are not parsed
     s = """T1329FUN"""
@@ -37,10 +33,24 @@ def test_attack_parsing():
     # test lower-case matching
     s = """t1329"""
     results = find_iocs(s)
-    assert results['attack_techniques'] == ['t1329']
+    assert results['attack_techniques'] == ['T1329']
 
-    # make sure attack techniques preceeded by some alpha-num. character are not parsed
+    s = 'T1156'
+    results = find_iocs(s)
+    assert results['attack_techniques'] == ['T1156']
+
+    s = "https://attack.mitre.org/techniques/T1156/"
+    results = find_iocs(s)
+    assert results['attack_techniques'] == ['T1156']
+
+
+def test_attack_tactics():
+    # make sure attack tactics preceeded by some alpha-num. character are not parsed
     s = """FOOTA0001"""
+    results = find_iocs(s)
+    assert len(results['attack_tactics']) == 0
+
+    s = """AT0001"""
     results = find_iocs(s)
     assert len(results['attack_tactics']) == 0
 
@@ -49,7 +59,7 @@ def test_attack_parsing():
     results = find_iocs(s)
     assert len(results['attack_tactics']) == 0
 
-    # make sure attack techniques preceeded by some alpha-num. character are not parsed
+    # make sure attack tactics preceeded by some alpha-num. character are not parsed
     s = """foota0001"""
     results = find_iocs(s)
     assert len(results['attack_tactics']) == 0
@@ -57,7 +67,11 @@ def test_attack_parsing():
     # test lower-case matching
     s = """ta0001"""
     results = find_iocs(s)
-    assert results['attack_tactics'] == ['ta0001']
+    assert results['attack_tactics'] == ['TA0001']
+
+    s = "https://attack.mitre.org/tactics/TA0001/"
+    results = find_iocs(s)
+    assert results['attack_tactics'] == ['TA0001']
 
 
 def test_ioc_finder(text_a):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """Python package for finding indicators of compromise in text."""
 
@@ -337,6 +337,8 @@ def find_iocs(
     iocs = dict()
 
     text = prepare_text(text)
+    # keep a copy of the original text - some items should be parsed from the original text
+    original_text = text
 
     # urls
     iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
@@ -400,7 +402,7 @@ def find_iocs(
 
         # misc
         asns_results = pool.apply_async(parse_asns, [text])
-        cves_results = pool.apply_async(parse_cves, [text])
+        cves_results = pool.apply_async(parse_cves, [original_text])
         registry_key_paths_results = pool.apply_async(parse_registry_key_paths, [text])
         google_adsense_publisher_ids_results = pool.apply_async(parse_google_adsense_ids, [text])
         google_analytics_tracker_ids_results = pool.apply_async(parse_google_analytics_ids, [text])
@@ -409,8 +411,8 @@ def find_iocs(
         user_agents_results = pool.apply_async(parse_user_agents, [text])
         file_paths_results = pool.apply_async(parse_file_paths, [text])
         phone_numbers_results = pool.apply_async(parse_phone_numbers, [text])
-        attack_techniques_results = pool.apply_async(parse_attack_techniques, [text])
-        attack_tactics_results = pool.apply_async(parse_attack_tactics, [text])
+        attack_techniques_results = pool.apply_async(parse_attack_techniques, [original_text])
+        attack_tactics_results = pool.apply_async(parse_attack_tactics, [original_text])
 
         # get and record the results
         iocs['domains'] = domains_results.get(MULTIPROCESSING_TIMEOUT)

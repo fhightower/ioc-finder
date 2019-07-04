@@ -285,5 +285,5 @@ phone_number_format_1 = Combine(
 phone_number = Or([phone_number_format_1])
 
 # at the time of writing, it appears that all of the attack techniques start with a `1`
-attack_technique = alphanum_word_start + Combine(Or(['T', 't']) + Word('1') + Word(nums, exact=3)) + alphanum_word_end
-attack_tactic = alphanum_word_start + Combine(Or(['TA', 'ta']) + Word(nums, exact=4)) + alphanum_word_end
+attack_technique = alphanum_word_start + Combine(Or(['T', 't']).setParseAction(upcaseTokens) + Word('1', bodyChars=nums, exact=4)) + alphanum_word_end
+attack_tactic = alphanum_word_start + Combine(Or(['TA', 'ta']).setParseAction(upcaseTokens) + Word(nums, exact=4)) + alphanum_word_end
