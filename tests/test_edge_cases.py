@@ -576,17 +576,21 @@ Value Name: avscan"""
     assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
 
 
+def test_multiple_registry_key_path_parsing():
+    """Make sure that consecutive registry key paths are parsed properly."""
+    s = """HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 2
+    assert 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME' in iocs['registry_key_paths']
+    assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
+
+
 def test_issue_46_registry_key_with_space_parsing():
     """Make sure that Registry Keys with a space in them are parsed properly. See: https://github.com/fhightower/ioc-finder/issues/46."""
     s = """HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME"""
     iocs = find_iocs(s)
     assert len(iocs['registry_key_paths']) == 1
     assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
-
-    s = """HKLM\SOFTWARE\Microsoft\Windows  NT\CurrentVersion\Console\ConsoleIME"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
 
     s = """HKLM\SOFTWARE\Microsoft\Windows ... NT\CurrentVersion\Console\ConsoleIME"""
     iocs = find_iocs(s)
@@ -603,9 +607,35 @@ def test_issue_46_registry_key_with_space_parsing():
     assert len(iocs['registry_key_paths']) == 1
     assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
 
-    s = 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe'
+    s = 'HKLM\\SOFTWARE\\foo bar\\b'
     iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\notepad.exe']
+    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar\\b']
+
+    s = 'HKLM\\SOFTWARE\\foo bar\\bing buzz\\b'
+    iocs = find_iocs(s)
+    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar\\bing buzz\\b']
+
+    s = 'HKLM\\SOFTWARE\\foo bar bing\\b'
+    iocs = find_iocs(s)
+    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar bing\\b']
+
+    s = 'HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b'
+    iocs = find_iocs(s)
+    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b']
+
+    s = 'HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b'
+    iocs = find_iocs(s)
+    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b']
+
+    s = 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe'
+    iocs = find_iocs(s)
+    assert iocs['registry_key_paths'] == ['HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe']
+
+    # any string with more than one space should be parsed such that anything after multiple spaces is NOT captured
+    s = """HKLM\SOFTWARE\Microsoft\Windows  NT\CurrentVersion\Console\ConsoleIME"""
+    iocs = find_iocs(s)
+    assert len(iocs['registry_key_paths']) == 1
+    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
 
 
 def test_deduplication_of_indicators_with_different_cases():

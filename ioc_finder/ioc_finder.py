@@ -204,7 +204,9 @@ def parse_registry_key_paths(text):
     for registry_key_path in full_parsed_registry_key_paths:
         # if there is a space in the last section of the parsed registry key path, remove it so that content after a registry key path is not also pulled in... this is a limitation of the grammar: it will not parse a registry key path with a space in the final section (the section after the final '\')
         if ' ' in registry_key_path.split('\\')[-1]:
-            registry_key_paths.append(' '.join(registry_key_path.split(' ')[:-1]))
+            last_section = registry_key_path.split('\\')[-1]
+            registry_key_path = registry_key_path.replace(last_section, last_section.split(' ')[0])
+            registry_key_paths.append(registry_key_path)
         else:
             registry_key_paths.append(registry_key_path)
 
@@ -372,7 +374,7 @@ def find_iocs(
         text = _remove_items(iocs['ipv4_cidrs'], text)
     # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
     # if not parse_address_from_cidr:
-        # text = _remove_items(iocs['ipv6_cidrs'], text)
+    #     text = _remove_items(iocs['ipv6_cidrs'], text)
 
     # file hashes
     if parse_imphashes:

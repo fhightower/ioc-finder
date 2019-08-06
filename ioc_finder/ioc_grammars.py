@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import copy
+import re
 
 from pyparsing import alphas, alphanums, printables, nums, hexnums
 from pyparsing import (
@@ -177,11 +178,26 @@ root_key = Or(
         'HKEY_DYN_DATA',
     ]
 )
-registry_key_subpath = OneOrMore(
+
+
+def hasMultipleConsecutiveSpaces(string):
+    """Return True if the given string has multiple, consecutive spaces."""
+    return re.match('  +', string)
+
+
+registry_key_subpath_section = Combine(
     Word('\\')
     + Word(alphanums)
-    + Optional(Word(' ', max=1) + Word(alphanums).addCondition(lambda tokens: tokens[0] not in root_key))
+    + ZeroOrMore(
+        # registry key paths may contain a file extension which requires that we capture registry key path sections with a period (e.g. `notepad.exe`)
+        Optional(Word('.', max=1))
+        # the registry key path section can contain any alphanum text (including spaces) as long as the text is not one of the registry key path root keys and as long as there are not multiple, consecutive spaces
+        + Word(alphanums + ' ').addCondition(
+            lambda tokens: tokens[0] not in root_key and not hasMultipleConsecutiveSpaces(tokens[0])
+        )
+    )
 )
+registry_key_subpath = OneOrMore(registry_key_subpath_section)
 registry_key_path = (
     alphanum_word_start
     + Combine(
@@ -285,5 +301,13 @@ phone_number_format_1 = Combine(
 phone_number = Or([phone_number_format_1])
 
 # at the time of writing, it appears that all of the attack techniques start with a `1`
-attack_technique = alphanum_word_start + Combine(Or(['T', 't']).setParseAction(upcaseTokens) + Word('1', bodyChars=nums, exact=4)) + alphanum_word_end
-attack_tactic = alphanum_word_start + Combine(Or(['TA', 'ta']).setParseAction(upcaseTokens) + Word(nums, exact=4)) + alphanum_word_end
+attack_technique = (
+    alphanum_word_start
+    + Combine(Or(['T', 't']).setParseAction(upcaseTokens) + Word('1', bodyChars=nums, exact=4))
+    + alphanum_word_end
+)
+attack_tactic = (
+    alphanum_word_start
+    + Combine(Or(['TA', 'ta']).setParseAction(upcaseTokens) + Word(nums, exact=4))
+    + alphanum_word_end
+)
