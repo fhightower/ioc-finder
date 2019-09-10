@@ -162,22 +162,22 @@ ipv4_cidr = (
     + alphanum_word_end
 )
 
-root_key = Or(
-    [
-        'HKEY_LOCAL_MACHINE',
-        'HKLM',
-        'HKEY_CURRENT_CONFIG',
-        'HKCC',
-        'HKEY_CLASSES_ROOT',
-        'HKCR',
-        'HKEY_CURRENT_USER',
-        'HKCU',
-        'HKEY_USERS',
-        'HKU',
-        'HKEY_PERFORMANCE_DATA',
-        'HKEY_DYN_DATA',
-    ]
-)
+root_key_list = [
+    'HKEY_LOCAL_MACHINE',
+    'HKLM',
+    'HKEY_CURRENT_CONFIG',
+    'HKCC',
+    'HKEY_CLASSES_ROOT',
+    'HKCR',
+    'HKEY_CURRENT_USER',
+    'HKCU',
+    'HKEY_USERS',
+    'HKU',
+    'HKEY_PERFORMANCE_DATA',
+    'HKEY_DYN_DATA',
+]
+
+root_key = Or(root_key_list)
 
 
 def hasMultipleConsecutiveSpaces(string):
@@ -193,7 +193,7 @@ registry_key_subpath_section = Combine(
         Optional(Word('.', max=1))
         # the registry key path section can contain any alphanum text (including spaces) as long as the text is not one of the registry key path root keys and as long as there are not multiple, consecutive spaces
         + Word(alphanums + ' ').addCondition(
-            lambda tokens: tokens[0] not in root_key and not hasMultipleConsecutiveSpaces(tokens[0])
+            lambda tokens: tokens[0] not in root_key_list and not hasMultipleConsecutiveSpaces(tokens[0])
         )
     )
 )
