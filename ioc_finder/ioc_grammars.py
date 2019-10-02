@@ -28,12 +28,12 @@ alphanum_word_start = WordStart(wordChars=alphanums)
 alphanum_word_end = WordEnd(wordChars=alphanums)
 
 # the label definition ignores the fact that labels should not end in an hyphen
-label = Word(initChars=alphanums, bodyChars=alphanums + '-', max=63)
+label = Word(initChars=alphanums + '_', bodyChars=alphanums + '-_', max=63)
 domain_tld = Or(tlds)
 domain_name = (
     alphanum_word_start
     + Combine(
-        Combine(OneOrMore(label + ('.' + FollowedBy(Word(alphanums + '-')))))('domain_labels') + domain_tld('tld')
+        Combine(OneOrMore(label + ('.' + FollowedBy(Word(alphanums + '-_')))))('domain_labels') + domain_tld('tld')
     )
     + alphanum_word_end
 ).setParseAction(downcaseTokens)
