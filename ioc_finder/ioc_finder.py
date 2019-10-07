@@ -281,6 +281,12 @@ def parse_attack_tactics(text):
     return _listify(attack_tactics)
 
 
+def parse_tlp_labels(text):
+    """."""
+    tlp_labels = ioc_grammars.tlp_label.searchString(text)
+    return _listify(tlp_labels)
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
@@ -415,6 +421,7 @@ def find_iocs(
         phone_numbers_results = pool.apply_async(parse_phone_numbers, [text])
         attack_techniques_results = pool.apply_async(parse_attack_techniques, [original_text])
         attack_tactics_results = pool.apply_async(parse_attack_tactics, [original_text])
+        tlp_labels_results = pool.apply_async(parse_tlp_labels, [original_text])
 
         # get and record the results
         iocs['domains'] = domains_results.get(MULTIPROCESSING_TIMEOUT)
@@ -437,5 +444,6 @@ def find_iocs(
         iocs['phone_numbers'] = phone_numbers_results.get(MULTIPROCESSING_TIMEOUT)
         iocs['attack_techniques'] = attack_techniques_results.get(MULTIPROCESSING_TIMEOUT)
         iocs['attack_tactics'] = attack_tactics_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['tlp_labels'] = tlp_labels_results.get(MULTIPROCESSING_TIMEOUT)
 
     return iocs

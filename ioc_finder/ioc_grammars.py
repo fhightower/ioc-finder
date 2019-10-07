@@ -6,6 +6,7 @@ import re
 
 from pyparsing import alphas, alphanums, printables, nums, hexnums
 from pyparsing import (
+    CaselessLiteral,
     Combine,
     downcaseTokens,
     FollowedBy,
@@ -311,3 +312,10 @@ attack_tactic = (
     + Combine(Or(['TA', 'ta']).setParseAction(upcaseTokens) + Word(nums, exact=4))
     + alphanum_word_end
 )
+
+tlp_colors_list = [CaselessLiteral('red'), CaselessLiteral('amber'), CaselessLiteral('green'), CaselessLiteral('white')]
+tlp_colors = Or(tlp_colors_list)
+
+tlp_label = Combine(
+    CaselessLiteral('tlp') + Or([':', '-', ' ', '']).setParseAction(lambda x: ':') + tlp_colors
+).setParseAction(upcaseTokens)

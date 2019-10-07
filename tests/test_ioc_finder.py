@@ -4,6 +4,21 @@
 from ioc_finder import find_iocs
 
 
+def test_tlp_labels():
+    s = 'tlp amber and TLP:RED'
+    iocs = find_iocs(s)
+    assert len(iocs['tlp_labels']) == 2
+    assert 'TLP:RED' in iocs['tlp_labels']
+    assert 'TLP:AMBER' in iocs['tlp_labels']
+
+    s = 'tlp-Amber and TLPRED TlpGreen'
+    iocs = find_iocs(s)
+    assert len(iocs['tlp_labels']) == 3
+    assert 'TLP:RED' in iocs['tlp_labels']
+    assert 'TLP:AMBER' in iocs['tlp_labels']
+    assert 'TLP:GREEN' in iocs['tlp_labels']
+
+
 def test_domain_parsing():
     s = "this is just a (google.com) test of example.com"
     iocs = find_iocs(s)
