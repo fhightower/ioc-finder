@@ -90,20 +90,14 @@ def test_cli_disabling_parsing_urls_without_scheme():
 
 def test_cli_disabling_import_hash_parsing():
     runner = CliRunner()
-    result = runner.invoke(
-        ioc_finder.cli_find_iocs,
-        ["imphash 18ddf28a71089acdbab5038f58044c0a", "--no_import_hashes"],
-    )
+    result = runner.invoke(ioc_finder.cli_find_iocs, ["imphash 18ddf28a71089acdbab5038f58044c0a", "--no_import_hashes"])
     assert result.exit_code == 0
     json_results = json.loads(result.output.strip())
     assert '18ddf28a71089acdbab5038f58044c0a' in json_results['md5s']
     assert len(json_results['md5s']) == 1
     assert not json_results.get('imphashes')
 
-    result = runner.invoke(
-        ioc_finder.cli_find_iocs,
-        ["imphash 18ddf28a71089acdbab5038f58044c0a"],
-    )
+    result = runner.invoke(ioc_finder.cli_find_iocs, ["imphash 18ddf28a71089acdbab5038f58044c0a"])
     assert result.exit_code == 0
     json_results = json.loads(result.output.strip())
     assert '18ddf28a71089acdbab5038f58044c0a' in json_results['imphashes']

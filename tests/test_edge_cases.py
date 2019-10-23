@@ -653,7 +653,9 @@ def test_issue_46_registry_key_with_space_parsing():
 
     s = 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe'
     iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe']
+    assert iocs['registry_key_paths'] == [
+        'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe'
+    ]
 
     # any string with more than one space should be parsed such that anything after multiple spaces is NOT captured
     s = """HKLM\SOFTWARE\Microsoft\Windows  NT\CurrentVersion\Console\ConsoleIME"""
@@ -749,7 +751,9 @@ def test_windows_file_paths():
     s = r'test C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\ is a bad file path'
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 1
-    assert iocs['file_paths'][0] == 'C:\\Users\\<username>\\AppData\\Roaming\\Macromedia\\Flash Player\\macromedia\\bin\\'
+    assert (
+        iocs['file_paths'][0] == 'C:\\Users\\<username>\\AppData\\Roaming\\Macromedia\\Flash Player\\macromedia\\bin\\'
+    )
 
 
 def test_unix_file_paths():
