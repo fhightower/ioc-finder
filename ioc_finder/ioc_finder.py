@@ -287,6 +287,11 @@ def parse_tlp_labels(text):
     return _listify(tlp_labels)
 
 
+def parse_malware_names(text):
+    """."""
+    raise NotImplementedError
+
+
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')

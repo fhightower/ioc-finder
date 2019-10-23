@@ -2,6 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from ioc_finder import find_iocs
+from ioc_finder.ioc_finder import parse_malware_names
+
+
+def test_malware_names():
+    s = 'Bublik Emotet Esfury Gootkit'
+    malware_names = parse_malware_names(s)
+    assert len(malware_names) == 3
 
 
 def test_tlp_labels():
@@ -314,9 +321,18 @@ ssdeep  12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4
 
 def test_imphash_parsing():
     names = ['imphash', 'import hash']
-    templates = ["""SHA-256 093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a
+    templates = [
+        """SHA-256 093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a
 Dropper {}: 18ddf28a71089acdbab5038f58044c0a
-C2 IP: 210.209.127.8:443""", '{}: 18ddf28a71089acdbab5038f58044c0a', '{} 18ddf28a71089acdbab5038f58044c0a', '{}  18ddf28a71089acdbab5038f58044c0a', '{}:     18ddf28a71089acdbab5038f58044c0a', '{}\t18ddf28a71089acdbab5038f58044c0a', '{}\n18ddf28a71089acdbab5038f58044c0a', '{} - 18ddf28a71089acdbab5038f58044c0a']
+C2 IP: 210.209.127.8:443""",
+        '{}: 18ddf28a71089acdbab5038f58044c0a',
+        '{} 18ddf28a71089acdbab5038f58044c0a',
+        '{}  18ddf28a71089acdbab5038f58044c0a',
+        '{}:     18ddf28a71089acdbab5038f58044c0a',
+        '{}\t18ddf28a71089acdbab5038f58044c0a',
+        '{}\n18ddf28a71089acdbab5038f58044c0a',
+        '{} - 18ddf28a71089acdbab5038f58044c0a',
+    ]
 
     for template in templates:
         for name in names:
@@ -334,7 +350,16 @@ C2 IP: 210.209.127.8:443""", '{}: 18ddf28a71089acdbab5038f58044c0a', '{} 18ddf28
 
 def test_authentihash():
     names = ['authentihash']
-    templates = ['{} 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}   3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}: 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}:     3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{} - 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}-3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}\t3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4', '{}\n3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4']
+    templates = [
+        '{} 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{}   3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{}: 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{}:     3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{} - 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{}-3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{}\t3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+        '{}\n3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
+    ]
 
     for template in templates:
         for name in names:
@@ -359,14 +384,20 @@ def test_user_agents():
     s = 'mozilla/5.0 (windows nt 6.1; wow64) applewebkit/535.11 (khtml, like gecko) chrome/17.0.963.56 safari/535.11 mozilla/5.0 (windows nt 6.1; wow64; rv:11.0) gecko firefox/11.0'
     iocs = find_iocs(s)
     assert len(iocs['user_agents']) == 2
-    assert 'mozilla/5.0 (windows nt 6.1; wow64) applewebkit/535.11 (khtml, like gecko) chrome/17.0.963.56 safari/535.11' in iocs['user_agents']
+    assert (
+        'mozilla/5.0 (windows nt 6.1; wow64) applewebkit/535.11 (khtml, like gecko) chrome/17.0.963.56 safari/535.11'
+        in iocs['user_agents']
+    )
     assert 'mozilla/5.0 (windows nt 6.1; wow64; rv:11.0) gecko firefox/11.0' in iocs['user_agents']
 
     # test the same thing as above but with different casing to make sure the cases are matched and maintained properly
     s = 'Mozilla/5.0 (Windows nt 6.1; wow64) Applewebkit/535.11 (khtml, like Gecko) Chrome/17.0.963.56 Safari/535.11 Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0'
     iocs = find_iocs(s)
     assert len(iocs['user_agents']) == 2
-    assert 'Mozilla/5.0 (Windows nt 6.1; wow64) Applewebkit/535.11 (khtml, like Gecko) Chrome/17.0.963.56 Safari/535.11' in iocs['user_agents']
+    assert (
+        'Mozilla/5.0 (Windows nt 6.1; wow64) Applewebkit/535.11 (khtml, like Gecko) Chrome/17.0.963.56 Safari/535.11'
+        in iocs['user_agents']
+    )
     assert 'Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0' in iocs['user_agents']
 
 
@@ -395,7 +426,10 @@ C:\Windows\SysWOW64\f9jwqSbS.exe"""
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 6
     assert r'C:\Users\<username>\AppData \Local\Microsoft\Windows\shedaudio.exe' in iocs['file_paths']
-    assert r'C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\flashplayer.exe' in iocs['file_paths']
+    assert (
+        r'C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\flashplayer.exe'
+        in iocs['file_paths']
+    )
     assert r'C:\Windows\11987416.exe' in iocs['file_paths']
     assert r'C:\Windows\System32\46615275.exe' in iocs['file_paths']
     assert r'C:\Windows\System32\shedaudio.exe' in iocs['file_paths']
@@ -418,11 +452,7 @@ C:\Windows\SysWOW64\f9jwqSbS.exe"""
 
 
 def test_phone_numbers():
-    phone_number_blocks = [
-        ['123', '4567'],
-        ['123', '456', '7890'],
-        ['(123)', '456', '7890'],
-    ]
+    phone_number_blocks = [['123', '4567'], ['123', '456', '7890'], ['(123)', '456', '7890']]
 
     block_connectors = ['-', ' - ', '.', ' . ', ' ']
 
