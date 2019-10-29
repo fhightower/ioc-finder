@@ -30,6 +30,7 @@ Currently, this package can the following items in a given text:
 - User agents (*beta*)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - MITRE ATT&CK tactics and techniques (see [more info](https://attack.mitre.org/))
+- [TLP labels](https://www.us-cert.gov/tlp)
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -72,7 +73,7 @@ pip install ioc-finder
 
 ## Usage
 
-This package can be used in [python](#Python) or via a [command-line interface](#Command-Line Interface).
+This package can be used in [python](#python) or via a [command-line interface](#command-line-interface).
 
 ### Python
 
