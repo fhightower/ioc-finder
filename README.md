@@ -31,6 +31,7 @@ Currently, this package can the following items in a given text:
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - MITRE ATT&CK tactics and techniques (see [more info](https://attack.mitre.org/))
 - [TLP labels](https://www.us-cert.gov/tlp)
+- Malware names
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
 Also provides some helpful features like:
@@ -127,6 +128,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "ipv4s": [],
     "ipv6s": [],
     "mac_addresses": [],
+    "malware_names": [],
     "md5s": [],
     "phone_numbers": [],
     "registry_key_paths": [],
@@ -134,6 +136,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "sha256s": [],
     "sha512s": [],
     "ssdeeps": [],
+    "tlp_labels": [],
     "urls": [],
     "user_agents": [],
     "xmpp_addresses": []
@@ -161,6 +164,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "ipv4s": [],
     "ipv6s": [],
     "mac_addresses": [],
+    "malware_names": [],
     "md5s": [],
     "phone_numbers": [],
     "registry_key_paths": [],
@@ -168,6 +172,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "sha256s": [],
     "sha512s": [],
     "ssdeeps": [],
+    "tlp_labels": [],
     "urls": ["https://example.org/test/bingo.php"],
     "user_agents": [],
     "xmpp_addresses": []
@@ -212,6 +217,7 @@ This will return:
     "ipv4s": [],
     "ipv6s": [],
     "mac_addresses": [],
+    "malware_names": [],
     "md5s": [],
     "phone_numbers": [],
     "registry_key_paths": [],
@@ -219,6 +225,7 @@ This will return:
     "sha256s": [],
     "sha512s": [],
     "ssdeeps": [],
+    "tlp_labels": [],
     "urls": [
         "https://example.org/test/bingo.php"
     ],
