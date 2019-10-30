@@ -23,7 +23,7 @@ from pyparsing import (
     ZeroOrMore,
 )
 
-from data_lists import tlds, schemes
+from data_lists import tlds, schemes, malware_name_regexes, malpedia_malware_name_regexes
 
 alphanum_word_start = WordStart(wordChars=alphanums)
 alphanum_word_end = WordEnd(wordChars=alphanums)
@@ -319,3 +319,11 @@ tlp_colors = Or(tlp_colors_list)
 tlp_label = Combine(
     CaselessLiteral('tlp') + Or([':', '-', ' ', '']).setParseAction(lambda x: ':') + tlp_colors
 ).setParseAction(upcaseTokens)
+
+malware_names = Or([Regex(malware_name_regex, flags=re.IGNORECASE) for malware_name_regex in malware_name_regexes])
+malpedia_malware_names = Or(
+    [
+        Regex(malpedia_malware_name_regex, flags=re.IGNORECASE)
+        for malpedia_malware_name_regex in malpedia_malware_name_regexes
+    ]
+)

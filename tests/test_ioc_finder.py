@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 
 from ioc_finder import find_iocs
-from ioc_finder.ioc_finder import parse_malware_names
 
 
 def test_malware_names():
     s = 'Bublik Emotet Esfury Gootkit'
-    malware_names = parse_malware_names(s)
-    assert len(malware_names) == 3
+    malware_names = find_iocs(s)['malware_names']
+    assert len(malware_names) == 4
+
+    s = 'Bublik Bublik'
+    malware_names = find_iocs(s)['malware_names']
+    assert len(malware_names) == 1
 
 
 def test_tlp_labels():

@@ -289,7 +289,14 @@ def parse_tlp_labels(text):
 
 def parse_malware_names(text):
     """."""
-    raise NotImplementedError
+    malware_names = ioc_grammars.malware_names.searchString(text)
+    return _listify(malware_names)
+
+
+def parse_malpedia_malware_names(text):
+    """."""
+    malpedia_malware_names = ioc_grammars.malpedia_malware_names.searchString(text)
+    return _listify(malpedia_malware_names)
 
 
 @click.command()
@@ -427,6 +434,8 @@ def find_iocs(
         attack_techniques_results = pool.apply_async(parse_attack_techniques, [original_text])
         attack_tactics_results = pool.apply_async(parse_attack_tactics, [original_text])
         tlp_labels_results = pool.apply_async(parse_tlp_labels, [original_text])
+        malware_names_results = pool.apply_async(parse_malware_names, [original_text])
+        malpedia_malware_names_results = pool.apply_async(parse_malpedia_malware_names, [original_text])
 
         # get and record the results
         iocs['domains'] = domains_results.get(MULTIPROCESSING_TIMEOUT)
@@ -450,5 +459,11 @@ def find_iocs(
         iocs['attack_techniques'] = attack_techniques_results.get(MULTIPROCESSING_TIMEOUT)
         iocs['attack_tactics'] = attack_tactics_results.get(MULTIPROCESSING_TIMEOUT)
         iocs['tlp_labels'] = tlp_labels_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['malware_names'] = []
+        iocs['malware_names'].extend(malware_names_results.get(MULTIPROCESSING_TIMEOUT))
+        iocs['malware_names'].extend(malpedia_malware_names_results.get(MULTIPROCESSING_TIMEOUT))
+
+    # deduplicate the list of malware names because the names are compiled from two, different functions
+    iocs['malware_names'] = _deduplicate(iocs['malware_names'])
 
     return iocs
