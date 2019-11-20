@@ -9,6 +9,7 @@ from pyparsing import (
     CaselessLiteral,
     Combine,
     downcaseTokens,
+    Empty,
     FollowedBy,
     NotAny,
     OneOrMore,
@@ -317,7 +318,7 @@ tlp_colors_list = [CaselessLiteral('red'), CaselessLiteral('amber'), CaselessLit
 tlp_colors = Or(tlp_colors_list)
 
 tlp_label = Combine(
-    CaselessLiteral('tlp') + Or([':', '-', ' ', '']).setParseAction(lambda x: ':') + tlp_colors
+    CaselessLiteral('tlp') + Or([':', '-', ' ', Empty()]).setParseAction(lambda x: ':') + tlp_colors
 ).setParseAction(upcaseTokens)
 
 malware_names = Or([Regex(malware_name_regex, flags=re.IGNORECASE) for malware_name_regex in malware_name_regexes])
