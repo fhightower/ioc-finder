@@ -253,6 +253,18 @@ Options:
   --help                          Show this message and exit.
 ```
 
+### Parsing Specific Indicator Types
+
+If you need to parse a specific indicator type, you can do this using one of the parse functions that start with `parse_`. For example, the code below will parse URLs:
+
+```python
+from ioc_finder import parse_urls
+results = parse_urls('https://google.com')
+print(results)
+```
+
+**Warning:** It is recommended that you use the `ioc_finder.find_iocs` function rather than a parse function as `ioc_finder.find_iocs` handles some of the nuances of parsing indicator data. If you use specific functions, the text you provide will **not** be [fanged](https://ioc-fang.hightower.space/) and may not return the data you expect.
+
 ## Credits
 
 This project uses the [ioc_fanger](https://github.com/ioc-fang/ioc_fanger) package to make sure that all indicators in the text are properly [fanged](https://ioc-fang.hightower.space/).
