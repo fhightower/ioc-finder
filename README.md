@@ -265,6 +265,10 @@ print(results)
 
 **Warning:** It is recommended that you use the `ioc_finder.find_iocs` function rather than a parse function as `ioc_finder.find_iocs` handles some of the nuances of parsing indicator data. If you use specific functions, the text you provide will **not** be [fanged](https://ioc-fang.hightower.space/) and may not return the data you expect.
 
+**Note:** However, `find_iocs` will not work if run within a multiprocessing Pool, because it already uses its own pool. See https://anothercybersecurityblog.wordpress.com/2019/11/19/the-downside-of-python-multiprocessing-daemon-childs/ for an explanation.
+
+If you want to run ioc-finder within code that uses a multiprocessing pool, it _would_ be better to use the parse functions individually.
+
 ## Credits
 
 This project uses the [ioc_fanger](https://github.com/ioc-fang/ioc_fanger) package to make sure that all indicators in the text are properly [fanged](https://ioc-fang.hightower.space/).
