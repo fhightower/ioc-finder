@@ -166,6 +166,12 @@ def test_url_parsing():
     assert 'http://example.com//test' in results['urls']
 
 
+def test_issue_45_url_parsing():
+    s = 'http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p\'6_%09/d%5c'
+    results = find_iocs(s)
+    assert results['urls'] == ['http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p\'6_%09/d%5c']
+
+
 def test_schemeless_url_parsing():
     """Test parsing URLs without a scheme."""
     s = "github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh"

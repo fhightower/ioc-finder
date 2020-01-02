@@ -40,6 +40,17 @@ def prepare_text(text):
     return text
 
 
+# TODO: replace this function with the democritus.stringRemoveFromEnd
+def _remove_from_end(input_string: str, string_to_remove: str) -> str:
+    """."""
+    if input_string.endswith(string_to_remove):
+        desired_string_final_index = len(input_string) - len(string_to_remove)
+        updated_string = input_string[:desired_string_final_index]
+        return updated_string
+    else:
+        return input_string
+
+
 def parse_urls(text, parse_urls_without_scheme=True):
     """."""
     if parse_urls_without_scheme:
@@ -58,6 +69,10 @@ def parse_urls(text, parse_urls_without_scheme=True):
         # remove a final ')' if there is a '(' in the url
         if url.endswith(')') and '(' not in url:
             url = url.rstrip(')')
+
+        # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
+        url = _remove_from_end(url, '\'/>')
+        url = _remove_from_end(url, '"/>')
 
         clean_urls.append(url)
 
