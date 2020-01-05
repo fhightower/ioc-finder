@@ -2607,7 +2607,7 @@ malpedia_malware_name_regexes = [
     'jqjsnicker',
     'jripbot',
     'kagent',
-    'karagany',
+    'karaga?ny',
     'kasperagent',
     'kazuar',
     'kegotip',
