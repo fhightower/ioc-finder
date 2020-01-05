@@ -2470,6 +2470,7 @@ malpedia_malware_name_regexes = [
     'cutlet',
     'cyber[ _-]?splitter',
     'dairy',
+    'dapato',
     'darkcomet',
     'darkpulsar',
     'darksky',
