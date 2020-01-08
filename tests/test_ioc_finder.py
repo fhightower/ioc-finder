@@ -143,7 +143,9 @@ def test_url_parsing():
 
     s = 'http://8pretgdl.r.us-east-1.awstrack.me/L0/http:%2F%2Fwww.excelgoodies.com%2Fexcel-vba-training-in-virginia%23course-content/1/0100016ed23f4bef-b14931bd-26f6-4130-9c37-c4f9902a771d-000000/mHJBuJ8D1RcIDE3jrWkdw4I9im4=138'
     iocs = find_iocs(s)
-    assert iocs['urls'] == ['http://8pretgdl.r.us-east-1.awstrack.me/L0/http:%2F%2Fwww.excelgoodies.com%2Fexcel-vba-training-in-virginia%23course-content/1/0100016ed23f4bef-b14931bd-26f6-4130-9c37-c4f9902a771d-000000/mHJBuJ8D1RcIDE3jrWkdw4I9im4=138']
+    assert iocs['urls'] == [
+        'http://8pretgdl.r.us-east-1.awstrack.me/L0/http:%2F%2Fwww.excelgoodies.com%2Fexcel-vba-training-in-virginia%23course-content/1/0100016ed23f4bef-b14931bd-26f6-4130-9c37-c4f9902a771d-000000/mHJBuJ8D1RcIDE3jrWkdw4I9im4=138'
+    ]
 
 
 def test_file_hash_parsing():
