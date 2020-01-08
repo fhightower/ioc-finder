@@ -190,8 +190,25 @@ def hasMultipleConsecutiveSpaces(string):
     return re.match('  +', string)
 
 
+def hasBothOrNeitherAngleBrackets(string):
+    """Make sure a string either has both '<' and '>' or neither of those angle brackets."""
+    left_angle_bracket_in_string = '<' in string
+    right_angle_bracket_in_string = '>' in string
+
+    # if the string has both brackets...
+    if left_angle_bracket_in_string and right_angle_bracket_in_string:
+        return True
+    # if the string has only one bracket...
+    elif left_angle_bracket_in_string or right_angle_bracket_in_string:
+        return False
+    # if the string has neither of the brackets...
+    else:
+        return True
+
+
 registry_key_subpath_section = Combine(
     Word('\\')
+    + Optional(Word('<'))
     + Word(alphanums)
     + ZeroOrMore(
         # registry key paths may contain a file extension which requires that we capture registry key path sections with a period (e.g. `notepad.exe`)
@@ -201,7 +218,8 @@ registry_key_subpath_section = Combine(
             lambda tokens: tokens[0] not in root_key_list and not hasMultipleConsecutiveSpaces(tokens[0])
         )
     )
-)
+    + Optional(Word('>'))
+).addCondition(lambda tokens: hasBothOrNeitherAngleBrackets(tokens[0]))
 registry_key_subpath = OneOrMore(registry_key_subpath_section)
 registry_key_path = (
     alphanum_word_start

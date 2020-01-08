@@ -169,7 +169,9 @@ def test_url_parsing():
 def test_issue_45_url_parsing():
     s = 'http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p\'6_%09/d%5c'
     results = find_iocs(s)
-    assert results['urls'] == ['http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p\'6_%09/d%5c']
+    assert results['urls'] == [
+        'http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p\'6_%09/d%5c'
+    ]
 
 
 def test_schemeless_url_parsing():
@@ -579,95 +581,6 @@ def test_onion_parsing():
     assert len(iocs['urls']) == 1
     assert 'http://foo.onion/test' in iocs['urls']
     assert 'foo.onion' in iocs['domains']
-
-
-def test_registry_key_abbreviations():
-    s = """<HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED
-Value Name: ShowSuperHidden
-<HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED
-Value Name: HideFileExt
-<HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED
-Value Name: SuperHidden
-<HKLM>\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED\FOLDER\HIDEFILEEXT
-Value Name: DefaultValue
-<HKLM>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\POLICIES\EXPLORER\RUN
-Value Name: PC
-<HKLM>\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN
-Value Name: avscan"""
-
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 4
-    assert 'HKCU\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED' in iocs['registry_key_paths']
-    assert (
-        'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED\FOLDER\HIDEFILEEXT'
-        in iocs['registry_key_paths']
-    )
-    assert 'HKLM\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\POLICIES\EXPLORER\RUN' in iocs['registry_key_paths']
-    assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
-
-
-def test_multiple_registry_key_path_parsing():
-    """Make sure that consecutive registry key paths are parsed properly."""
-    s = """HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 2
-    assert 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME' in iocs['registry_key_paths']
-    assert 'HKLM\SOFTWARE\WOW6432NODE\MICROSOFT\WINDOWS\CURRENTVERSION\RUN' in iocs['registry_key_paths']
-
-
-def test_issue_46_registry_key_with_space_parsing():
-    """Make sure that Registry Keys with a space in them are parsed properly. See: https://github.com/fhightower/ioc-finder/issues/46."""
-    s = """HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
-
-    s = """HKLM\SOFTWARE\Microsoft\Windows ... NT\CurrentVersion\Console\ConsoleIME"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
-
-    s = """Found a registry key like <HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED on the windows box"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKCU\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED'
-
-    s = """Found a registry key like HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME on the windows box"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
-
-    s = 'HKLM\\SOFTWARE\\foo bar\\b'
-    iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar\\b']
-
-    s = 'HKLM\\SOFTWARE\\foo bar\\bing buzz\\b'
-    iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar\\bing buzz\\b']
-
-    s = 'HKLM\\SOFTWARE\\foo bar bing\\b'
-    iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar bing\\b']
-
-    s = 'HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b'
-    iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b']
-
-    s = 'HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b'
-    iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == ['HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b']
-
-    s = 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe'
-    iocs = find_iocs(s)
-    assert iocs['registry_key_paths'] == [
-        'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\\notepad.exe'
-    ]
-
-    # any string with more than one space should be parsed such that anything after multiple spaces is NOT captured
-    s = """HKLM\SOFTWARE\Microsoft\Windows  NT\CurrentVersion\Console\ConsoleIME"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
 
 
 def test_deduplication_of_indicators_with_different_cases():
