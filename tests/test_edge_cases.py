@@ -471,15 +471,15 @@ def test_ip_address_systematically():
 
     s = '1.01.1.1'
     iocs = find_iocs(s)
-    assert iocs['ipv4s'] == '1.1.1.1'
+    assert iocs['ipv4s'] == ['1.1.1.1']
 
     s = '01.1.1.1'
     iocs = find_iocs(s)
-    assert iocs['ipv4s'] == '1.1.1.1'
+    assert iocs['ipv4s'] == ['1.1.1.1']
 
     s = '01.01.1.1'
     iocs = find_iocs(s)
-    assert iocs['ipv4s'] == '1.1.1.1'
+    assert iocs['ipv4s'] == ['1.1.1.1']
 
     s = '0001.1.1.1'
     iocs = find_iocs(s)
@@ -507,7 +507,7 @@ def test_asn_parsing():
 def test_onion_parsing():
     s = 'foo.onion'
     iocs = find_iocs(s)
-    assert iocs['domains'] == 'foo.onion'
+    assert iocs['domains'] == ['foo.onion']
 
     s = 'http://foo.onion/test'
     iocs = find_iocs(s)
