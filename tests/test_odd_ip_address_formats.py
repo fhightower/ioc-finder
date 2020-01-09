@@ -13,6 +13,15 @@ def test_leading_zero():
     results = find_iocs(s)
     assert results['ipv4s'] == ['226.0.0.31']
 
+    s = '014.0.0.01'
+    results = find_iocs(s)
+    assert results['ipv4s'] == ['12.0.0.1']
+
+    # because `018` (the first section of the ip below) is not a valid octal number, it should not be converted
+    s = '018.0.0.01'
+    results = find_iocs(s)
+    assert results['ipv4s'] == ['18.0.0.1']
+
 
 def test_a_b_c_format():
     results = find_iocs('111.111.1111')
