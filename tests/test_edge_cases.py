@@ -121,7 +121,7 @@ def test_url_parsing():
     """Test some specific url examples."""
     s = "https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh"
     iocs = find_iocs(s)
-    assert iocs['urls'] == 'https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh'
+    assert iocs['urls'] == ['https://github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh']
 
     s = '<link href="http://fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css"/>'
     iocs = find_iocs(s)
@@ -164,7 +164,7 @@ def test_schemeless_url_parsing():
     """Test parsing URLs without a scheme."""
     s = "github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh"
     iocs = find_iocs(s)
-    assert iocs['urls'] == 'github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh'
+    assert iocs['urls'] == ['github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh']
 
     s = 'github.com/StylishThemes/GitHub-Dark/blob/master/tools/authors.sh hightower.space/projects'
     iocs = find_iocs(s)

@@ -186,6 +186,11 @@ def test_ipv4_cidr_parsing():
     assert '1.2.3.4/20' in iocs['ipv4_cidrs']
     assert '1.2.3.4/32' in iocs['ipv4_cidrs']
 
+    s = "1.2.3.4/0 1.2.3.4/10 1.2.3.4/20 1.2.3.4/32"
+    iocs = find_iocs(s, parse_address_from_cidr=False)
+    assert len(iocs['ipv4_cidrs']) == 4
+    assert len(iocs['ipv4s']) == 0
+
 
 def test_registry_key_parsing():
     s = "HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
