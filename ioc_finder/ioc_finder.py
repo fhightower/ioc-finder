@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Python package for finding indicators of compromise in text."""
 
+import concurrent.futures
 import json
-import multiprocessing
 import os
 import sys
 
@@ -420,63 +420,38 @@ def find_iocs(
         # remove the authentihashes so they are not also parsed as sha256s
         text = _remove_items(iocs['authentihashes'], text)
 
-    with multiprocessing.Pool() as pool:
+    with concurrent.futures.ProcessPoolExecutor() as executor:
         # domains
-        domains_results = pool.apply_async(parse_domain_names, [text])
+        iocs['domains'] = executor.submit(parse_domain_names, text).result()
 
         # ip addresses
-        ipv4s_results = pool.apply_async(parse_ipv4_addresses, [text])
-        ipv6s_results = pool.apply_async(parse_ipv6_addresses, [text])
+        iocs['ipv4s'] = executor.submit(parse_ipv4_addresses, text).result()
+        iocs['ipv6s'] = executor.submit(parse_ipv6_addresses, text).result()
 
         # file hashes
-        sha512s_results = pool.apply_async(parse_sha512s, [text])
-        sha256s_results = pool.apply_async(parse_sha256s, [text])
-        sha1s_results = pool.apply_async(parse_sha1s, [text])
-        md5s_results = pool.apply_async(parse_md5s, [text])
-        ssdeeps_results = pool.apply_async(parse_ssdeeps, [text])
+        iocs['sha512s'] = executor.submit(parse_sha512s, text).result()
+        iocs['sha256s'] = executor.submit(parse_sha256s, text).result()
+        iocs['sha1s'] = executor.submit(parse_sha1s, text).result()
+        iocs['md5s'] = executor.submit(parse_md5s, text).result()
+        iocs['ssdeeps'] = executor.submit(parse_ssdeeps, text).result()
 
         # misc
-        asns_results = pool.apply_async(parse_asns, [text])
-        cves_results = pool.apply_async(parse_cves, [original_text])
-        registry_key_paths_results = pool.apply_async(parse_registry_key_paths, [text])
-        google_adsense_publisher_ids_results = pool.apply_async(parse_google_adsense_ids, [text])
-        google_analytics_tracker_ids_results = pool.apply_async(parse_google_analytics_ids, [text])
-        bitcoin_addresses_results = pool.apply_async(parse_bitcoin_addresses, [text])
-        mac_addresses_results = pool.apply_async(parse_mac_addresses, [text])
-        user_agents_results = pool.apply_async(parse_user_agents, [text])
-        file_paths_results = pool.apply_async(parse_file_paths, [text])
-        phone_numbers_results = pool.apply_async(parse_phone_numbers, [text])
-        attack_techniques_results = pool.apply_async(parse_attack_techniques, [original_text])
-        attack_tactics_results = pool.apply_async(parse_attack_tactics, [original_text])
-        tlp_labels_results = pool.apply_async(parse_tlp_labels, [original_text])
-        malware_names_results = pool.apply_async(parse_malware_names, [original_text])
-        malpedia_malware_names_results = pool.apply_async(parse_malpedia_malware_names, [original_text])
-
-        # get and record the results
-        iocs['domains'] = domains_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['ipv4s'] = ipv4s_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['ipv6s'] = ipv6s_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['sha512s'] = sha512s_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['sha256s'] = sha256s_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['sha1s'] = sha1s_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['md5s'] = md5s_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['ssdeeps'] = ssdeeps_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['asns'] = asns_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['cves'] = cves_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['registry_key_paths'] = registry_key_paths_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['google_adsense_publisher_ids'] = google_adsense_publisher_ids_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['google_analytics_tracker_ids'] = google_analytics_tracker_ids_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['bitcoin_addresses'] = bitcoin_addresses_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['mac_addresses'] = mac_addresses_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['user_agents'] = user_agents_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['file_paths'] = file_paths_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['phone_numbers'] = phone_numbers_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['attack_techniques'] = attack_techniques_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['attack_tactics'] = attack_tactics_results.get(MULTIPROCESSING_TIMEOUT)
-        iocs['tlp_labels'] = tlp_labels_results.get(MULTIPROCESSING_TIMEOUT)
+        iocs['asns'] = executor.submit(parse_asns, text).result()
+        iocs['cves'] = executor.submit(parse_cves, [original_text]).result()
+        iocs['registry_key_paths'] = executor.submit(parse_registry_key_paths, text).result()
+        iocs['google_adsense_publisher_ids'] = executor.submit(parse_google_adsense_ids, text).result()
+        iocs['google_analytics_tracker_ids'] = executor.submit(parse_google_analytics_ids, text).result()
+        iocs['bitcoin_addresses'] = executor.submit(parse_bitcoin_addresses, text).result()
+        iocs['mac_addresses'] = executor.submit(parse_mac_addresses, text).result()
+        iocs['user_agents'] = executor.submit(parse_user_agents, text).result()
+        iocs['file_paths'] = executor.submit(parse_file_paths, text).result()
+        iocs['phone_numbers'] = executor.submit(parse_phone_numbers, text).result()
+        iocs['attack_techniques'] = executor.submit(parse_attack_techniques, original_text).result()
+        iocs['attack_tactics'] = executor.submit(parse_attack_tactics, original_text).result()
+        iocs['tlp_labels'] = executor.submit(parse_tlp_labels, original_text).result()
         iocs['malware_names'] = []
-        iocs['malware_names'].extend(malware_names_results.get(MULTIPROCESSING_TIMEOUT))
-        iocs['malware_names'].extend(malpedia_malware_names_results.get(MULTIPROCESSING_TIMEOUT))
+        iocs['malware_names'].extend(executor.submit(parse_malware_names, original_text).result())
+        iocs['malware_names'].extend(executor.submit(parse_malpedia_malware_names, original_text).result())
 
     # deduplicate the list of malware names because the names are compiled from two, different functions
     iocs['malware_names'] = _deduplicate(iocs['malware_names'])
