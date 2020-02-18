@@ -1944,7 +1944,7 @@ malware_name_regexes = [
     'dedipros',
     'dipverdle\\.?a?',
     'dircrypt',
-    'dorifel',
+    '(dorifel|quervar)',
     '(dyndns-mirage-apt|mirage)',
     'dyre(za)?',
     '(enfal(-apt)?|lurid)',
