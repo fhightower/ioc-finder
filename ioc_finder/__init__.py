@@ -31,7 +31,7 @@ from .ioc_finder import (
     parse_attack_techniques,
     parse_attack_tactics,
     parse_tlp_labels,
-    parse_malware_names,
+    parse_standard_malware_names,
     parse_malpedia_malware_names,
 )
 

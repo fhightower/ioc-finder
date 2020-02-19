@@ -302,7 +302,7 @@ def parse_tlp_labels(text):
     return _listify(tlp_labels)
 
 
-def parse_malware_names(text):
+def parse_standard_malware_names(text):
     """."""
     malware_names = ioc_grammars.malware_names.searchString(text)
     return _listify(malware_names)
@@ -367,6 +367,7 @@ def find_iocs(
     parse_urls_without_scheme=True,
     parse_imphashes=True,
     parse_authentihashes=True,
+    parse_malware_names=True,
 ):
     """Find indicators of compromise in the given text."""
     iocs = dict()
@@ -449,11 +450,14 @@ def find_iocs(
         iocs['attack_techniques'] = executor.submit(parse_attack_techniques, original_text).result()
         iocs['attack_tactics'] = executor.submit(parse_attack_tactics, original_text).result()
         iocs['tlp_labels'] = executor.submit(parse_tlp_labels, original_text).result()
-        iocs['malware_names'] = []
-        iocs['malware_names'].extend(executor.submit(parse_malware_names, original_text).result())
-        iocs['malware_names'].extend(executor.submit(parse_malpedia_malware_names, original_text).result())
 
-    # deduplicate the list of malware names because the names are compiled from two, different functions
-    iocs['malware_names'] = _deduplicate(iocs['malware_names'])
+        if parse_malware_names:
+            iocs['malware_names'] = []
+            iocs['malware_names'].extend(executor.submit(parse_standard_malware_names, original_text).result())
+            iocs['malware_names'].extend(executor.submit(parse_malpedia_malware_names, original_text).result())
+
+    if parse_malware_names:
+        # deduplicate the list of malware names because the names are compiled from two, different functions
+        iocs['malware_names'] = _deduplicate(iocs['malware_names'])
 
     return iocs
