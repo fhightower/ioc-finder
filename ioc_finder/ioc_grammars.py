@@ -344,10 +344,12 @@ tlp_label = Combine(
     + tlp_colors
 ).setParseAction(upcaseTokens)
 
-malware_names = Or([Regex(malware_name_regex, flags=re.IGNORECASE) for malware_name_regex in malware_name_regexes])
+malware_names = Or(
+    [Regex(malware_name_regex, flags=re.IGNORECASE) for malware_name_regex in malware_name_regexes]
+).setParseAction(downcaseTokens)
 malpedia_malware_names = Or(
     [
         Regex(malpedia_malware_name_regex, flags=re.IGNORECASE)
         for malpedia_malware_name_regex in malpedia_malware_name_regexes
     ]
-)
+).setParseAction(downcaseTokens)
