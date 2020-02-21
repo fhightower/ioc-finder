@@ -2007,7 +2007,7 @@ malware_name_regexes = [
     'qadars',
     '(qakbot|qbot|pinkslipbot)',
     'quant[ _-]?loader',
-    '(dougat|quarian)',
+    '(quarian|dougat)',
     'ramdo',
     'renocide',
     'rerdom',
