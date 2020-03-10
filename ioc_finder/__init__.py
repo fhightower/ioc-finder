@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 from .ioc_finder import (
@@ -35,5 +35,5 @@ from .ioc_finder import (
     parse_malpedia_malware_names,
 )
 
-__author__ = """Floyd Hightower"""
+__author__ = '''Floyd Hightower'''
 __version__ = '2.1.1'

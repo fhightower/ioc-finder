@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Python package for finding indicators of compromise in text."""
+"""Python package for finding observables in text."""
 
 import concurrent.futures
 import json
@@ -13,11 +13,9 @@ import ioc_fanger
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 import ioc_grammars
 
-MULTIPROCESSING_TIMEOUT = 120
-
 
 def _deduplicate(indicator_list):
-    """Deduplicate the list of indicators of compromise."""
+    """Deduplicate the list of observables."""
     return list(set(indicator_list))
 
 
@@ -33,7 +31,7 @@ def _remove_items(items, text):
     return text
 
 
-def prepare_text(text):
+def _prepare_text(text):
     """Fang (https://ioc-fang.hightower.space/) and encode the text in such a way that all Unicode domain names are converted into their punycode representation."""
     text = ioc_fanger.fang(text)
     # text = text.encode('idna').decode('utf-8')
@@ -332,7 +330,8 @@ def parse_malpedia_malware_names(text):
 )
 @click.option('--no_urls_without_schemes', is_flag=True, help='Using this flag will not parse URLs without schemes')
 @click.option('--no_import_hashes', is_flag=True, help='Using this flag will not parse import hashes')
-@click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihash')
+@click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihashes')
+@click.option('--no_malware_names', is_flag=True, help='Using this flag will not parse malware names')
 def cli_find_iocs(
     text,
     no_url_domain_parsing,
@@ -342,17 +341,19 @@ def cli_find_iocs(
     no_urls_without_schemes,
     no_import_hashes,
     no_authentihashes,
+    no_malware_names,
 ):
-    """CLI interface for parsing indicators of compromise."""
+    """CLI interface for parsing observables."""
     iocs = find_iocs(
         text,
-        not no_url_domain_parsing,
-        not no_email_addr_domain_parsing,
-        not no_cidr_address_parsing,
-        not no_xmpp_addr_domain_parsing,
-        not no_urls_without_schemes,
-        not no_import_hashes,
-        not no_authentihashes,
+        parse_domain_from_url=not no_url_domain_parsing,
+        parse_domain_from_email_address=not no_email_addr_domain_parsing,
+        parse_address_from_cidr=not no_cidr_address_parsing,
+        parse_domain_name_from_xmpp_address=not no_xmpp_addr_domain_parsing,
+        parse_urls_without_scheme=not no_urls_without_schemes,
+        parse_imphashes=not no_import_hashes,
+        parse_authentihashes=not no_authentihashes,
+        parse_malware_names=not no_malware_names,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
@@ -369,10 +370,10 @@ def find_iocs(
     parse_authentihashes=True,
     parse_malware_names=True,
 ):
-    """Find indicators of compromise in the given text."""
+    """Find observables in the given text."""
     iocs = dict()
 
-    text = prepare_text(text)
+    text = _prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
 
@@ -380,7 +381,7 @@ def find_iocs(
     iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
     if not parse_domain_from_url:
         text = _remove_items(iocs['urls'], text)
-    # even if we want to parse domain names from the urls, we need to remove the urls's paths to make sure no domain names are incorrectly parsed from the urls's paths
+    # even if we want to parse domain names from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
     else:
         text = _remove_url_paths(iocs['urls'], text, parse_urls_without_scheme)
 
