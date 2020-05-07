@@ -29,7 +29,10 @@ Currently, this package can the following items in a given text:
 - URLs (URLs with and without schemes)
 - User agents (*beta*)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
-- MITRE ATT&CK tactics and techniques (see [more info](https://attack.mitre.org/))
+- MITRE ATT&CK data (see [more info](https://attack.mitre.org/)):
+    - Pre-attack tactics and techniques
+    - Enterprise tactics and techniques
+    - Mobile tactics and techniques
 - [TLP labels](https://www.us-cert.gov/tlp)
 - Malware names
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
@@ -112,8 +115,16 @@ The `find_iocs()` returns a dictionary in the following structure:
 ```json
 {
     "asns": [],
-    "attack_tactics": [],
-    "attack_techniques": [],
+    "attack_tactics": {
+        "enterprise": [],
+        "mobile": [],
+        "pre_attack": []
+    },
+    "attack_techniques": {
+        "enterprise": [],
+        "mobile": [],
+        "pre_attack": []
+    },
     "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
@@ -141,6 +152,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "user_agents": [],
     "xmpp_addresses": []
 }
+
 ```
 
 For example, running the example code shown at the start of the [usage](#usage) section above produces the following output:
@@ -148,8 +160,16 @@ For example, running the example code shown at the start of the [usage](#usage) 
 ```json
 {
     "asns": [],
-    "attack_tactics": [],
-    "attack_techniques": [],
+    "attack_tactics": {
+        "enterprise": [],
+        "mobile": [],
+        "pre_attack": []
+    },
+    "attack_techniques": {
+        "enterprise": [],
+        "mobile": [],
+        "pre_attack": []
+    },
     "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
@@ -198,8 +218,16 @@ This will return:
 ```json
 {
     "asns": [],
-    "attack_tactics": [],
-    "attack_techniques": [],
+    "attack_tactics": {
+        "enterprise": [],
+        "mobile": [],
+        "pre_attack": []
+    },
+    "attack_techniques": {
+        "enterprise": [],
+        "mobile": [],
+        "pre_attack": []
+    },
     "authentihashes": [],
     "bitcoin_addresses": [],
     "cves": [],
