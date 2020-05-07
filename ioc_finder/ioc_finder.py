@@ -282,16 +282,40 @@ def parse_phone_numbers(text):
     return [phone_number[::-1] for phone_number in _listify(phone_numbers)]
 
 
-def parse_attack_techniques(text):
+def parse_pre_attack_tactics(text):
     """."""
-    attack_techniques = ioc_grammars.attack_technique.searchString(text)
-    return _listify(attack_techniques)
+    data = ioc_grammars.pre_attack_tactics_grammar.searchString(text)
+    return _listify(data)
 
 
-def parse_attack_tactics(text):
+def parse_pre_attack_techniques(text):
     """."""
-    attack_tactics = ioc_grammars.attack_tactic.searchString(text)
-    return _listify(attack_tactics)
+    data = ioc_grammars.pre_attack_techniques_grammar.searchString(text)
+    return _listify(data)
+
+
+def parse_enterprise_attack_tactics(text):
+    """."""
+    data = ioc_grammars.enterprise_attack_tactics_grammar.searchString(text)
+    return _listify(data)
+
+
+def parse_enterprise_attack_techniques(text):
+    """."""
+    data = ioc_grammars.enterprise_attack_techniques_grammar.searchString(text)
+    return _listify(data)
+
+
+def parse_mobile_attack_tactics(text):
+    """."""
+    data = ioc_grammars.mobile_attack_tactics_grammar.searchString(text)
+    return _listify(data)
+
+
+def parse_mobile_attack_techniques(text):
+    """."""
+    data = ioc_grammars.mobile_attack_techniques_grammar.searchString(text)
+    return _listify(data)
 
 
 def parse_tlp_labels(text):
@@ -448,9 +472,18 @@ def find_iocs(
         iocs['user_agents'] = executor.submit(parse_user_agents, text).result()
         iocs['file_paths'] = executor.submit(parse_file_paths, text).result()
         iocs['phone_numbers'] = executor.submit(parse_phone_numbers, text).result()
-        iocs['attack_techniques'] = executor.submit(parse_attack_techniques, original_text).result()
-        iocs['attack_tactics'] = executor.submit(parse_attack_tactics, original_text).result()
         iocs['tlp_labels'] = executor.submit(parse_tlp_labels, original_text).result()
+
+        iocs['attack_tactics'] = {
+            "pre_attack": executor.submit(parse_pre_attack_tactics, original_text).result(),
+            "enterprise": executor.submit(parse_enterprise_attack_tactics, original_text).result(),
+            "mobile": executor.submit(parse_mobile_attack_tactics, original_text).result()
+        }
+        iocs['attack_techniques'] = {
+            "pre_attack": executor.submit(parse_pre_attack_techniques, original_text).result(),
+            "enterprise": executor.submit(parse_enterprise_attack_techniques, original_text).result(),
+            "mobile": executor.submit(parse_mobile_attack_techniques, original_text).result()
+        }
 
         if parse_malware_names:
             iocs['malware_names'] = []
