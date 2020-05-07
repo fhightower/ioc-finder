@@ -42,60 +42,75 @@ def test_attack_techniques():
     # make sure attack techniques preceded by some alpha-num. character are not parsed
     s = """FOOT1329"""
     results = find_iocs(s)
-    assert results['attack_techniques'] == []
+    assert results['attack_techniques']['pre_attack'] == []
+    assert results['attack_techniques']['enterprise'] == []
+    assert results['attack_techniques']['mobile'] == []
 
     # make sure attack techniques postceded by some alpha-num. character are not parsed
     s = """T1329FUN"""
     results = find_iocs(s)
-    assert results['attack_techniques'] == []
+    assert results['attack_techniques']['pre_attack'] == []
+    assert results['attack_techniques']['enterprise'] == []
+    assert results['attack_techniques']['mobile'] == []
 
     # make sure attack techniques preceeded by some alpha-num. character are not parsed
     s = """foot1329"""
     results = find_iocs(s)
-    assert results['attack_techniques'] == []
+    assert results['attack_techniques']['pre_attack'] == []
+    assert results['attack_techniques']['enterprise'] == []
+    assert results['attack_techniques']['mobile'] == []
 
     # test lower-case matching
     s = """t1329"""
     results = find_iocs(s)
-    assert results['attack_techniques'] == ['T1329']
+    print(results)
+    assert results['attack_techniques']['pre_attack'] == ['T1329']
 
     s = 'T1156'
     results = find_iocs(s)
-    assert results['attack_techniques'] == ['T1156']
+    assert results['attack_techniques']['enterprise'] == ['T1156']
 
     s = "https://attack.mitre.org/techniques/T1156/"
     results = find_iocs(s)
-    assert results['attack_techniques'] == ['T1156']
+    assert results['attack_techniques']['enterprise'] == ['T1156']
 
 
 def test_attack_tactics():
     # make sure attack tactics preceeded by some alpha-num. character are not parsed
     s = """FOOTA0001"""
     results = find_iocs(s)
-    assert results['attack_tactics'] == []
+    assert results['attack_tactics']['pre_attack'] == []
+    assert results['attack_tactics']['enterprise'] == []
+    assert results['attack_tactics']['mobile'] == []
 
     s = """AT0001"""
     results = find_iocs(s)
-    assert results['attack_tactics'] == []
+    assert results['attack_tactics']['pre_attack'] == []
+    assert results['attack_tactics']['enterprise'] == []
+    assert results['attack_tactics']['mobile'] == []
 
     # make sure attack tactics postceded by some alpha-num. character are not parsed
     s = """TA0001FUN"""
     results = find_iocs(s)
-    assert results['attack_tactics'] == []
+    assert results['attack_tactics']['pre_attack'] == []
+    assert results['attack_tactics']['enterprise'] == []
+    assert results['attack_tactics']['mobile'] == []
 
     # make sure attack tactics preceeded by some alpha-num. character are not parsed
     s = """foota0001"""
     results = find_iocs(s)
-    assert results['attack_tactics'] == []
+    assert results['attack_tactics']['pre_attack'] == []
+    assert results['attack_tactics']['enterprise'] == []
+    assert results['attack_tactics']['mobile'] == []
 
     # test lower-case matching
     s = """ta0001"""
     results = find_iocs(s)
-    assert results['attack_tactics'] == ['TA0001']
+    assert results['attack_tactics']['enterprise'] == ['TA0001']
 
     s = "https://attack.mitre.org/tactics/TA0001/"
     results = find_iocs(s)
-    assert results['attack_tactics'] == ['TA0001']
+    assert results['attack_tactics']['enterprise'] == ['TA0001']
 
 
 def test_ioc_finder(text_a):

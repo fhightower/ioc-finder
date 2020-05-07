@@ -490,10 +490,11 @@ A wide variety of cloud, virtual private services, hosting, compute, and storage
 
 T1308"""
     results = find_iocs(s)
+    print(results)
     assert len(results['attack_techniques']) == 3
-    assert 'T1329' in results['attack_techniques']
-    assert 'T1307' in results['attack_techniques']
-    assert 'T1308' in results['attack_techniques']
+    assert 'T1329' in results['attack_techniques']['pre_attack']
+    assert 'T1307' in results['attack_techniques']['pre_attack']
+    assert 'T1308' in results['attack_techniques']['pre_attack']
 
 
 def test_attack_tactics():
@@ -504,6 +505,6 @@ def test_attack_tactics():
     TA0014  Targ"""
     results = find_iocs(s)
     assert len(results['attack_tactics']) == 3
-    assert 'TA0012' in results['attack_tactics']
-    assert 'TA0013' in results['attack_tactics']
-    assert 'TA0014' in results['attack_tactics']
+    assert 'TA0012' in results['attack_tactics']['pre_attack']
+    assert 'TA0013' in results['attack_tactics']['pre_attack']
+    assert 'TA0014' in results['attack_tactics']['pre_attack']
