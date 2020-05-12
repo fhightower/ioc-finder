@@ -1,4 +1,4 @@
-# IOC Finder
+# Observable Finder (Formerly named "IOC Finder")
 
 [![PyPi](https://img.shields.io/pypi/v/ioc_finder.svg)](https://pypi.python.org/pypi/ioc_finder)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4078c4e3e384431bbe69c35c7f6da7b7)](https://www.codacy.com/app/fhightower/ioc-finder)
@@ -31,8 +31,8 @@ Currently, this package can the following items in a given text:
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - MITRE ATT&CK data (see [more info](https://attack.mitre.org/)):
     - Pre-attack tactics and techniques
-    - Enterprise tactics and techniques
-    - Mobile tactics and techniques
+    - Enterprise mitigations, tactics, and techniques
+    - Mobile mitigations, tactics, and techniques
 - [TLP labels](https://www.us-cert.gov/tlp)
 - Malware names
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
@@ -115,6 +115,10 @@ The `find_iocs()` returns a dictionary in the following structure:
 ```json
 {
     "asns": [],
+    "attack_mitigations": {
+        "enterprise": [],
+        "mobile": []
+    },
     "attack_tactics": {
         "enterprise": [],
         "mobile": [],
@@ -160,6 +164,10 @@ For example, running the example code shown at the start of the [usage](#usage) 
 ```json
 {
     "asns": [],
+    "attack_mitigations": {
+        "enterprise": [],
+        "mobile": []
+    },
     "attack_tactics": {
         "enterprise": [],
         "mobile": [],
@@ -218,6 +226,10 @@ This will return:
 ```json
 {
     "asns": [],
+    "attack_mitigations": {
+        "enterprise": [],
+        "mobile": []
+    },
     "attack_tactics": {
         "enterprise": [],
         "mobile": [],

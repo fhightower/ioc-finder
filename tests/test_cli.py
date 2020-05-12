@@ -30,6 +30,10 @@ def test_cli_without_domain_from_url_parsing():
         result.output.strip()
         == """{
     "asns": [],
+    "attack_mitigations": {
+        "enterprise": [],
+        "mobile": []
+    },
     "attack_tactics": {
         "enterprise": [],
         "mobile": [],
