@@ -25,7 +25,20 @@ from pyparsing import (
     ZeroOrMore,
 )
 
-from data_lists import pre_attack_tactics, pre_attack_techniques, enterprise_attack_mitigations, enterprise_attack_tactics, enterprise_attack_techniques, mobile_attack_mitigations, mobile_attack_tactics, mobile_attack_techniques, tlds, schemes, malware_name_regexes, malpedia_malware_name_regexes
+from data_lists import (
+    pre_attack_tactics,
+    pre_attack_techniques,
+    enterprise_attack_mitigations,
+    enterprise_attack_tactics,
+    enterprise_attack_techniques,
+    mobile_attack_mitigations,
+    mobile_attack_tactics,
+    mobile_attack_techniques,
+    tlds,
+    schemes,
+    malware_name_regexes,
+    malpedia_malware_name_regexes,
+)
 
 alphanum_word_start = WordStart(wordChars=alphanums)
 alphanum_word_end = WordEnd(wordChars=alphanums)
@@ -323,16 +336,44 @@ phone_number_format_1 = Combine(
 
 phone_number = Or([phone_number_format_1])
 
-pre_attack_tactics_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in pre_attack_tactics]).setParseAction(upcaseTokens) + alphanum_word_end
-pre_attack_techniques_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(upcaseTokens) + alphanum_word_end
+pre_attack_tactics_grammar = (
+    alphanum_word_start
+    + Or([CaselessLiteral(i) for i in pre_attack_tactics]).setParseAction(upcaseTokens)
+    + alphanum_word_end
+)
+pre_attack_techniques_grammar = (
+    alphanum_word_start
+    + Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(upcaseTokens)
+    + alphanum_word_end
+)
 
-enterprise_attack_mitigations_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in enterprise_attack_mitigations]) + alphanum_word_end
-enterprise_attack_tactics_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).setParseAction(upcaseTokens) + alphanum_word_end
-enterprise_attack_techniques_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(upcaseTokens) + alphanum_word_end
+enterprise_attack_mitigations_grammar = (
+    alphanum_word_start + Or([CaselessLiteral(i) for i in enterprise_attack_mitigations]) + alphanum_word_end
+)
+enterprise_attack_tactics_grammar = (
+    alphanum_word_start
+    + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).setParseAction(upcaseTokens)
+    + alphanum_word_end
+)
+enterprise_attack_techniques_grammar = (
+    alphanum_word_start
+    + Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(upcaseTokens)
+    + alphanum_word_end
+)
 
-mobile_attack_mitigations_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in mobile_attack_mitigations]) + alphanum_word_end
-mobile_attack_tactics_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).setParseAction(upcaseTokens) + alphanum_word_end
-mobile_attack_techniques_grammar = alphanum_word_start + Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(upcaseTokens) + alphanum_word_end
+mobile_attack_mitigations_grammar = (
+    alphanum_word_start + Or([CaselessLiteral(i) for i in mobile_attack_mitigations]) + alphanum_word_end
+)
+mobile_attack_tactics_grammar = (
+    alphanum_word_start
+    + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).setParseAction(upcaseTokens)
+    + alphanum_word_end
+)
+mobile_attack_techniques_grammar = (
+    alphanum_word_start
+    + Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(upcaseTokens)
+    + alphanum_word_end
+)
 
 tlp_colors_list = [CaselessLiteral('red'), CaselessLiteral('amber'), CaselessLiteral('green'), CaselessLiteral('white')]
 tlp_colors = Or(tlp_colors_list)
