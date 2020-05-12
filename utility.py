@@ -26,7 +26,8 @@ def get_enterprise_attack_data():
     d = r.json()['objects']
     tactics = [_get_id(i) for i in d if i['type'] == 'x-mitre-tactic']
     techniques = [_get_id(i) for i in d if i['type'] == 'attack-pattern']
-    return tactics, techniques
+    mitigations = [_get_id(i) for i in d if i['type'] == 'course-of-action' and _get_id(i).startswith('M')]
+    return tactics, techniques, mitigations
 
 
 def get_mobile_attack_data():
@@ -34,7 +35,8 @@ def get_mobile_attack_data():
     d = r.json()['objects']
     tactics = [_get_id(i) for i in d if i['type'] == 'x-mitre-tactic']
     techniques = [_get_id(i) for i in d if i['type'] == 'attack-pattern']
-    return tactics, techniques
+    mitigations = [_get_id(i) for i in d if i['type'] == 'course-of-action' and _get_id(i).startswith('M')]
+    return tactics, techniques, mitigations
 
 
 print(get_pre_attack_data())
