@@ -294,6 +294,12 @@ def parse_pre_attack_techniques(text):
     return _listify(data)
 
 
+def parse_enterprise_attack_mitigations(text):
+    """."""
+    data = ioc_grammars.enterprise_attack_mitigations_grammar.searchString(text)
+    return _listify(data)
+
+
 def parse_enterprise_attack_tactics(text):
     """."""
     data = ioc_grammars.enterprise_attack_tactics_grammar.searchString(text)
@@ -303,6 +309,12 @@ def parse_enterprise_attack_tactics(text):
 def parse_enterprise_attack_techniques(text):
     """."""
     data = ioc_grammars.enterprise_attack_techniques_grammar.searchString(text)
+    return _listify(data)
+
+
+def parse_mobile_attack_mitigations(text):
+    """."""
+    data = ioc_grammars.mobile_attack_mitigations_grammar.searchString(text)
     return _listify(data)
 
 
@@ -474,6 +486,10 @@ def find_iocs(
         iocs['phone_numbers'] = executor.submit(parse_phone_numbers, text).result()
         iocs['tlp_labels'] = executor.submit(parse_tlp_labels, original_text).result()
 
+        iocs['attack_mitigations'] = {
+            "enterprise": executor.submit(parse_enterprise_attack_mitigations, original_text).result(),
+            "mobile": executor.submit(parse_mobile_attack_mitigations, original_text).result()
+        }
         iocs['attack_tactics'] = {
             "pre_attack": executor.submit(parse_pre_attack_tactics, original_text).result(),
             "enterprise": executor.submit(parse_enterprise_attack_tactics, original_text).result(),
