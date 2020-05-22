@@ -279,6 +279,13 @@ def test_email_address_parsing():
     assert iocs['email_addresses_complete'] == ['foo"bar@gmail.com']
     assert iocs['email_addresses'] == ['bar@gmail.com']
 
+    s = 'Abc\\@def@example.com'
+    iocs = find_iocs(s)
+    print(iocs['email_addresses_complete'])
+    print(iocs['email_addresses'])
+    assert iocs['email_addresses_complete'] == ['Abc\@def@example.com']
+    assert iocs['email_addresses'] == ['def@example.com']
+
     s = 'foobar@gmail.com"'
     iocs = find_iocs(s)
     assert iocs['email_addresses_complete'] == ['foobar@gmail.com']
