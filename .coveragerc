@@ -3,4 +3,4 @@ omit =
     .tox/*
     tests/*
     setup.py
-    travis_pypi_setup.py
+    utility.py
