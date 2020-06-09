@@ -86,7 +86,7 @@ complete_email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
 # the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted complete_email_local_part (and the double-quotes and backslash should be preceded by a backslash)
 complete_email_local_part = Combine(
     Optional(complete_email_comment)('email_address_comment')
-    + Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"')
+    + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), "\\@"]))
     + Optional(complete_email_comment)('email_address_comment')
 )
 complete_email_address = Combine(
