@@ -36,8 +36,6 @@ from data_lists import (
     mobile_attack_techniques,
     tlds,
     schemes,
-    malware_name_regexes,
-    malpedia_malware_name_regexes,
 )
 
 alphanum_word_start = WordStart(wordChars=alphanums)
@@ -383,13 +381,3 @@ tlp_label = Combine(
     + Or([Literal(':'), Literal('-'), Literal(' '), Empty()]).setParseAction(lambda x: ':')
     + tlp_colors
 ).setParseAction(upcaseTokens)
-
-malware_names = Or(
-    [Regex(malware_name_regex, flags=re.IGNORECASE) for malware_name_regex in malware_name_regexes]
-).setParseAction(downcaseTokens)
-malpedia_malware_names = Or(
-    [
-        Regex(malpedia_malware_name_regex, flags=re.IGNORECASE)
-        for malpedia_malware_name_regex in malpedia_malware_name_regexes
-    ]
-).setParseAction(downcaseTokens)

@@ -35,8 +35,6 @@ from .ioc_finder import (
     parse_mobile_attack_tactics,
     parse_mobile_attack_techniques,
     parse_tlp_labels,
-    parse_standard_malware_names,
-    parse_malpedia_malware_names,
 )
 
 __author__ = '''Floyd Hightower'''

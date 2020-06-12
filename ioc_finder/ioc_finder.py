@@ -336,18 +336,6 @@ def parse_tlp_labels(text):
     return _listify(tlp_labels)
 
 
-def parse_standard_malware_names(text):
-    """."""
-    malware_names = ioc_grammars.malware_names.searchString(text)
-    return _listify(malware_names)
-
-
-def parse_malpedia_malware_names(text):
-    """."""
-    malpedia_malware_names = ioc_grammars.malpedia_malware_names.searchString(text)
-    return _listify(malpedia_malware_names)
-
-
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
@@ -367,7 +355,6 @@ def parse_malpedia_malware_names(text):
 @click.option('--no_urls_without_schemes', is_flag=True, help='Using this flag will not parse URLs without schemes')
 @click.option('--no_import_hashes', is_flag=True, help='Using this flag will not parse import hashes')
 @click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihashes')
-@click.option('--no_malware_names', is_flag=True, help='Using this flag will not parse malware names')
 def cli_find_iocs(
     text,
     no_url_domain_parsing,
@@ -377,7 +364,6 @@ def cli_find_iocs(
     no_urls_without_schemes,
     no_import_hashes,
     no_authentihashes,
-    no_malware_names,
 ):
     """CLI interface for parsing observables."""
     iocs = find_iocs(
@@ -389,7 +375,6 @@ def cli_find_iocs(
         parse_urls_without_scheme=not no_urls_without_schemes,
         parse_imphashes=not no_import_hashes,
         parse_authentihashes=not no_authentihashes,
-        parse_malware_names=not no_malware_names,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
@@ -404,7 +389,6 @@ def find_iocs(
     parse_urls_without_scheme=True,
     parse_imphashes=True,
     parse_authentihashes=True,
-    parse_malware_names=True,
 ):
     """Find observables in the given text."""
     iocs = dict()
@@ -500,14 +484,5 @@ def find_iocs(
             "enterprise": executor.submit(parse_enterprise_attack_techniques, original_text).result(),
             "mobile": executor.submit(parse_mobile_attack_techniques, original_text).result()
         }
-
-        if parse_malware_names:
-            iocs['malware_names'] = []
-            iocs['malware_names'].extend(executor.submit(parse_standard_malware_names, original_text).result())
-            iocs['malware_names'].extend(executor.submit(parse_malpedia_malware_names, original_text).result())
-
-    if parse_malware_names:
-        # deduplicate the list of malware names because the names are compiled from two, different functions
-        iocs['malware_names'] = _deduplicate(iocs['malware_names'])
 
     return iocs

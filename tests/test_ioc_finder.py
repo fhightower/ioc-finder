@@ -4,16 +4,6 @@
 from ioc_finder import find_iocs
 
 
-def test_malware_names():
-    s = 'Bublik Emotet Esfury Gootkit'
-    malware_names = find_iocs(s)['malware_names']
-    assert len(malware_names) == 4
-
-    s = 'Bublik Bublik'
-    malware_names = find_iocs(s)['malware_names']
-    assert len(malware_names) == 1
-
-
 def test_tlp_labels():
     s = 'tlp amber and TLP:RED'
     iocs = find_iocs(s)
