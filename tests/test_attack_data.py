@@ -15,7 +15,8 @@ Configur'''
     results = find_iocs(s)
     assert list(results['attack_mitigations'].keys()) == ['enterprise', 'mobile']
     assert results['attack_mitigations']['mobile'] == []
-    assert results['attack_mitigations']['enterprise'] == ['M1036', 'M1015']
+    assert 'M1036' in results['attack_mitigations']['enterprise']
+    assert 'M1015' in results['attack_mitigations']['enterprise']
 
 
 def test_attack_mobile_mitigations_1():
@@ -28,7 +29,8 @@ Enterprises can vet applications for exploitable vulnerabilities or unwanted (pr
     results = find_iocs(s)
     assert list(results['attack_mitigations'].keys()) == ['enterprise', 'mobile']
     assert results['attack_mitigations']['enterprise'] == ['M1013']
-    assert results['attack_mitigations']['mobile'] == ['M1013', 'M1005']
+    assert 'M1013' in results['attack_mitigations']['mobile']
+    assert 'M1005' in results['attack_mitigations']['mobile']
 
 
 def test_attack_techniques():
@@ -135,3 +137,17 @@ def test_attack_tactics_edge_cases():
     s = "https://attack.mitre.org/tactics/TA0001/"
     results = find_iocs(s)
     assert results['attack_tactics']['enterprise'] == ['TA0001']
+
+
+def test_subtechnique_parsing():
+    s = 'T1156'
+    results = find_iocs(s)
+    assert results['attack_techniques']['enterprise'] == ['T1156']
+
+    s = 'T1156.001'
+    results = find_iocs(s)
+    assert results['attack_techniques']['enterprise'] == ['T1156.001']
+
+    s = 'T1156.0012'
+    results = find_iocs(s)
+    assert results['attack_techniques']['enterprise'] == []

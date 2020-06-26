@@ -472,17 +472,17 @@ def find_iocs(
 
         iocs['attack_mitigations'] = {
             "enterprise": executor.submit(parse_enterprise_attack_mitigations, original_text).result(),
-            "mobile": executor.submit(parse_mobile_attack_mitigations, original_text).result()
+            "mobile": executor.submit(parse_mobile_attack_mitigations, original_text).result(),
         }
         iocs['attack_tactics'] = {
             "pre_attack": executor.submit(parse_pre_attack_tactics, original_text).result(),
             "enterprise": executor.submit(parse_enterprise_attack_tactics, original_text).result(),
-            "mobile": executor.submit(parse_mobile_attack_tactics, original_text).result()
+            "mobile": executor.submit(parse_mobile_attack_tactics, original_text).result(),
         }
         iocs['attack_techniques'] = {
             "pre_attack": executor.submit(parse_pre_attack_techniques, original_text).result(),
             "enterprise": executor.submit(parse_enterprise_attack_techniques, original_text).result(),
-            "mobile": executor.submit(parse_mobile_attack_techniques, original_text).result()
+            "mobile": executor.submit(parse_mobile_attack_techniques, original_text).result(),
         }
 
     return iocs

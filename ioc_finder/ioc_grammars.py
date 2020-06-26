@@ -334,6 +334,7 @@ phone_number_format_1 = Combine(
 
 phone_number = Or([phone_number_format_1])
 
+attack_sub_technique = Literal('.') + Word(nums, exact=3)
 pre_attack_tactics_grammar = (
     alphanum_word_start
     + Or([CaselessLiteral(i) for i in pre_attack_tactics]).setParseAction(upcaseTokens)
@@ -341,7 +342,10 @@ pre_attack_tactics_grammar = (
 )
 pre_attack_techniques_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(upcaseTokens)
+    + Combine(
+        Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(upcaseTokens)
+        + Optional(attack_sub_technique)
+    )
     + alphanum_word_end
 )
 
@@ -355,7 +359,10 @@ enterprise_attack_tactics_grammar = (
 )
 enterprise_attack_techniques_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(upcaseTokens)
+    + Combine(
+        Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(upcaseTokens)
+        + Optional(attack_sub_technique)
+    )
     + alphanum_word_end
 )
 
@@ -369,7 +376,10 @@ mobile_attack_tactics_grammar = (
 )
 mobile_attack_techniques_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(upcaseTokens)
+    + Combine(
+        Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(upcaseTokens)
+        + Optional(attack_sub_technique)
+    )
     + alphanum_word_end
 )
 
