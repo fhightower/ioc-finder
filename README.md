@@ -30,9 +30,9 @@ Currently, this package can the following items in a given text:
 - User agents (*beta*)
 - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
 - MITRE ATT&CK data (see [more info](https://attack.mitre.org/)):
-    - Pre-attack tactics and techniques
-    - Enterprise mitigations, tactics, and techniques
-    - Mobile mitigations, tactics, and techniques
+    - Pre-attack tactics and techniques (and [sub-techniques](https://medium.com/mitre-attack/attack-subs-what-you-need-to-know-99bce414ae0b))
+    - Enterprise mitigations, tactics, and techniques (and [sub-techniques](https://medium.com/mitre-attack/attack-subs-what-you-need-to-know-99bce414ae0b))
+    - Mobile mitigations, tactics, and techniques (and [sub-techniques](https://medium.com/mitre-attack/attack-subs-what-you-need-to-know-99bce414ae0b))
 - [TLP labels](https://www.us-cert.gov/tlp)
 - Others... if you have any requests, [let me know](https://github.com/fhightower/ioc-finder) (or you can contact me [here](https://hightower.space/contact/) to make private suggestions)!
 
