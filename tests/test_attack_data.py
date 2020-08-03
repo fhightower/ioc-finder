@@ -140,13 +140,13 @@ def test_attack_tactics_edge_cases():
 
 
 def test_subtechnique_parsing():
-    s = 'T1156'
+    s = 'T1546.004'
     results = find_iocs(s)
-    assert results['attack_techniques']['enterprise'] == ['T1156']
+    assert results['attack_techniques']['enterprise'] == ['T1546.004']
 
-    s = 'T1156.001'
+    s = 'T1546.004'
     results = find_iocs(s)
-    assert results['attack_techniques']['enterprise'] == ['T1156.001']
+    assert results['attack_techniques']['enterprise'] == ['T1546.004']
 
     s = 'T1156.0012'
     results = find_iocs(s)
