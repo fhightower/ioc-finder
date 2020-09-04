@@ -1,7 +1,7 @@
 # Observable Finder (Formerly named "IOC Finder")
 
 [![PyPi](https://img.shields.io/pypi/v/ioc_finder.svg)](https://pypi.python.org/pypi/ioc_finder)
-[![PyPI - Downloads](https://pypi.python.org/pypi/ioc_finder)](https://img.shields.io/pypi/dm/ioc-finder)
+![PyPI - Downloads](https://pypi.python.org/pypi/ioc_finder)(https://img.shields.io/pypi/dm/ioc-finder)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4078c4e3e384431bbe69c35c7f6da7b7)](https://www.codacy.com/app/fhightower/ioc-finder)
 [![Build Status](https://travis-ci.org/fhightower/ioc-finder.svg?branch=master)](https://travis-ci.org/fhightower/ioc-finder)
 [![codecov](https://codecov.io/gh/fhightower/ioc-finder/branch/master/graph/badge.svg)](https://codecov.io/gh/fhightower/ioc-finder)
