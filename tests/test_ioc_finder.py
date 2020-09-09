@@ -137,6 +137,17 @@ def test_url_parsing():
         'http://8pretgdl.r.us-east-1.awstrack.me/L0/http:%2F%2Fwww.excelgoodies.com%2Fexcel-vba-training-in-virginia%23course-content/1/0100016ed23f4bef-b14931bd-26f6-4130-9c37-c4f9902a771d-000000/mHJBuJ8D1RcIDE3jrWkdw4I9im4=138'
     ]
 
+    s = 'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
+    iocs = find_iocs(s)
+    assert iocs['sha256s'] == [
+        '2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862'
+    ]
+
+    # this was implemented for https://github.com/fhightower/ioc-finder/issues/87
+    s = 'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
+    iocs = find_iocs(s, parse_from_url_path=False)
+    assert iocs['sha256s'] == []
+
 
 def test_file_hash_parsing():
     s = "{} {} {} {} {}".format('A' * 32, 'a' * 32, 'b' * 40, 'c' * 64, 'd' * 128)

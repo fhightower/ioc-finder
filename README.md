@@ -100,6 +100,7 @@ You must pass some text into the `find_iocs()` function as string (the iocs will
 The `find_iocs` takes the following keywords (all of them default to `True`):
 
 - `parse_domain_from_url` (default=True): Whether or not to parse domain names from URLs (e.g. `example.com` from `https://example.com/test`)
+- `parse_from_url_path` (default=True): Whether or not to parse observables from URL paths (e.g. `2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862` from `https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection`)
 - `parse_domain_from_email_address` (default=True): Whether or not to parse domain names from email addresses (e.g. `example.com` from `foo@example.com`)
 - `parse_address_from_cidr` (default=True): Whether or not to parse IP addresses from CIDR ranges (e.g. `0.0.0.1` from `0.0.0.1/24`)
 - `parse_urls_without_scheme` (default=True): Whether or not to parse URLs without a scheme (see [https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Generic_syntax](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Generic_syntax)) (e.g. `hightower.space/projects`)

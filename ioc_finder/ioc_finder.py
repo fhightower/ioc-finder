@@ -341,6 +341,7 @@ def parse_tlp_labels(text):
 @click.command()
 @click.argument('text')
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
+@click.option('--no_parse_from_url_path', is_flag=True, help='Using this flag will not parse observables from URL paths')
 @click.option(
     '--no_email_addr_domain_parsing',
     is_flag=True,
@@ -360,6 +361,7 @@ def parse_tlp_labels(text):
 def cli_find_iocs(
     text,
     no_url_domain_parsing,
+    no_parse_from_url_path,
     no_email_addr_domain_parsing,
     no_cidr_address_parsing,
     no_xmpp_addr_domain_parsing,
@@ -371,6 +373,7 @@ def cli_find_iocs(
     iocs = find_iocs(
         text,
         parse_domain_from_url=not no_url_domain_parsing,
+        parse_from_url_path=not no_parse_from_url_path,
         parse_domain_from_email_address=not no_email_addr_domain_parsing,
         parse_address_from_cidr=not no_cidr_address_parsing,
         parse_domain_name_from_xmpp_address=not no_xmpp_addr_domain_parsing,
@@ -385,6 +388,7 @@ def cli_find_iocs(
 def find_iocs(
     text: str,
     parse_domain_from_url: bool = True,
+    parse_from_url_path: bool = True,
     parse_domain_from_email_address: bool = True,
     parse_address_from_cidr: bool = True,
     parse_domain_name_from_xmpp_address: bool = True,
@@ -403,8 +407,8 @@ def find_iocs(
     iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
     if not parse_domain_from_url:
         text = _remove_items(iocs['urls'], text)
-    # even if we want to parse domain names from the urls, we need to remove the urls' paths to make sure no domain names are incorrectly parsed from the urls' paths
-    else:
+
+    if not parse_from_url_path:
         text = _remove_url_paths(iocs['urls'], text, parse_urls_without_scheme)
 
     # xmpp addresses
