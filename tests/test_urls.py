@@ -98,3 +98,8 @@ def test_invalid_urls():
     for url in INVALID_URLS:
         iocs = find_iocs(url)
         assert len(iocs['urls']) == 0
+
+
+def test_cidr_ranges():
+    result = find_iocs('1.1.1.1/0')
+    assert result['urls'] == []
