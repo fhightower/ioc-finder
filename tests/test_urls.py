@@ -101,5 +101,6 @@ def test_invalid_urls():
 
 
 def test_cidr_ranges():
+    # see https://github.com/fhightower/ioc-finder/issues/91
     result = find_iocs('1.1.1.1/0')
     assert result['urls'] == []
