@@ -23,6 +23,6 @@ setup(
     install_requires=requirements,
     license='MIT',
     zip_safe=True,
-    keywords='iocs,indicators of compromise,parsing,finding,searching,threat intelligence,malware,threat hunting,observables,domains,domain names,asns,cidr,cidr ranges,ips,ip addresses,urls,email addresses,md5,sha1,sha256',
+    keywords='iocs,indicators of compromise,parsing,finding,searching,threat intelligence,malware,threat hunting,observables,domains,domain names,asns,cidr,cidr ranges,ips,ip addresses,urls,email addresses,md5,sha1,sha256,google ads,cve,file paths',
     test_suite='tests',
 )
