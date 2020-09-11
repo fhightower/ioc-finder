@@ -148,6 +148,12 @@ def test_url_parsing():
     iocs = find_iocs(s, parse_from_url_path=False)
     assert iocs['sha256s'] == []
 
+    # this was implemented for https://github.com/fhightower/ioc-finder/issues/87
+    s = 'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
+    iocs = find_iocs(s, parse_from_url_path=False, parse_urls_without_scheme=False)
+    assert iocs['urls'] == ['https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection']
+    assert iocs['sha256s'] == []
+
 
 def test_file_hash_parsing():
     s = "{} {} {} {} {}".format('A' * 32, 'a' * 32, 'b' * 40, 'c' * 64, 'd' * 128)

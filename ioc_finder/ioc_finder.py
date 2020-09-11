@@ -89,10 +89,9 @@ def _remove_url_paths(urls: List, text: str, parse_urls_without_scheme: bool = T
             parsed_url = ioc_grammars.url.parseString(url)
         url_path = parsed_url.url_path
 
-        # handle situations where the parsed url is likely a cidr range
-        if parse_urls_without_scheme and parse_ipv4_cidrs(str(url)):
-            pass
-        elif len(url_path) > 1:
+        is_cidr_range = parse_ipv4_cidrs(str(url))
+        # if the 'url' has a URL path and is not a cidr range, remove the url_path
+        if not is_cidr_range and len(url_path) > 1:
             text = text.replace(url_path, ' ')
     return text
 
