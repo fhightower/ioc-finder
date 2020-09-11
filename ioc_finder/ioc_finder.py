@@ -339,7 +339,7 @@ def parse_tlp_labels(text):
 
 
 @click.command()
-@click.argument('text')
+@click.argument('text', required=False)
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
 @click.option('--no_parse_from_url_path', is_flag=True, help='Using this flag will not parse observables from URL paths')
 @click.option(
@@ -370,6 +370,12 @@ def cli_find_iocs(
     no_authentihashes,
 ):
     """CLI interface for parsing observables."""
+    stdin_text = click.get_text_stream('stdin')
+
+    # if there is stdin, use it
+    if not text and stdin_text:
+        text = '\n'.join([line for line in stdin_text])
+
     iocs = find_iocs(
         text,
         parse_domain_from_url=not no_url_domain_parsing,
