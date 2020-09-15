@@ -80,13 +80,10 @@ def parse_urls(text: str, parse_urls_without_scheme: bool = True) -> List:
     return _deduplicate(clean_urls)
 
 
-def _remove_url_paths(urls: List, text: str, parse_urls_without_scheme: bool = True) -> str:
+def _remove_url_paths(urls: List, text: str) -> str:
     """Remove the path from each url from the text."""
     for url in urls:
-        if parse_urls_without_scheme:
-            parsed_url = ioc_grammars.scheme_less_url.parseString(url)
-        else:
-            parsed_url = ioc_grammars.url.parseString(url)
+        parsed_url = ioc_grammars.scheme_less_url.parseString(url)
         url_path = parsed_url.url_path
 
         is_cidr_range = parse_ipv4_cidrs(str(url))
@@ -414,7 +411,7 @@ def find_iocs(
         text = _remove_items(iocs['urls'], text)
 
     if not parse_from_url_path:
-        text = _remove_url_paths(iocs['urls'], text, parse_urls_without_scheme)
+        text = _remove_url_paths(iocs['urls'], text)
 
     # xmpp addresses
     iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
