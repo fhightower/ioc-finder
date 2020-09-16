@@ -39,6 +39,15 @@ def get_mobile_attack_data():
     return tactics, techniques, mitigations
 
 
+def get_tlds():
+    """."""
+    r = requests.get('https://data.iana.org/TLD/tlds-alpha-by-domain.txt')
+    tlds = r.text.split('\n')[1:-1]
+    tlds = [i.lower() for i in tlds]
+    tlds.append('onion')
+    return tlds
+
+
 print(get_pre_attack_data())
 print(get_enterprise_attack_data())
 print(get_mobile_attack_data())
