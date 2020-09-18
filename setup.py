@@ -10,7 +10,7 @@ requirements = ['pyparsing', 'ioc_fanger', 'click']
 
 setup(
     name='ioc_finder',
-    version='4.0.1',
+    version='4.0.2',
     description="Python package for finding and parsing indicators of compromise from text.",
     entry_points={'console_scripts': ['ioc-finder=ioc_finder.ioc_finder:cli_find_iocs']},
     long_description=readme,
