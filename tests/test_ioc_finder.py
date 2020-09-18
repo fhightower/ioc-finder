@@ -484,3 +484,13 @@ def test_phone_numbers():
             iocs = find_iocs(phone_number)
             assert len(iocs['phone_numbers']) == 1
             assert iocs['phone_numbers'][0] == phone_number
+
+
+def test_monero_addresses():
+    result = find_iocs('496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp')
+    assert result['monero_addresses'] == ['496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp']
+
+    s = '49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk 498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh'
+    result = find_iocs(s)
+    assert '49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk' in result['monero_addresses']
+    assert '498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh' in result['monero_addresses']

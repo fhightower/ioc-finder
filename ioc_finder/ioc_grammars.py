@@ -272,6 +272,8 @@ bitcoin_address = (
     + alphanum_word_end
 )
 
+monero_address = alphanum_word_start + Regex('4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}') + alphanum_word_end
+
 # see https://github.com/fhightower/ioc-finder/issues/18
 xmpp_address = alphanum_word_start + Combine(
     email_local_part('email_address_local_part') + "@" + domain_name('jabber_address_domain')

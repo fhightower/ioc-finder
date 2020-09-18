@@ -242,6 +242,12 @@ def parse_bitcoin_addresses(text):
     return _listify(bitcoin_addresses)
 
 
+def parse_monero_addresses(text):
+    """."""
+    monero_addresses = ioc_grammars.monero_address.searchString(text)
+    return _listify(monero_addresses)
+
+
 def parse_xmpp_addresses(text: str) -> List:
     """."""
     xmpp_addresses = ioc_grammars.xmpp_address.searchString(text)
@@ -472,6 +478,7 @@ def find_iocs(
         iocs['google_adsense_publisher_ids'] = executor.submit(parse_google_adsense_ids, text).result()
         iocs['google_analytics_tracker_ids'] = executor.submit(parse_google_analytics_ids, text).result()
         iocs['bitcoin_addresses'] = executor.submit(parse_bitcoin_addresses, text).result()
+        iocs['monero_addresses'] = executor.submit(parse_monero_addresses, text).result()
         iocs['mac_addresses'] = executor.submit(parse_mac_addresses, text).result()
         iocs['user_agents'] = executor.submit(parse_user_agents, text).result()
         iocs['file_paths'] = executor.submit(parse_file_paths, text).result()
