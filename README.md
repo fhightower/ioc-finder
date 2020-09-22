@@ -9,6 +9,14 @@
 
 Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) from text. You can test this project here: [http://ioc-finder.hightower.space/](http://ioc-finder.hightower.space/).
 
+```python
+from ioc_finder import find_iocs
+text = "This is just an foobar.com https://example.org/test/bingo.php"
+iocs = find_iocs(text)
+print(iocs['domains'])  # ['foobar.com', 'example.org']
+print(iocs['urls'])  # ['https://example.org/test/bingo.php']
+```
+
 ## Capabilities
 
 Currently, this package can the following items in a given text:
