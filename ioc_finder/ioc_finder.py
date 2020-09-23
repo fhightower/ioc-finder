@@ -501,3 +501,7 @@ def find_iocs(
         }
 
     return iocs
+
+
+if __name__ == '__main__':
+    find_iocs()
