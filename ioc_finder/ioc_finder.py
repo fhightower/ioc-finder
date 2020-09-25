@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Python package for finding observables in text."""
 
-import concurrent.futures
 import json
 import os
 import sys
@@ -343,7 +342,9 @@ def parse_tlp_labels(text):
 @click.command()
 @click.argument('text', required=False)
 @click.option('--no_url_domain_parsing', is_flag=True, help='Using this flag will not parse domain names from URLs')
-@click.option('--no_parse_from_url_path', is_flag=True, help='Using this flag will not parse observables from URL paths')
+@click.option(
+    '--no_parse_from_url_path', is_flag=True, help='Using this flag will not parse observables from URL paths'
+)
 @click.option(
     '--no_email_addr_domain_parsing',
     is_flag=True,
@@ -456,52 +457,47 @@ def find_iocs(
         # remove the authentihashes so they are not also parsed as sha256s
         text = _remove_items(iocs['authentihashes'], text)
 
-    with concurrent.futures.ProcessPoolExecutor() as executor:
-        # domains
-        iocs['domains'] = executor.submit(parse_domain_names, text).result()
+    # domains
+    iocs['domains'] = parse_domain_names(text)
 
-        # ip addresses
-        iocs['ipv4s'] = executor.submit(parse_ipv4_addresses, text).result()
-        iocs['ipv6s'] = executor.submit(parse_ipv6_addresses, text).result()
+    # ip addresses
+    iocs['ipv4s'] = parse_ipv4_addresses(text)
+    iocs['ipv6s'] = parse_ipv6_addresses(text)
 
-        # file hashes
-        iocs['sha512s'] = executor.submit(parse_sha512s, text).result()
-        iocs['sha256s'] = executor.submit(parse_sha256s, text).result()
-        iocs['sha1s'] = executor.submit(parse_sha1s, text).result()
-        iocs['md5s'] = executor.submit(parse_md5s, text).result()
-        iocs['ssdeeps'] = executor.submit(parse_ssdeeps, text).result()
+    # file hashes
+    iocs['sha512s'] = parse_sha512s(text)
+    iocs['sha256s'] = parse_sha256s(text)
+    iocs['sha1s'] = parse_sha1s(text)
+    iocs['md5s'] = parse_md5s(text)
+    iocs['ssdeeps'] = parse_ssdeeps(text)
 
-        # misc
-        iocs['asns'] = executor.submit(parse_asns, text).result()
-        iocs['cves'] = executor.submit(parse_cves, [original_text]).result()
-        iocs['registry_key_paths'] = executor.submit(parse_registry_key_paths, text).result()
-        iocs['google_adsense_publisher_ids'] = executor.submit(parse_google_adsense_ids, text).result()
-        iocs['google_analytics_tracker_ids'] = executor.submit(parse_google_analytics_ids, text).result()
-        iocs['bitcoin_addresses'] = executor.submit(parse_bitcoin_addresses, text).result()
-        iocs['monero_addresses'] = executor.submit(parse_monero_addresses, text).result()
-        iocs['mac_addresses'] = executor.submit(parse_mac_addresses, text).result()
-        iocs['user_agents'] = executor.submit(parse_user_agents, text).result()
-        iocs['file_paths'] = executor.submit(parse_file_paths, text).result()
-        iocs['phone_numbers'] = executor.submit(parse_phone_numbers, text).result()
-        iocs['tlp_labels'] = executor.submit(parse_tlp_labels, original_text).result()
+    # misc
+    iocs['asns'] = parse_asns(text)
+    iocs['cves'] = parse_cves(original_text)
+    iocs['registry_key_paths'] = parse_registry_key_paths(text)
+    iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
+    iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
+    iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
+    iocs['monero_addresses'] = parse_monero_addresses(text)
+    iocs['mac_addresses'] = parse_mac_addresses(text)
+    iocs['user_agents'] = parse_user_agents(text)
+    iocs['file_paths'] = parse_file_paths(text)
+    iocs['phone_numbers'] = parse_phone_numbers(text)
+    iocs['tlp_labels'] = parse_tlp_labels(original_text)
 
-        iocs['attack_mitigations'] = {
-            "enterprise": executor.submit(parse_enterprise_attack_mitigations, original_text).result(),
-            "mobile": executor.submit(parse_mobile_attack_mitigations, original_text).result(),
-        }
-        iocs['attack_tactics'] = {
-            "pre_attack": executor.submit(parse_pre_attack_tactics, original_text).result(),
-            "enterprise": executor.submit(parse_enterprise_attack_tactics, original_text).result(),
-            "mobile": executor.submit(parse_mobile_attack_tactics, original_text).result(),
-        }
-        iocs['attack_techniques'] = {
-            "pre_attack": executor.submit(parse_pre_attack_techniques, original_text).result(),
-            "enterprise": executor.submit(parse_enterprise_attack_techniques, original_text).result(),
-            "mobile": executor.submit(parse_mobile_attack_techniques, original_text).result(),
-        }
+    iocs['attack_mitigations'] = {
+        "enterprise": parse_enterprise_attack_mitigations(original_text),
+        "mobile": parse_mobile_attack_mitigations(original_text),
+    }
+    iocs['attack_tactics'] = {
+        "pre_attack": parse_pre_attack_tactics(original_text),
+        "enterprise": parse_enterprise_attack_tactics(original_text),
+        "mobile": parse_mobile_attack_tactics(original_text),
+    }
+    iocs['attack_techniques'] = {
+        "pre_attack": parse_pre_attack_techniques(original_text),
+        "enterprise": parse_enterprise_attack_techniques(original_text),
+        "mobile": parse_mobile_attack_techniques(original_text),
+    }
 
     return iocs
-
-
-if __name__ == '__main__':
-    find_iocs()
