@@ -285,7 +285,8 @@ xmpp_address = alphanum_word_start + Combine(
 mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(['-', ':'])) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + '.') * 2 + Word(hexnums, exact=4))
-mac_address = alphanum_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + alphanum_word_end
+mac_address_word_boundary = WordStart(wordChars=alphanums + ':-')
+mac_address = mac_address_word_boundary + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_boundary
 
 # the structure of an ssdeep hash is: chunksize:chunk:double_chunk
 # we add a condition to the ssdeep grammar to make sure that the second section of the grammar (the chunk) is at least as big if not bigger than the third section (the double_chunk)
