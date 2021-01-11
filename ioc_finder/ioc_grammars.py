@@ -66,10 +66,11 @@ ipv4_address = (
     + alphanum_word_end
 )
 
-hexadectet = Word(hexnums, min=1, max=4)
-ipv6_address_full = alphanum_word_start + Combine((hexadectet + ":") * 7 + hexadectet)
+ipv6_word_boundary = WordStart(wordChars=alphanums + ':')
 
-ipv6_shortened_word_start = copy.deepcopy(alphanum_word_start)
+hexadectet = Word(hexnums, min=1, max=4)
+ipv6_address_full = ipv6_word_boundary + Combine((hexadectet + ":") * 7 + hexadectet)
+
 # the condition on the end of this grammar is designed to make sure that any shortened ipv6 addresses have '::' in them
 ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(
     lambda tokens: tokens[0].count('::') > 0
@@ -77,7 +78,7 @@ ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')
 
 ipv6_address = (
     Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(':') > 1)
-    + alphanum_word_end
+    + ipv6_word_boundary
 )
 
 complete_email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')

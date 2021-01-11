@@ -578,3 +578,12 @@ def test_ssdeep_parsing():
     s = '11:04:10 -0500'
     iocs = find_iocs(s)
     assert iocs['ssdeeps'] == []
+
+
+def test_certificate_serial_number_issue_96():
+    # see https://github.com/fhightower/ioc-finder/issues/96
+    s = '''SolarWinds.Orion.Core.BusinessLayer.dll is signed by SolarWinds, using the certificate with serial number 0f:e9:73:75:20:22:a6:06:ad:f2:a3:6e:34:5d:c0:ed. The file was signed on March 24, 2020.'''
+    observables = find_iocs(s)
+    print(observables)
+    assert observables['ipv6s'] == []
+    assert observables['mac_addresses'] == []
