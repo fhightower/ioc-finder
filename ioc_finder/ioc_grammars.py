@@ -66,10 +66,11 @@ ipv4_address = (
     + alphanum_word_end
 )
 
-ipv6_word_boundary = WordStart(wordChars=alphanums + ':')
+ipv6_word_start = WordStart(wordChars=alphanums + ':')
+ipv6_word_end = WordEnd(wordChars=alphanums + ':')
 
 hexadectet = Word(hexnums, min=1, max=4)
-ipv6_address_full = ipv6_word_boundary + Combine((hexadectet + ":") * 7 + hexadectet)
+ipv6_address_full = ipv6_word_start + Combine((hexadectet + ":") * 7 + hexadectet)
 
 # the condition on the end of this grammar is designed to make sure that any shortened ipv6 addresses have '::' in them
 ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')])) + hexadectet).addCondition(
@@ -78,7 +79,7 @@ ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(':'), Word(':')
 
 ipv6_address = (
     Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(':') > 1)
-    + ipv6_word_boundary
+    + ipv6_word_end
 )
 
 complete_email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
@@ -285,8 +286,9 @@ xmpp_address = alphanum_word_start + Combine(
 mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(['-', ':'])) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + '.') * 2 + Word(hexnums, exact=4))
-mac_address_word_boundary = WordStart(wordChars=alphanums + ':-')
-mac_address = mac_address_word_boundary + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_boundary
+mac_address_word_start = WordStart(wordChars=alphanums + ':-.')
+mac_address_word_end = WordEnd(wordChars=alphanums + ':-.')
+mac_address = mac_address_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_end
 
 # the structure of an ssdeep hash is: chunksize:chunk:double_chunk
 # we add a condition to the ssdeep grammar to make sure that the second section of the grammar (the chunk) is at least as big if not bigger than the third section (the double_chunk)
