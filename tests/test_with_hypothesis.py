@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Using hypothesis (https://hypothesis.readthedocs.io/en/latest/index.html) to test the finder."""
 
 from hypothesis import given, settings
-from hypothesis.provisional import domains, urls, ip4_addr_strings, ip6_addr_strings
+from hypothesis.provisional import domains, urls
+from hypothesis.strategies._internal.ipaddress import ip_addresses
 
 from ioc_finder import find_iocs
 
@@ -44,7 +44,7 @@ def test_domain_parsing(domain):
         raise AssertionError('Error parsing domains')
 
 
-@given(ip4_addr_strings())
+@given(ip_addresses(v=4))
 @settings(deadline=None)
 def test_ipv4_parsing(ipv4):
     iocs = find_iocs(ipv4)
@@ -61,7 +61,7 @@ def test_ipv4_parsing(ipv4):
         raise AssertionError('Error parsing ipv4s')
 
 
-@given(ip6_addr_strings())
+@given(ip_addresses(v=6))
 @settings(deadline=None)
 def test_ipv6_parsing(ipv6):
     iocs = find_iocs(ipv6)
