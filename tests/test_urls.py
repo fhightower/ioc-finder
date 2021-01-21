@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Test the URL parsing against the urls here: https://mathiasbynens.be/demo/url-regex."""
 
 from ioc_finder import find_iocs

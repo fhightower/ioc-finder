@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 
 from ioc_finder.ioc_grammars import hasMultipleConsecutiveSpaces, hasBothOrNeitherAngleBrackets
 
