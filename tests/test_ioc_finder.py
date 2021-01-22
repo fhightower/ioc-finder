@@ -49,18 +49,19 @@ def test_ipv6_parsing():
 def test_email_address_parsing():
     s = "test@a.com bingo@en.wikipedia.com foo@a.com'.format('a'*63 bar@b.a.com'.format('a'*63, 'a'*63 bad@test-ing.com me@2600.com john.smith(comment)@example.com (comment)john.smith@example.com \"John..Doe\"@example.com' test@[192.168.0.1]"
 
-    iocs = find_iocs(s)
-    assert len(iocs['email_addresses_complete']) == 10
-    assert 'test@a.com' in iocs['email_addresses_complete']
-    assert 'bingo@en.wikipedia.com' in iocs['email_addresses_complete']
-    assert 'foo@a.com' in iocs['email_addresses_complete']
-    assert 'bar@b.a.com' in iocs['email_addresses_complete']
-    assert 'bad@test-ing.com' in iocs['email_addresses_complete']
-    assert 'me@2600.com' in iocs['email_addresses_complete']
-    assert 'john.smith(comment)@example.com' in iocs['email_addresses_complete']
-    assert '(comment)john.smith@example.com' in iocs['email_addresses_complete']
-    assert '\"John..Doe\"@example.com' in iocs['email_addresses_complete']
-    assert 'test@[192.168.0.1]' in iocs['email_addresses_complete']
+    iocs = find_iocs(s)['email_addresses_complete']
+    print(iocs)
+    assert len(iocs) == 10
+    assert 'test@a.com' in iocs
+    assert 'bingo@en.wikipedia.com' in iocs
+    assert 'foo@a.com' in iocs
+    assert 'bar@b.a.com' in iocs
+    assert 'bad@test-ing.com' in iocs
+    assert 'me@2600.com' in iocs
+    assert 'john.smith(comment)@example.com' in iocs
+    assert '(comment)john.smith@example.com' in iocs
+    assert '\"John..Doe\"@example.com' in iocs
+    assert 'test@[192.168.0.1]' in iocs
 
     iocs = find_iocs('a@example.com')
     assert iocs['email_addresses_complete'][0] == 'a@example.com'
@@ -132,6 +133,7 @@ def test_url_parsing():
 
     s = 'http://8pretgdl.r.us-east-1.awstrack.me/L0/http:%2F%2Fwww.excelgoodies.com%2Fexcel-vba-training-in-virginia%23course-content/1/0100016ed23f4bef-b14931bd-26f6-4130-9c37-c4f9902a771d-000000/mHJBuJ8D1RcIDE3jrWkdw4I9im4=138'
     iocs = find_iocs(s)
+    print(iocs['urls'])
     assert iocs['urls'] == [
         'http://8pretgdl.r.us-east-1.awstrack.me/L0/http:%2F%2Fwww.excelgoodies.com%2Fexcel-vba-training-in-virginia%23course-content/1/0100016ed23f4bef-b14931bd-26f6-4130-9c37-c4f9902a771d-000000/mHJBuJ8D1RcIDE3jrWkdw4I9im4=138'
     ]
@@ -419,56 +421,6 @@ def test_user_agents():
         in iocs['user_agents']
     )
     assert 'Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0' in iocs['user_agents']
-
-
-def test_file_paths():
-    s = r"""C:\Users\<username>\AppData \Local\Microsoft\Windows\shedaudio.exe
-
-C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\flashplayer.exe
-
-Typical Registry Keys:
-
-HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Run
-
-HKEY_LOCAL_MACHINE\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Run
-
-HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run
-
-System Root Directories:
-
-C:\Windows\11987416.exe
-
-C:\Windows\System32\46615275.exe
-
-C:\Windows\System32\shedaudio.exe
-
-C:\Windows\SysWOW64\f9jwqSbS.exe"""
-    iocs = find_iocs(s)
-    assert len(iocs['file_paths']) == 6
-    assert r'C:\Users\<username>\AppData \Local\Microsoft\Windows\shedaudio.exe' in iocs['file_paths']
-    assert (
-        r'C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\flashplayer.exe'
-        in iocs['file_paths']
-    )
-    assert r'C:\Windows\11987416.exe' in iocs['file_paths']
-    assert r'C:\Windows\System32\46615275.exe' in iocs['file_paths']
-    assert r'C:\Windows\System32\shedaudio.exe' in iocs['file_paths']
-    assert r'C:\Windows\SysWOW64\f9jwqSbS.exe' in iocs['file_paths']
-
-    s = 'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/pivtoken.appex file'
-    iocs = find_iocs(s)
-    assert len(iocs['file_paths']) == 1
-    assert '/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/pivtoken.appex' in iocs['file_paths']
-
-    s = '~/Desktop/test.py'
-    iocs = find_iocs(s)
-    assert len(iocs['file_paths']) == 1
-    assert '~/Desktop/test.py' in iocs['file_paths']
-
-    s = '/etc/init.d/.rebootime'
-    iocs = find_iocs(s)
-    assert len(iocs['file_paths']) == 1
-    assert '/etc/init.d/.rebootime' in iocs['file_paths']
 
 
 def test_phone_numbers():
