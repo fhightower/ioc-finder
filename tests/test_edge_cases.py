@@ -24,12 +24,6 @@ def test_domain_name_with_underscore():
     assert results['domains'] == ['_jabber._tcp.gmail.com']
 
 
-def test_domain_name_with_underscore_preceeded_by_markdown_italics():
-    s = '_o_o.lgms.nl_'
-    results = find_iocs(s)
-    assert results['domains'] == ['o_o.lgms.nl']
-
-
 def test_url_with_underscore_in_subdomain():
     # see https://github.com/fhightower/ioc-finder/issues/26
     s = 'https://o_o.lgms.nl/'

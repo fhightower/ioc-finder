@@ -105,9 +105,9 @@ url_scheme = Or(schemes)
 # todo: move the handling for port to the domain grammar - maybe?
 port = Combine(':' + Word(nums))
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)('port'))
-# NOTE: in the grammar below, we are excluding '?' and '#' so that the url's query strings and fragments are not parsed as part of a url path
-# NOTE: in the grammar below, we are excluding '<' so that url in html are parsed properly (e.g. `<p>https://example.com/test/bingo.php</p>`)
-url_path = Combine(OneOrMore(Word(printables, excludeChars='?#<') + Optional('/')))
+# although the ":" character is not valid in url paths, some urls are written with the ":" unencoded so we include it below
+url_path_word = Word(alphanums + '-._~!$&\'()*+,;:=%')
+url_path = Combine(OneOrMore(Or([url_path_word, '/'])))
 url_query = Word(printables, excludeChars='#"\']')
 url_fragment = Word(printables, excludeChars='?"\']')
 url = alphanum_word_start + Combine(
