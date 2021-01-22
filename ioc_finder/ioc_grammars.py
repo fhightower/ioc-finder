@@ -81,12 +81,12 @@ ipv6_address = (
     + ipv6_word_end
 )
 
-complete_email_comment = Combine('(' + Word(printables.replace(')', '')) + ')')
+complete_email_comment = Combine('(' + Word(alphanums) + ')')
 # the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted complete_email_local_part (and the double-quotes and backslash should be preceded by a backslash)
 complete_email_local_part = Combine(
-    Optional(complete_email_comment)('email_address_comment')
+    Optional(complete_email_comment)('email_address_start_comment')
     + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), "\\@"]))
-    + Optional(complete_email_comment)('email_address_comment')
+    + Optional(complete_email_comment)('email_address_end_comment')
 )
 complete_email_address = Combine(
     complete_email_local_part('email_address_local_part')
