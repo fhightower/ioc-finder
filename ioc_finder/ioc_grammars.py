@@ -227,7 +227,7 @@ registry_key_subpath_section = Combine(
         Optional(Word('.', max=1))
         # the registry key path section can contain any alphanum text (including spaces) as long as the text is not one of the registry key path root keys and as long as there are not multiple, consecutive spaces
         + Word(alphanums + ' ').addCondition(
-            lambda tokens: tokens[0] not in root_key_list and not hasMultipleConsecutiveSpaces(tokens[0])
+            lambda tokens: tokens[0].strip() not in root_key_list and not hasMultipleConsecutiveSpaces(tokens[0])
         )
     )
     + Optional(Word('>'))
