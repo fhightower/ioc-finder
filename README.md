@@ -1,9 +1,9 @@
-# Observable Finder (Formerly named "IOC Finder")
+# IOC Finder
 
 [![PyPi](https://img.shields.io/pypi/v/ioc_finder.svg)](https://pypi.python.org/pypi/ioc_finder)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/ioc-finder)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/4078c4e3e384431bbe69c35c7f6da7b7)](https://www.codacy.com/app/fhightower/ioc-finder)
-[![Build Status](https://travis-ci.org/fhightower/ioc-finder.svg?branch=master)](https://travis-ci.org/fhightower/ioc-finder)
+[![Build Status](https://travis-ci.com/fhightower/ioc-finder.svg?branch=master)](https://travis-ci.com/fhightower/ioc-finder)
 [![codecov](https://codecov.io/gh/fhightower/ioc-finder/branch/master/graph/badge.svg)](https://codecov.io/gh/fhightower/ioc-finder)
 [![live demo](https://img.shields.io/badge/live%20demo-%E2%86%92-green)](http://ioc-finder.hightower.space/)
 
@@ -320,9 +320,7 @@ print(results)
 
 This project uses the [ioc_fanger](https://github.com/ioc-fang/ioc_fanger) package to make sure that all indicators in the text are properly [fanged](https://ioc-fang.hightower.space/).
 
-This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and Floyd Hightower's [python-project-template](https://gitlab.com/fhightower-templates/python-project-template) project template.
-
-Previous iterations of this package were inspired by [https://github.com/mosesschwartz/extract_iocs](https://github.com/mosesschwartz/extract_iocs).
+This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and Floyd Hightower's [python-project-template](https://github.com/fhightower-templates/python-project-template) project template.
 
 ### Other Helpful Projects
 
