@@ -4,9 +4,32 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [5.0.2] - 2021.04.02
+
+### Changed
+
+- [Improved URL grammar](https://github.com/fhightower/ioc-finder/commit/e3025c1a578663f693e7aa7947ac56e577dde0e9)
+
+### Fixed
+
+- Updating library such that CIDR ranges are not detected as URLs when `parse_urls_without_scheme=True` (see [#91](https://github.com/fhightower/ioc-finder/issues/91))
+- Parse observables from URL path when `parse_domain_from_url=False` and `parse_from_url_path=True` (see [#90](https://github.com/fhightower/ioc-finder/issues/90))
+
+## [5.0.1] - 2021.01.11
+
+### Changed
+
+- Improved word boundary (specifically of MAC address and IP address grammars)
+
+## [5.0.0] - 2020.09.25
+
+### Removed
+
+- Concurrency (through the use of concurrent.futures)
+
 ## [4.0.2] - 2020.09.18
 
-## Added
+### Added
 
 - Added parsing Monero addresses (see #94)
 
