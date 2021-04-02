@@ -63,3 +63,5 @@ target/
 
 # Cookie cutter packaging file
 travis_pypi_setup.py
+Pipfile
+Pipfile.lock
