@@ -98,7 +98,13 @@ def test_invalid_urls():
         assert len(iocs['urls']) == 0
 
 
-def test_cidr_ranges():
-    # see https://github.com/fhightower/ioc-finder/issues/91
+def test_cidr_ranges_not_found_as_urls():
+    """See https://github.com/fhightower/ioc-finder/issues/91."""
     result = find_iocs('1.1.1.1/0')
     assert result['urls'] == []
+
+    result = find_iocs('1.1.1.1/0', parse_urls_without_scheme=False)
+    assert result['urls'] == []
+
+    result = find_iocs('1.1.1.1/0 foobar.com/test/bingo.php')
+    assert result['urls'] == ['foobar.com/test/bingo.php']

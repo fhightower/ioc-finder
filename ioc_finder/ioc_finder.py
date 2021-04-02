@@ -440,6 +440,13 @@ def find_iocs(
     iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
     if not parse_address_from_cidr:
         text = _remove_items(iocs['ipv4_cidrs'], text)
+
+    # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
+    if parse_urls_without_scheme:
+        for cidr in iocs['ipv4_cidrs']:
+            if cidr in iocs['urls']:
+                iocs['urls'].remove(cidr)
+
     # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
     # if not parse_address_from_cidr:
     #     text = _remove_items(iocs['ipv6_cidrs'], text)
