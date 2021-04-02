@@ -1,0 +1,7 @@
+black
+bumpversion
+hypothesis
+pytest
+pytest-cov
+requests
+twine
