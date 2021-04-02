@@ -77,8 +77,16 @@ def parse_urls(text: str, parse_urls_without_scheme: bool = True) -> List:
     return _deduplicate(clean_urls)
 
 
+def _remove_url_domain_name(urls: List, text) -> str:
+    """Remove the domain name of each url from the text."""
+    for url in urls:
+        parsed_url = ioc_grammars.scheme_less_url.parseString(url)
+        text = text.replace(parsed_url.url_authority, ' ')
+    return text
+
+
 def _remove_url_paths(urls: List, text: str) -> str:
-    """Remove the path from each url from the text."""
+    """Remove the path of each url from the text."""
     for url in urls:
         parsed_url = ioc_grammars.scheme_less_url.parseString(url)
         url_path = parsed_url.url_path
@@ -412,10 +420,11 @@ def find_iocs(
 
     # urls
     iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
-    if not parse_domain_from_url:
+    if not parse_domain_from_url and not parse_from_url_path:
         text = _remove_items(iocs['urls'], text)
-
-    if not parse_from_url_path:
+    elif not parse_domain_from_url:
+        text = _remove_url_domain_name(iocs['urls'], text)
+    elif not parse_from_url_path:
         text = _remove_url_paths(iocs['urls'], text)
 
     # xmpp addresses
@@ -464,6 +473,7 @@ def find_iocs(
 
     # domains
     iocs['domains'] = parse_domain_names(text)
+    parse_domain_from_url
 
     # ip addresses
     iocs['ipv4s'] = parse_ipv4_addresses(text)
@@ -486,7 +496,6 @@ def find_iocs(
     iocs['monero_addresses'] = parse_monero_addresses(text)
     iocs['mac_addresses'] = parse_mac_addresses(text)
     iocs['user_agents'] = parse_user_agents(text)
-    iocs['file_paths'] = parse_file_paths(text)
     iocs['phone_numbers'] = parse_phone_numbers(text)
     iocs['tlp_labels'] = parse_tlp_labels(original_text)
 
@@ -504,5 +513,10 @@ def find_iocs(
         "enterprise": parse_enterprise_attack_techniques(original_text),
         "mobile": parse_mobile_attack_techniques(original_text),
     }
+
+    # if there are still url paths in the text, remove them so they don't get parsed as file names
+    if parse_from_url_path:
+        text = _remove_url_paths(iocs['urls'], text)
+    iocs['file_paths'] = parse_file_paths(text)
 
     return iocs
