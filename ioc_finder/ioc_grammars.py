@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import copy
 import re
 
@@ -24,7 +22,7 @@ from pyparsing import (
     ZeroOrMore,
 )
 
-from data_lists import (
+from data import (
     pre_attack_tactics,
     pre_attack_techniques,
     enterprise_attack_mitigations,

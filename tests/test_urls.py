@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Test the URL parsing against the urls here: https://mathiasbynens.be/demo/url-regex."""
 
 from ioc_finder import find_iocs

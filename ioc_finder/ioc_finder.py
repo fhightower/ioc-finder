@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Python package for finding observables in text."""
 
 import json

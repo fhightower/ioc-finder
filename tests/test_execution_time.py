@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import time
 
 from ioc_finder import ioc_finder
