@@ -37,4 +37,4 @@ from .ioc_finder import (
 )
 
 __author__ = '''Floyd Hightower'''
-__version__ = '5.0.2'
+__version__ = '5.0.3'
