@@ -4,6 +4,7 @@ import json
 import os
 import sys
 from typing import Dict, List
+import urllib.parse as urlparse
 
 import click
 import ioc_fanger
@@ -89,12 +90,18 @@ def _remove_url_paths(urls: List, text: str) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
         parsed_url = ioc_grammars.scheme_less_url.parseString(url)
-        url_path = parsed_url.url_path
+        url_path = urlparse.unquote_plus(parsed_url.url_path)
 
         is_cidr_range = parse_ipv4_cidrs(str(url))
         # if the 'url' has a URL path and is not a cidr range, remove the url_path
         if not is_cidr_range and len(url_path) > 1:
             text = text.replace(url_path, ' ')
+    return text
+
+
+def _percent_decode_url(urls: List, text: str) -> str:
+    for url in urls:
+        text = text.replace(url, urlparse.unquote_plus(url))
     return text
 
 
@@ -423,9 +430,13 @@ def find_iocs(
     if not parse_domain_from_url and not parse_from_url_path:
         text = _remove_items(iocs['urls'], text)
     elif not parse_domain_from_url:
+        text = _percent_decode_url(iocs['urls'], text)
         text = _remove_url_domain_name(iocs['urls'], text)
     elif not parse_from_url_path:
+        text = _percent_decode_url(iocs['urls'], text)
         text = _remove_url_paths(iocs['urls'], text)
+    else:
+        text = _percent_decode_url(iocs['urls'], text)
 
     # xmpp addresses
     iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
@@ -517,6 +528,7 @@ def find_iocs(
     # if there are still url paths in the text, remove them so they don't get parsed as file names
     if parse_from_url_path:
         text = _remove_url_paths(iocs['urls'], text)
+
     iocs['file_paths'] = parse_file_paths(text)
 
     return iocs
