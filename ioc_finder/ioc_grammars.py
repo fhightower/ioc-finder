@@ -1,12 +1,42 @@
 import copy
 import re
 
-from data import (enterprise_attack_mitigations, enterprise_attack_tactics, enterprise_attack_techniques,
-                  mobile_attack_mitigations, mobile_attack_tactics, mobile_attack_techniques, pre_attack_tactics,
-                  pre_attack_techniques, schemes, tlds,)
-from pyparsing import (CaselessLiteral, Combine, Empty, FollowedBy, Literal, NotAny, OneOrMore, Optional, Or, Regex,
-                       Word, WordEnd, WordStart, ZeroOrMore, alphanums, alphas, downcaseTokens, hexnums, nums,
-                       printables, replaceWith, upcaseTokens,)
+from data import (
+    enterprise_attack_mitigations,
+    enterprise_attack_tactics,
+    enterprise_attack_techniques,
+    mobile_attack_mitigations,
+    mobile_attack_tactics,
+    mobile_attack_techniques,
+    pre_attack_tactics,
+    pre_attack_techniques,
+    schemes,
+    tlds,
+)
+from pyparsing import (
+    CaselessLiteral,
+    Combine,
+    Empty,
+    FollowedBy,
+    Literal,
+    NotAny,
+    OneOrMore,
+    Optional,
+    Or,
+    Regex,
+    Word,
+    WordEnd,
+    WordStart,
+    ZeroOrMore,
+    alphanums,
+    alphas,
+    downcaseTokens,
+    hexnums,
+    nums,
+    printables,
+    replaceWith,
+    upcaseTokens,
+)
 
 alphanum_word_start = WordStart(wordChars=alphanums)
 alphanum_word_end = WordEnd(wordChars=alphanums)
