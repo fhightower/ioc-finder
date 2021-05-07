@@ -128,7 +128,9 @@ def test_parse_domain_from_url_not_removing_entire_url():
 def test_issue_104__encoded_url_properly_parsed():
     s = 'https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip'
     result = find_iocs(s)
-    assert result['urls'] == ['https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip']
+    assert result['urls'] == [
+        'https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip'
+    ]
 
 
 def test_url__percent_encoded_path():
@@ -136,5 +138,7 @@ def test_url__percent_encoded_path():
     s = 'https://example.com/test%20page/foo.com/bingo.php?q=bar.com'
     result = find_iocs(s, parse_from_url_path=False)
     assert result['urls'] == ['https://example.com/test%20page/foo.com/bingo.php?q=bar.com']
-    assert iterables_have_same_items(result['domains'], ['example.com', 'bar.com'])  # the key here is that "foo.com" is not parsed because it is part of the path (which has been removed)
+    assert iterables_have_same_items(
+        result['domains'], ['example.com', 'bar.com']
+    )  # the key here is that "foo.com" is not parsed because it is part of the path (which has been removed)
     assert result['file_paths'] == []

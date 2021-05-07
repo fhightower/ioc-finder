@@ -138,9 +138,7 @@ def test_url_parsing():
 
     s = 'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
     iocs = find_iocs(s)
-    assert iocs['sha256s'] == [
-        '2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862'
-    ]
+    assert iocs['sha256s'] == ['2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862']
 
     # this was implemented for https://github.com/fhightower/ioc-finder/issues/87
     s = 'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
@@ -150,7 +148,9 @@ def test_url_parsing():
     # this was implemented for https://github.com/fhightower/ioc-finder/issues/87
     s = 'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
     iocs = find_iocs(s, parse_from_url_path=False, parse_urls_without_scheme=False)
-    assert iocs['urls'] == ['https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection']
+    assert iocs['urls'] == [
+        'https://www.virustotal.com/gui/file/2f3ec0e4998909bb0efab13c82d30708ca9f88679e42b75ef13ea0466951d862/detection'
+    ]
     assert iocs['sha256s'] == []
 
 
@@ -436,10 +436,20 @@ def test_phone_numbers():
 
 
 def test_monero_addresses():
-    result = find_iocs('496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp')
-    assert result['monero_addresses'] == ['496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp']
+    result = find_iocs(
+        '496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp'
+    )
+    assert result['monero_addresses'] == [
+        '496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp'
+    ]
 
     s = '49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk 498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh'
     result = find_iocs(s)
-    assert '49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk' in result['monero_addresses']
-    assert '498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh' in result['monero_addresses']
+    assert (
+        '49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk'
+        in result['monero_addresses']
+    )
+    assert (
+        '498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh'
+        in result['monero_addresses']
+    )

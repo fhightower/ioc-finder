@@ -6,7 +6,6 @@ from hypothesis.strategies._internal.ipaddress import ip_addresses
 
 from ioc_finder import find_iocs
 
-
 # @given(urls())
 # @settings(deadline=None)
 # def test_url_parsing(url):

@@ -1,39 +1,12 @@
 import copy
 import re
 
-from pyparsing import alphas, alphanums, printables, nums, hexnums
-from pyparsing import (
-    CaselessLiteral,
-    Combine,
-    downcaseTokens,
-    Empty,
-    FollowedBy,
-    Literal,
-    NotAny,
-    OneOrMore,
-    Optional,
-    Or,
-    Regex,
-    replaceWith,
-    upcaseTokens,
-    Word,
-    WordEnd,
-    WordStart,
-    ZeroOrMore,
-)
-
-from data import (
-    pre_attack_tactics,
-    pre_attack_techniques,
-    enterprise_attack_mitigations,
-    enterprise_attack_tactics,
-    enterprise_attack_techniques,
-    mobile_attack_mitigations,
-    mobile_attack_tactics,
-    mobile_attack_techniques,
-    tlds,
-    schemes,
-)
+from data import (enterprise_attack_mitigations, enterprise_attack_tactics, enterprise_attack_techniques,
+                  mobile_attack_mitigations, mobile_attack_tactics, mobile_attack_techniques, pre_attack_tactics,
+                  pre_attack_techniques, schemes, tlds,)
+from pyparsing import (CaselessLiteral, Combine, Empty, FollowedBy, Literal, NotAny, OneOrMore, Optional, Or, Regex,
+                       Word, WordEnd, WordStart, ZeroOrMore, alphanums, alphas, downcaseTokens, hexnums, nums,
+                       printables, replaceWith, upcaseTokens,)
 
 alphanum_word_start = WordStart(wordChars=alphanums)
 alphanum_word_end = WordEnd(wordChars=alphanums)
@@ -285,7 +258,9 @@ mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(['-', ':'])) *
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + '.') * 2 + Word(hexnums, exact=4))
 mac_address_word_start = WordStart(wordChars=alphanums + ':-.')
 mac_address_word_end = WordEnd(wordChars=alphanums + ':-.')
-mac_address = mac_address_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_end
+mac_address = (
+    mac_address_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_end
+)
 
 # the structure of an ssdeep hash is: chunksize:chunk:double_chunk
 # we add a condition to the ssdeep grammar to make sure that the second section of the grammar (the chunk) is at least as big if not bigger than the third section (the double_chunk)

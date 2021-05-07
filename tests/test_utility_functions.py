@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ioc_finder.ioc_grammars import hasMultipleConsecutiveSpaces, hasBothOrNeitherAngleBrackets
+from ioc_finder.ioc_grammars import hasBothOrNeitherAngleBrackets, hasMultipleConsecutiveSpaces
 
 
 def test_hasBothOrNeitherAngleBrackets_1():

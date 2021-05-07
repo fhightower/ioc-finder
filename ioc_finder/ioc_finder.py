@@ -3,8 +3,8 @@
 import json
 import os
 import sys
-from typing import Dict, List
 import urllib.parse as urlparse
+from typing import Any, Dict, List, Union
 
 import click
 import ioc_fanger

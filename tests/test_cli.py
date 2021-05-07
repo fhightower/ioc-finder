@@ -7,7 +7,9 @@ from ioc_finder import ioc_finder
 
 def test_parse_cli_stdin():
     runner = CliRunner()
-    result = runner.invoke(ioc_finder.cli_find_iocs, input="This is just an example.com https://example.org/test/bingo.php")
+    result = runner.invoke(
+        ioc_finder.cli_find_iocs, input="This is just an example.com https://example.org/test/bingo.php"
+    )
     assert result.exit_code == 0
     output = result.output.strip()
     assert 'example.org' in output
