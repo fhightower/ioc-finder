@@ -1,8 +1,16 @@
-black
-bumpversion
-hypothesis
+black; python_version > '3.5'
+bump2version
+codecov
+flake8
+flake8-cognitive-complexity
+ipython
+mypy
+pylint
 pytest
 pytest-cov
+pytest-benchmark
+hypothesis
+d8s-lists==0.8.0
+d8s-file-system==0.10.0
+d8s-strings==0.3.0
 requests
-twine
-d8s-lists==0.6.0
