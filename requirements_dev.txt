@@ -5,7 +5,7 @@ d8s-file-system==0.10.0
 d8s-lists==0.8.0
 d8s-strings==0.3.0
 flake8-cognitive-complexity==0.1.0
-flake8==3.9.1
+flake8==3.9.2
 hypothesis==6.12.0
 ipython==7.23.1
 mypy==0.812
