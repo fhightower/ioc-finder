@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 
 - Made all boolean arguments keyword-only arguments ([#108](https://github.com/fhightower/ioc-finder/issues/108))
+- Converting data from lists to tuples ([#110](https://github.com/fhightower/ioc-finder/issues/110))
 
 ### Fixed
 

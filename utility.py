@@ -17,7 +17,7 @@ def get_pre_attack_data():
     l = r.json()['objects']
     tactics = [_get_id(i) for i in l if i['type'] == 'x-mitre-tactic']
     techniques = [_get_id(i) for i in l if i['type'] == 'attack-pattern']
-    return tactics, techniques
+    return tuple(tactics), tuple(techniques)
 
 
 def get_enterprise_attack_data():
@@ -26,7 +26,7 @@ def get_enterprise_attack_data():
     tactics = [_get_id(i) for i in d if i['type'] == 'x-mitre-tactic']
     techniques = [_get_id(i) for i in d if i['type'] == 'attack-pattern']
     mitigations = [_get_id(i) for i in d if i['type'] == 'course-of-action' and _get_id(i).startswith('M')]
-    return tactics, techniques, mitigations
+    return tuple(tactics), tuple(techniques), tuple(mitigations)
 
 
 def get_mobile_attack_data():
@@ -35,7 +35,7 @@ def get_mobile_attack_data():
     tactics = [_get_id(i) for i in d if i['type'] == 'x-mitre-tactic']
     techniques = [_get_id(i) for i in d if i['type'] == 'attack-pattern']
     mitigations = [_get_id(i) for i in d if i['type'] == 'course-of-action' and _get_id(i).startswith('M')]
-    return tactics, techniques, mitigations
+    return tuple(tactics), tuple(techniques), tuple(mitigations)
 
 
 def get_tlds():
@@ -44,7 +44,7 @@ def get_tlds():
     tlds = r.text.split('\n')[1:-1]
     tlds = [i.lower() for i in tlds]
     tlds.append('onion')
-    return tlds
+    return tuple(tlds)
 
 
 print(get_pre_attack_data())
