@@ -1,18 +1,6 @@
 import copy
 import re
 
-from data import (
-    enterprise_attack_mitigations,
-    enterprise_attack_tactics,
-    enterprise_attack_techniques,
-    mobile_attack_mitigations,
-    mobile_attack_tactics,
-    mobile_attack_techniques,
-    pre_attack_tactics,
-    pre_attack_techniques,
-    schemes,
-    tlds,
-)
 from pyparsing import (
     CaselessLiteral,
     Combine,
@@ -38,6 +26,19 @@ from pyparsing import (
     upcaseTokens,
 )
 
+from ioc_finder.data import (
+    enterprise_attack_mitigations,
+    enterprise_attack_tactics,
+    enterprise_attack_techniques,
+    mobile_attack_mitigations,
+    mobile_attack_tactics,
+    mobile_attack_techniques,
+    pre_attack_tactics,
+    pre_attack_techniques,
+    schemes,
+    tlds,
+)
+
 alphanum_word_start = WordStart(wordChars=alphanums)
 alphanum_word_end = WordEnd(wordChars=alphanums)
 
@@ -57,12 +58,14 @@ ipv4_section = (
     .setParseAction(lambda x: str(int(x[0])))
     .addCondition(lambda tokens: int(tokens[0]) < 256)
 )
-# basically, the grammar below says: start any words that start with a '.' or a number; I want to match words that start with a '.' because this will fail later in the grammar and I do not want to match anything that start with a '.'
+# basically, the grammar below says: start any words that start with a '.' or a number;
+# I want to match words that start with a '.' because this will fail later in the grammar...
+# and I do not want to match anything that start with a '.'
 ipv4_address = (
     alphanum_word_start
     + WordStart('.' + nums)
     + Combine((ipv4_section + '.') * 3 + ipv4_section)
-    + NotAny(Regex('\.\S'))
+    + NotAny(Regex(r'\.\S'))
     + alphanum_word_end
 )
 
@@ -83,7 +86,9 @@ ipv6_address = (
 )
 
 complete_email_comment = Combine('(' + Word(alphanums) + ')')
-# the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>> are possible in a quoted complete_email_local_part (and the double-quotes and backslash should be preceded by a backslash)
+# the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>>
+# are possible in a quoted complete_email_local_part
+# (and the double-quotes and backslash should be preceded by a backslash)
 complete_email_local_part = Combine(
     Optional(complete_email_comment)('email_address_start_comment')
     + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), "\\@"]))
@@ -106,7 +111,8 @@ url_scheme = Or(schemes)
 # todo: move the handling for port to the domain grammar - maybe?
 port = Combine(':' + Word(nums))
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)('port'))
-# although the ":" character is not valid in url paths, some urls are written with the ":" unencoded so we include it below
+# although the ":" character is not valid in url paths,
+# some urls are written with the ":" unencoded so we include it below
 url_path_word = Word(alphanums + '-._~!$&\'()*+,;:=%')
 url_path = Combine(OneOrMore(Or([url_path_word, '/'])))
 url_query = Word(printables, excludeChars='#"\']')
@@ -133,7 +139,8 @@ scheme_less_url = alphanum_word_start + Combine(
     + (Optional(Combine('?' + url_query)('url_query')) & Optional(Combine('#' + url_fragment)('url_fragment')))
 )
 
-# this allows for matching file hashes preceeded with an 'x' or 'X' (https://github.com/fhightower/ioc-finder/issues/41)
+# this allows for matching file hashes preceeded with an 'x' or 'X'...
+# see https://github.com/fhightower/ioc-finder/issues/41
 file_hash_word_start = WordStart(wordChars=alphanums.replace('x', '').replace('X', ''))
 md5 = file_hash_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
 imphash = Combine(
@@ -224,9 +231,11 @@ registry_key_subpath_section = Combine(
     + Optional(Word('<'))
     + Word(alphanums)
     + ZeroOrMore(
-        # registry key paths may contain a file extension which requires that we capture registry key path sections with a period (e.g. `notepad.exe`)
+        # registry key paths may contain a file extension which requires that we capture registry
+        # key path sections with a period (e.g. `notepad.exe`)
         Optional(Word('.', max=1))
-        # the registry key path section can contain any alphanum text (including spaces) as long as the text is not one of the registry key path root keys and as long as there are not multiple, consecutive spaces
+        # the registry key path section can contain any alphanum text (including spaces) as long as the text is not
+        # one of the registry key path root keys and as long as there are not multiple, consecutive spaces
         + Word(alphanums + ' ').addCondition(
             lambda tokens: tokens[0].strip() not in root_key_list and not hasMultipleConsecutiveSpaces(tokens[0])
         )
@@ -261,7 +270,8 @@ google_analytics_tracker_id = (
     + alphanum_word_end
 )
 
-# see https://en.bitcoin.it/wiki/Address (and https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#segwit-address-format for more info on Bech32 addresses)
+# see https://en.bitcoin.it/wiki/Address
+# (and https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#segwit-address-format for Bech32 addresses)
 bitcoin_address = (
     alphanum_word_start
     + Or(
@@ -293,17 +303,18 @@ mac_address = (
 )
 
 # the structure of an ssdeep hash is: chunksize:chunk:double_chunk
-# we add a condition to the ssdeep grammar to make sure that the second section of the grammar (the chunk) is at least as big if not bigger than the third section (the double_chunk)
+# we add a condition to the ssdeep grammar to make sure that the second section of the grammar
+# (the chunk) is at least as big if not bigger than the third section (the double_chunk)
 ssdeep = alphanum_word_start + Combine(
     Word(nums) + ':' + Word(alphanums + '/+', min=3) + ':' + Word(alphanums + '/+', min=3)
 ).addCondition(lambda tokens: len(tokens[0].split(':')[1]) >= len(tokens[0].split(':')[2]))
 
-user_agent_platform_version = Regex('[0-9]+(\.[0-9]*)*')
-user_agent_start = Combine(Regex('[Mm]ozilla/') + user_agent_platform_version)
-user_agent_details = Regex('\(.+?\)')
+user_agent_platform_version = Regex(r'[0-9]+(\.[0-9]*)*')
+user_agent_start = Combine(Regex(r'[Mm]ozilla/') + user_agent_platform_version)
+user_agent_details = Regex(r'\(.+?\)')
 user_agent_platform = Combine(
     alphanum_word_start
-    + Regex('[a-zA-Z]{2,}/?').addCondition(lambda tokens: tokens[0].lower().strip('/') != 'mozilla')
+    + Regex(r'[a-zA-Z]{2,}/?').addCondition(lambda tokens: tokens[0].lower().strip('/') != 'mozilla')
     + Optional(user_agent_platform_version)
 )
 user_agent = Combine(
@@ -313,14 +324,14 @@ user_agent = Combine(
 )
 
 # https://github.com/fhightower/ioc-finder/issues/13
-# TODO: improve the windows_file_path grammar - it is pretty naive right now... the file_ending is very basic and it would be nice to have a list of common file endings, the windows_file_path grammar assumes that a path will not have a '.' in it (other than in the file name at the end), and the windows_file_path grammar assumes that the path will have a file name at the end (it will not match directory paths well)
 file_ending = Word(alphas, max=5)
 windows_file_path = alphanum_word_start + Combine(
     Word(alphanums, exact=1) + ':' + Word(printables.replace('.', '') + ' ') + '.' + file_ending
 )
 
 # we need to add '/' and '~' to the alphanum_word_start so that the grammar will match words starting with '/' and '~'
-# we add ':' to the alphanum_word_start because we want to avoid parsing urls are file paths (e.g. "//twitter.com" from "https://twitter.com/")
+# we add ':' to the alphanum_word_start because we want to avoid parsing urls are file paths
+# (e.g. "//twitter.com" from "https://twitter.com/")
 unix_file_path_wordstart = copy.deepcopy(alphanum_word_start)
 unix_file_path_wordstart.wordChars.add(':')
 unix_file_path_wordstart.wordChars.add('/')

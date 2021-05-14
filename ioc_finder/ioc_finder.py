@@ -4,14 +4,13 @@ import json
 import os
 import sys
 import urllib.parse as urlparse
-from typing import Any, Dict, List, Union
+from typing import Dict, List
 
 import click
 import ioc_fanger
 from pyparsing import ParseResults
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
-import ioc_grammars
+from ioc_finder import ioc_grammars
 
 
 def _deduplicate(indicator_list: List) -> List:
@@ -20,7 +19,7 @@ def _deduplicate(indicator_list: List) -> List:
 
 
 def _listify(indicator_list: ParseResults) -> List:
-    """Convert the multi-dimensional indicator list into a one-dimensional indicator list with empty entries and duplicates removed."""
+    """Convert the multi-dimensional list into a one-dimensional list with empty entries and duplicates removed."""
     return _deduplicate([indicator[0] for indicator in indicator_list if indicator[0]])
 
 
@@ -32,7 +31,9 @@ def _remove_items(items: List[str], text: str) -> str:
 
 
 def _prepare_text(text: str) -> str:
-    """Fang (https://ioc-fang.hightower.space/) and encode the text in such a way that all Unicode domain names are converted into their punycode representation."""
+    """Prepare the text for parsing.
+
+    Currently, this involves fanging (https://ioc-fang.hightower.space/) the text."""
     text = ioc_fanger.fang(text)
     # text = text.encode('idna').decode('utf-8')
     return text
@@ -74,7 +75,8 @@ def parse_urls(text: str, parse_urls_without_scheme: bool = True) -> List:
 
         clean_urls.append(url)
 
-    # return the cleaned urls - I deduplicate them again because the structure of the URL may have changed when it was cleaned
+    # return the cleaned urls...
+    # I deduplicate them again because the structure of the URL may have changed when it was cleaned
     return _deduplicate(clean_urls)
 
 
@@ -225,7 +227,10 @@ def parse_registry_key_paths(text):
 
     registry_key_paths = []
     for registry_key_path in full_parsed_registry_key_paths:
-        # if there is a space in the last section of the parsed registry key path, remove it so that content after a registry key path is not also pulled in... this is a limitation of the grammar: it will not parse a registry key path with a space in the final section (the section after the final '\')
+        # if there is a space in the last section of the parsed registry key path,
+        # remove it so that content after a registry key path is not also pulled in...
+        # this is a limitation of the grammar:
+        # it will not parse a registry key path with a space in the final section (the section after the final '\')
         if ' ' in registry_key_path.split('\\')[-1]:
             last_section = registry_key_path.split('\\')[-1]
             registry_key_path = registry_key_path.replace(last_section, last_section.split(' ')[0])
@@ -390,7 +395,8 @@ def cli_find_iocs(
 
     # if there is stdin, use it
     if not text and stdin_text:
-        text = '\n'.join([line for line in stdin_text])
+        text = '\n'.join(stdin_text)
+        # text = '\n'.join([line for line in stdin_text])
 
     iocs = find_iocs(
         text,
@@ -442,7 +448,8 @@ def find_iocs(
     iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
     if not parse_domain_name_from_xmpp_address:
         text = _remove_items(iocs['xmpp_addresses'], text)
-    # even if we want to parse domain names from the xmpp_address, we don't want them also being caught as email addresses so we'll remove everything before the `@`
+    # even if we want to parse domain names from the xmpp_address,
+    # we don't want them also being caught as email addresses so we'll remove everything before the `@`
     else:
         text = _remove_xmpp_local_part(iocs['xmpp_addresses'], text)
 
@@ -453,7 +460,8 @@ def find_iocs(
     if not parse_domain_from_email_address:
         text = _remove_items(iocs['email_addresses_complete'], text)
         text = _remove_items(iocs['email_addresses'], text)
-    # after parsing the email addresses, we need to remove the '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
+    # after parsing the email addresses, we need to remove the
+    # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
     text = _remove_items(['[IPv6:'], text)
 
     # cidr ranges
@@ -510,16 +518,16 @@ def find_iocs(
     iocs['phone_numbers'] = parse_phone_numbers(text)
     iocs['tlp_labels'] = parse_tlp_labels(original_text)
 
-    iocs['attack_mitigations'] = {
+    iocs['attack_mitigations'] = {  # type: ignore
         "enterprise": parse_enterprise_attack_mitigations(original_text),
         "mobile": parse_mobile_attack_mitigations(original_text),
     }
-    iocs['attack_tactics'] = {
+    iocs['attack_tactics'] = {  # type: ignore
         "pre_attack": parse_pre_attack_tactics(original_text),
         "enterprise": parse_enterprise_attack_tactics(original_text),
         "mobile": parse_mobile_attack_tactics(original_text),
     }
-    iocs['attack_techniques'] = {
+    iocs['attack_techniques'] = {  # type: ignore
         "pre_attack": parse_pre_attack_techniques(original_text),
         "enterprise": parse_enterprise_attack_techniques(original_text),
         "mobile": parse_mobile_attack_techniques(original_text),
