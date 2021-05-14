@@ -1,8 +1,6 @@
 """Python package for finding observables in text."""
 
 import json
-import os
-import sys
 import urllib.parse as urlparse
 from typing import Dict, List
 
@@ -50,7 +48,7 @@ def _remove_from_end(input_string: str, string_to_remove: str) -> str:
         return input_string
 
 
-def parse_urls(text: str, parse_urls_without_scheme: bool = True) -> List:
+def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     """."""
     if parse_urls_without_scheme:
         urls = ioc_grammars.scheme_less_url.searchString(text)
@@ -415,6 +413,7 @@ def cli_find_iocs(
 
 def find_iocs(
     text: str,
+    *,
     parse_domain_from_url: bool = True,
     parse_from_url_path: bool = True,
     parse_domain_from_email_address: bool = True,
@@ -432,7 +431,7 @@ def find_iocs(
     original_text = text
 
     # urls
-    iocs['urls'] = parse_urls(text, parse_urls_without_scheme)
+    iocs['urls'] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
     if not parse_domain_from_url and not parse_from_url_path:
         text = _remove_items(iocs['urls'], text)
     elif not parse_domain_from_url:

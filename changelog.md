@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Made all boolean arguments keyword-only arguments ([#108](https://github.com/fhightower/ioc-finder/issues/108))
+
+### Fixed
+
+- Unquoting URLs appropriately ([#104](https://github.com/fhightower/ioc-finder/issues/104))
+- Pinned specific [ioc-fanger](https://github.com/ioc-fang/ioc-fanger) version (this prevents an error where ioc-fanger was removing a URL in the query parameter of another URL - see [#104](https://github.com/fhightower/ioc-finder/issues/104))
+
 ## [5.0.3] - 2021.04.09
 
 ### Fixed
