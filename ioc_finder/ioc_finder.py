@@ -29,7 +29,7 @@ def _remove_items(items: List[str], text: str) -> str:
     return text
 
 
-def _prepare_text(text: str) -> str:
+def prepare_text(text: str) -> str:
     """Prepare the text for parsing.
 
     Currently, this involves fanging (https://ioc-fang.hightower.space/) the text."""
@@ -409,7 +409,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     """Find observables in the given text."""
     iocs = dict()
 
-    text = _prepare_text(text)
+    text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
 

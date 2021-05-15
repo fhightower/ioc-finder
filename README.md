@@ -310,11 +310,13 @@ If you need to parse a specific indicator type, you can do this using one of the
 
 ```python
 from ioc_finder import parse_urls
-results = parse_urls('https://google.com')
+
+text = 'https://google.com'
+results = parse_urls(prepare_text(text))
 print(results)
 ```
 
-**Warning:** It is recommended that you use the `ioc_finder.find_iocs` function rather than a parse function as `ioc_finder.find_iocs` handles some of the nuances of parsing indicator data. If you use specific functions, the text you provide will **not** be [fanged](https://ioc-fang.hightower.space/) and may not return the data you expect.
+If you use a parse function for a specific indicator type, we recommend that you first call the `prepare_text` function which [fangs](https://ioc-fang.hightower.space/) (e.g. `hXXps://example[.]com` => `https://example.com`) the text before parsing indicators from it. In the future, more functionality will be added to the `prepare_text` function making it advantageous to call this function before parsing indicators.
 
 ## Credits
 

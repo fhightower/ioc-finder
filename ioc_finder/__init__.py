@@ -34,6 +34,7 @@ from .ioc_finder import (
     parse_urls,
     parse_user_agents,
     parse_xmpp_addresses,
+    prepare_text,
 )
 
 __author__ = '''Floyd Hightower'''
