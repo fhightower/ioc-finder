@@ -108,7 +108,6 @@ email_address = alphanum_word_start + Combine(
 )
 
 url_scheme = Or(schemes)
-# todo: move the handling for port to the domain grammar - maybe?
 port = Combine(':' + Word(nums))
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)('port'))
 # although the ":" character is not valid in url paths,
@@ -180,7 +179,6 @@ asn = (
     + alphanum_word_end
 )
 
-# todo: implement ipv6 cidr ranges
 ipv4_cidr = (
     alphanum_word_start
     + Combine(ipv4_address('cidr_address') + '/' + Word(nums, max=2)('cidr_bit_range'))

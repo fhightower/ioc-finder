@@ -3,7 +3,6 @@ bump2version==1.0.1
 codecov==2.1.11
 d8s-file-system==0.10.0
 d8s-lists==0.8.0
-d8s-strings==0.3.0
 flake8-cognitive-complexity==0.1.0
 flake8==3.9.2
 hypothesis==6.12.0

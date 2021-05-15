@@ -1,3 +1,4 @@
+# pylint: disable=C0302
 pre_attack_tactics = (
     'TA0021',
     'TA0024',

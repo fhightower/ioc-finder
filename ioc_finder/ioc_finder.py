@@ -6,6 +6,7 @@ from typing import Dict, List
 
 import click
 import ioc_fanger
+from d8s_strings import string_remove_from_end
 from pyparsing import ParseResults
 
 from ioc_finder import ioc_grammars
@@ -37,17 +38,6 @@ def _prepare_text(text: str) -> str:
     return text
 
 
-# TODO: replace this function with the democritus.stringRemoveFromEnd
-def _remove_from_end(input_string: str, string_to_remove: str) -> str:
-    """."""
-    if input_string.endswith(string_to_remove):
-        desired_string_final_index = len(input_string) - len(string_to_remove)
-        updated_string = input_string[:desired_string_final_index]
-        return updated_string
-    else:
-        return input_string
-
-
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     """."""
     if parse_urls_without_scheme:
@@ -68,8 +58,8 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
             url = url.rstrip(')')
 
         # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
-        url = _remove_from_end(url, '\'/>')
-        url = _remove_from_end(url, '"/>')
+        url = string_remove_from_end(url, '\'/>')
+        url = string_remove_from_end(url, '"/>')
 
         clean_urls.append(url)
 
@@ -209,13 +199,6 @@ def parse_ipv4_cidrs(text: str) -> List:
     """."""
     cidrs = ioc_grammars.ipv4_cidr.searchString(text)
     return _listify(cidrs)
-
-
-# def parse_ipv6_cidrs(text):
-#     """."""
-#     # TODO: implement
-#     cidrs = ioc_grammars.ipv6_cidr.searchString(text)
-#     return _listify(cidrs)
 
 
 def parse_registry_key_paths(text):
@@ -373,7 +356,7 @@ def parse_tlp_labels(text):
     '--no_xmpp_addr_domain_parsing',
     is_flag=True,
     help='Using this flag will not parse domain names from XMPP addresses',
-)
+)  # pylint: disable=R0913
 @click.option('--no_urls_without_schemes', is_flag=True, help='Using this flag will not parse URLs without schemes')
 @click.option('--no_import_hashes', is_flag=True, help='Using this flag will not parse import hashes')
 @click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihashes')
@@ -411,7 +394,7 @@ def cli_find_iocs(
     print(ioc_string)
 
 
-def find_iocs(
+def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     text: str,
     *,
     parse_domain_from_url: bool = True,
@@ -474,10 +457,6 @@ def find_iocs(
             if cidr in iocs['urls']:
                 iocs['urls'].remove(cidr)
 
-    # iocs['ipv6_cidrs'] = parse_ipv6_cidrs(text)
-    # if not parse_address_from_cidr:
-    #     text = _remove_items(iocs['ipv6_cidrs'], text)
-
     # file hashes
     if parse_imphashes:
         iocs['imphashes'] = parse_imphashes_(text)
@@ -491,7 +470,6 @@ def find_iocs(
 
     # domains
     iocs['domains'] = parse_domain_names(text)
-    parse_domain_from_url
 
     # ip addresses
     iocs['ipv4s'] = parse_ipv4_addresses(text)
