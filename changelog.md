@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Made all boolean arguments keyword-only arguments ([#108](https://github.com/fhightower/ioc-finder/issues/108))
 - Converting data from lists to tuples ([#110](https://github.com/fhightower/ioc-finder/issues/110))
 - Made `_prepare_text` function public (`prepare_text`) ([#114](https://github.com/fhightower/ioc-finder/issues/114))
+- Renamed `no_urls_without_schemes` to `parse_urls_without_scheme` ([#109](https://github.com/fhightower/ioc-finder/issues/109))
 
 ### Fixed
 

@@ -102,7 +102,7 @@ def test_cli_disabling_parsing_urls_without_scheme():
     runner = CliRunner()
     result = runner.invoke(
         ioc_finder.cli_find_iocs,
-        ["This is just an example.com example.org/test/bingo.php", "--no_urls_without_schemes"],
+        ["This is just an example.com example.org/test/bingo.php", "--parse_urls_without_scheme"],
     )
     assert result.exit_code == 0
     print(result.output.strip())

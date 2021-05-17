@@ -357,7 +357,7 @@ def parse_tlp_labels(text):
     is_flag=True,
     help='Using this flag will not parse domain names from XMPP addresses',
 )  # pylint: disable=R0913
-@click.option('--no_urls_without_schemes', is_flag=True, help='Using this flag will not parse URLs without schemes')
+@click.option('--parse_urls_without_scheme', is_flag=True, help='Using this flag will parse URLs with and without a scheme (default is True)', default=True)
 @click.option('--no_import_hashes', is_flag=True, help='Using this flag will not parse import hashes')
 @click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihashes')
 def cli_find_iocs(
@@ -367,7 +367,7 @@ def cli_find_iocs(
     no_email_addr_domain_parsing,
     no_cidr_address_parsing,
     no_xmpp_addr_domain_parsing,
-    no_urls_without_schemes,
+    parse_urls_without_scheme,
     no_import_hashes,
     no_authentihashes,
 ):
@@ -386,7 +386,7 @@ def cli_find_iocs(
         parse_domain_from_email_address=not no_email_addr_domain_parsing,
         parse_address_from_cidr=not no_cidr_address_parsing,
         parse_domain_name_from_xmpp_address=not no_xmpp_addr_domain_parsing,
-        parse_urls_without_scheme=not no_urls_without_schemes,
+        parse_urls_without_scheme=parse_urls_without_scheme,
         parse_imphashes=not no_import_hashes,
         parse_authentihashes=not no_authentihashes,
     )
