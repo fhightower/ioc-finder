@@ -357,7 +357,12 @@ def parse_tlp_labels(text):
     is_flag=True,
     help='Using this flag will not parse domain names from XMPP addresses',
 )  # pylint: disable=R0913
-@click.option('--parse_urls_without_scheme', is_flag=True, help='Using this flag will parse URLs with and without a scheme (default is True)', default=True)
+@click.option(
+    '--parse_urls_without_scheme',
+    is_flag=True,
+    help='Using this flag will parse URLs with and without a scheme (default is True)',
+    default=True,
+)
 @click.option('--no_import_hashes', is_flag=True, help='Using this flag will not parse import hashes')
 @click.option('--no_authentihashes', is_flag=True, help='Using this flag will not parse authentihashes')
 def cli_find_iocs(
