@@ -2,8 +2,8 @@
 
 [![PyPi](https://img.shields.io/pypi/v/ioc_finder.svg)](https://pypi.python.org/pypi/ioc_finder)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/ioc-finder)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/4078c4e3e384431bbe69c35c7f6da7b7)](https://www.codacy.com/app/fhightower/ioc-finder)
-[![Build Status](https://travis-ci.com/fhightower/ioc-finder.svg?branch=master)](https://travis-ci.com/fhightower/ioc-finder)
+[![CI](https://github.com/fhightower/ioc-finder/workflows/CI/badge.svg)](https://github.com/fhightower/ioc-finder/actions)
+[![Lint](https://github.com/fhightower/ioc-finder/workflows/Lint/badge.svg)](https://github.com/fhightower/ioc-finder/actions)
 [![codecov](https://codecov.io/gh/fhightower/ioc-finder/branch/master/graph/badge.svg)](https://codecov.io/gh/fhightower/ioc-finder)
 [![live demo](https://img.shields.io/badge/live%20demo-%E2%86%92-green)](http://ioc-finder.hightower.space/)
 

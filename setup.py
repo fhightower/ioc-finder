@@ -21,7 +21,7 @@ setup(
         'Source': 'https://github.com/fhightower/ioc-finder',
         'Tracker': 'https://github.com/fhightower/ioc-finder/issues',
         'PyPi': 'https://pypi.org/project/ioc-finder/',
-        # 'CI': 'https://travis-ci.com/ioc-fang/ioc-fanger.svg?branch=main',
+        'CI': 'https://github.com/fhightower/ioc-finder/actions',
         'Changelog': 'https://github.com/fhightower/ioc-finder/blob/main/CHANGELOG.md',
     },
     packages=find_packages(exclude=('tests', 'docs')),
