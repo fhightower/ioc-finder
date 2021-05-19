@@ -6,7 +6,7 @@ d8s-lists==0.8.0
 flake8-cognitive-complexity==0.1.0
 flake8==3.9.2
 hypothesis==6.12.0
-ipython==7.23.1
+ipython>7.0,<8.0
 mypy==0.812
 pylint==2.8.2
 pytest-benchmark==3.4.1
