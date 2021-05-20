@@ -3,7 +3,8 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-requirements = ['pyparsing', 'ioc_fanger', 'click']
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.read().splitlines()
 
 setup(
     name='ioc_finder',
