@@ -1,5 +1,6 @@
 include CONTRIBUTING.rst
-include LICENSE
+include COPYING
+include COPYING.LESSER
 include README.md
 
 recursive-include tests *

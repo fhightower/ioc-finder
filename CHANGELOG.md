@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Converting data from lists to tuples ([#110](https://github.com/fhightower/ioc-finder/issues/110))
 - Made `_prepare_text` function public (`prepare_text`) ([#114](https://github.com/fhightower/ioc-finder/issues/114))
 - Renamed `no_urls_without_schemes` to `parse_urls_without_scheme` ([#109](https://github.com/fhightower/ioc-finder/issues/109))
+- Moved from MIT License to [GNU Lesser General Public License v3.0](https://choosealicense.com/licenses/lgpl-3.0/) ([#113](https://github.com/fhightower/ioc-finder/issues/113))
 
 ### Fixed
 
