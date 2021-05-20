@@ -13,3 +13,5 @@ mypy ioc_finder/ tests/
 pylint --fail-under 9 ioc_finder/*.py
 
 flake8 ioc_finder/
+
+echo "Done 🎉"
