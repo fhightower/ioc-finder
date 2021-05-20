@@ -209,11 +209,6 @@ def test_issue_46_registry_key_with_space_parsing():
     assert len(iocs['registry_key_paths']) == 1
     assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Console\ConsoleIME'
 
-    s = """HKLM\SOFTWARE\Microsoft\Windows ... NT\CurrentVersion\Console\ConsoleIME"""
-    iocs = find_iocs(s)
-    assert len(iocs['registry_key_paths']) == 1
-    assert iocs['registry_key_paths'][0] == 'HKLM\SOFTWARE\Microsoft\Windows'
-
     s = """Found a registry key like <HKCU>\SOFTWARE\MICROSOFT\WINDOWS\CURRENTVERSION\EXPLORER\ADVANCED on the windows box"""
     iocs = find_iocs(s)
     assert len(iocs['registry_key_paths']) == 1

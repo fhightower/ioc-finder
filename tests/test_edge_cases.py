@@ -149,12 +149,6 @@ def test_url_domain_name_parsing():
     assert iocs['domains'] == ['foo.youtube']
 
 
-def test_unicode_domain_name():
-    s = "ȩxample.com"
-    iocs = find_iocs(s)
-    assert iocs['domains'] == ['\\u0229xample.com']
-
-
 def test_ioc_deduplication():
     """Make sure the results returned from the ioc_finder are deduplicated."""
     iocs = find_iocs('example.com example.com')
@@ -222,14 +216,6 @@ def test_url_boundaries():
     s = """[https://i.imgur.com/abc.png#abc](https://i.imgur.com/abc.png#abc)"""
     iocs = find_iocs(s)
     assert iocs['urls'] == ['https://i.imgur.com/abc.png#abc']
-
-    s = "DownloadString('https://hacks4all[.]net/rdp.ps1');g $I"
-    iocs = find_iocs(s)
-    assert iocs['urls'] == ['https://hacks4all.net/rdp.ps1']
-
-    s = 'DownloadString("https://hacks4all[.]net/rdp.ps1");g $I'
-    iocs = find_iocs(s)
-    assert iocs['urls'] == ['https://hacks4all.net/rdp.ps1']
 
 
 def test_domain_parsing():
@@ -525,31 +511,11 @@ def test_mac_address_parsing():
     assert iocs['mac_addresses'] == []
 
 
-def test_windows_file_paths():
-    s = r'test C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin is a bad file path'
-    iocs = find_iocs(s)
-    assert iocs['file_paths'] == [r'C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin']
-
-    s = r'test C:\Users\<username>\AppData\Roaming\Macromedia\Flash Player\macromedia\bin\ is a bad file path'
-    iocs = find_iocs(s)
-    assert iocs['file_paths'] == [
-        'C:\\Users\\<username>\\AppData\\Roaming\\Macromedia\\Flash Player\\macromedia\\bin\\'
-    ]
-
-
-def test_unix_file_paths():
+def test_unix_file_paths__not_detect_url():
     # https://github.com/fhightower/ioc-finder/issues/42
     s = 'https://twitter.com/'
     iocs = find_iocs(s)
     assert iocs['file_paths'] == []
-
-    s = r'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e file'
-    iocs = find_iocs(s)
-    assert iocs['file_paths'] == [r'/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e']
-
-    s = r'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/ file'
-    iocs = find_iocs(s)
-    assert iocs['file_paths'] == [r'/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/']
 
 
 def test_phone_number_parsing():

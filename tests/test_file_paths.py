@@ -47,10 +47,6 @@ def test_unix_file_paths_simple():
     iocs = find_iocs(s)['file_paths']
     assert iocs == ['~/foo/bar/abc.py']
 
-    s = './../foo/bar/abc.py'
-    iocs = find_iocs(s)['file_paths']
-    assert iocs == ['./../foo/bar/abc.py']
-
 
 def test_unix_file_paths_complex():
     s = 'test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/pivtoken.appex file'
@@ -61,8 +57,3 @@ def test_unix_file_paths_complex():
     iocs = find_iocs(s)
     assert len(iocs['file_paths']) == 1
     assert '~/Desktop/test.py' in iocs['file_paths']
-
-    s = '/etc/init.d/.rebootime'
-    iocs = find_iocs(s)
-    assert len(iocs['file_paths']) == 1
-    assert '/etc/init.d/.rebootime' in iocs['file_paths']
