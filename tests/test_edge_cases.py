@@ -412,24 +412,6 @@ def test_ip_address_systematically():
     assert iocs['ipv4s'] == []
 
 
-def test_asn_parsing():
-    s = 'NWD2HUBCAS8.ad.analog.com'
-    iocs = find_iocs(s)
-    assert iocs['asns'] == []
-
-    s = 'here is an asn: "AS8"'
-    iocs = find_iocs(s)
-    assert iocs['asns'] == ['ASN8']
-
-    s = 'here is an asn: AS8foobar'
-    iocs = find_iocs(s)
-    assert iocs['asns'] == []
-
-    s = 'as8'
-    iocs = find_iocs(s)
-    assert iocs['asns'] == ['ASN8']
-
-
 def test_onion_parsing():
     s = 'foo.onion'
     iocs = find_iocs(s)

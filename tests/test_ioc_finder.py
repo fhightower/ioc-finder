@@ -163,15 +163,6 @@ def test_file_hash_parsing():
     assert len(iocs['sha512s']) == 1
 
 
-def test_asn_parsing():
-    s = "asn1234 as1234 asn 1234 as 1234 AS 4321 ASN4321"
-    iocs = find_iocs(s)
-    # this test works because all of the asns should be standardized into the same form
-    assert len(iocs['asns']) == 2
-    assert 'ASN1234' in iocs['asns']
-    assert 'ASN4321' in iocs['asns']
-
-
 def test_cve_parsing():
     s = "cve-2014-1000 cve 2014-1001 cve-1999-1002 CVE 2999-1003 CVE 1928-1004"
     iocs = find_iocs(s)
