@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [6.0.1] - 2021.06.09
+
+### Fixed
+
+- ASN grammar improved reduce false positives by not matching on lower-case `"as "` ([#136](https://github.com/fhightower/ioc-finder/issues/136))
+
+## [6.0.0] - 2021.05.20
+
 ### Changed
 
 - Made all boolean arguments keyword-only arguments ([#108](https://github.com/fhightower/ioc-finder/issues/108))

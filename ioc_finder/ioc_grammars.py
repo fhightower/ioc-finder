@@ -172,8 +172,13 @@ cve = (
 asn = (
     alphanum_word_start
     + Combine(
-        Or(['as', 'AS']).setParseAction(replaceWith('AS'))
-        + Optional(Word('nN ')).setParseAction(replaceWith('N'))
+        Or(
+            [
+                Literal('AS') + Optional(Word('N ')).setParseAction(replaceWith('N')),
+                Literal('as').setParseAction(replaceWith('ASN')),
+                (Literal('asn') + Optional(' ')).setParseAction(replaceWith('ASN')),
+            ]
+        )
         + Word(nums)('as_number')
     )
     + alphanum_word_end
