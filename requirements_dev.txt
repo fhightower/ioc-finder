@@ -8,7 +8,7 @@ flake8==3.9.2
 hypothesis==6.14.1
 ipython>7.0,<8.0
 mypy==0.910
-pylint==2.9.3
+pylint==2.9.6
 pytest-benchmark==3.4.1
 pytest-cov==2.12.1
 pytest==6.2.4
