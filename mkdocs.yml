@@ -33,4 +33,4 @@ markdown_extensions:
   - toc:
       permalink: true
 nav:
-    - Welcome to the Indicator of Compromise (IOC) Finder Documentation!: index.md
+    - Home: index.md
