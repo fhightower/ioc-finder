@@ -1,0 +1,36 @@
+site_name: Indicator of Compromise Finder Docs
+site_url: ""
+theme:
+  name: material
+  custom_dir: docs/overrides
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      # toggle:
+      #   icon: material/lightbulb-outline
+      #   name: Switch to dark mode
+      primary: white
+      accent: deep orange
+    # - media: "(prefers-color-scheme: dark)"
+    #   scheme: slate
+    #   toggle:
+    #     icon: material/lightbulb
+    #     name: Switch to light mode
+    #   primary: deep orange
+    #   accent: indigo
+  font: false
+  icon:
+    logo: material/magnify
+  features:
+    - navigation.instant
+    - navigation.top
+    - header.autohide
+    - navigation.tabs
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - meta
+  - toc:
+      permalink: true
+nav:
+    - Welcome to the Indicator of Compromise (IOC) Finder Documentation!: index.md
