@@ -8,7 +8,7 @@
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://choosealicense.com/licenses/lgpl-3.0/)
 [![live demo](https://img.shields.io/badge/live%20demo-%E2%86%92-green)](http://ioc-finder.hightower.space/)
 
-Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) from text. You can test this project here: [http://ioc-finder.hightower.space/](http://ioc-finder.hightower.space/).
+Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) from text. You can explore this library in our [interactive documentation](https://iocs.hightower.space/).
 
 ```python
 from ioc_finder import find_iocs
