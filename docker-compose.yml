@@ -15,6 +15,13 @@ services:
     <<: *base
     command: ipython
 
+  mkdocs:
+    <<: *base
+    entrypoint: "mkdocs"
+    ports:
+      - "8000:8000"
+    command: ["serve", "--dev-addr=0.0.0.0:8000"]
+
   bump-patch:
     <<: *base
     command: bumpversion patch

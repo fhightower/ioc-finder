@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Starboard Notebook</title>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <link href="https://unpkg.com/starboard-notebook@0.6.0/dist/starboard-notebook.css" rel="stylesheet">
+    </head>
+    <body>
+      <!-- Article -->
+      <div class="md-content" data-md-component="content">
+        <article class="md-content__inner md-typeset">
+
+          <!-- Content -->
+          {% block content %}
+
+            <!-- Edit button -->
+            {% if page.edit_url %}
+              <a
+                href="{{ page.edit_url }}"
+                title="{{ lang.t('edit.link.title') }}"
+                class="md-content__button md-icon"
+              >
+                {% include ".icons/material/pencil.svg" %}
+              </a>
+            {% endif %}
+
+            <!--
+              Hack: check whether the content contains a h1 headline. If it
+              doesn't, the page title (or respectively site name) is used
+              as the main headline.
+            -->
+            {% if not "\x3ch1" in page.content %}
+              <h1>{{ page.title | d(config.site_name, true)}}</h1>
+            {% endif %}
+
+            <!-- Markdown content -->
+            {{ page.content }}
+
+            <!-- Last update of source file -->
+            {% if page and page.meta %}
+              {% if page.meta.git_revision_date_localized or
+                    page.meta.revision_date
+              %}
+                {% include "partials/source-file.html" %}
+              {% endif %}
+            {% endif %}
+          {% endblock %}
+        </article>
+      </div>
+
+        <script src="https://unpkg.com/starboard-notebook@0.6.0/dist/starboard-notebook.js"></script>
+    </body>
+</html>
