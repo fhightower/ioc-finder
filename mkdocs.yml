@@ -1,23 +1,25 @@
 site_name: Indicator of Compromise Finder Docs
 site_url: ""
+repo_url: https://github.com/fhightower/ioc-finder
+repo_name: ioc-finder
 theme:
   name: material
   custom_dir: docs/overrides
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      # toggle:
-      #   icon: material/lightbulb-outline
-      #   name: Switch to dark mode
-      primary: white
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to dark mode
+      primary: deep orange
       accent: deep orange
-    # - media: "(prefers-color-scheme: dark)"
-    #   scheme: slate
-    #   toggle:
-    #     icon: material/lightbulb
-    #     name: Switch to light mode
-    #   primary: deep orange
-    #   accent: indigo
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/lightbulb
+        name: Switch to light mode
+      primary: deep orange
+      accent: deep orange
   font: false
   icon:
     logo: material/magnify
@@ -25,8 +27,11 @@ theme:
     - navigation.instant
     - navigation.top
     - header.autohide
-    - navigation.tabs
+    - toc.integrate
 markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - attr_list
   - admonition
   - pymdownx.details
   - meta
@@ -34,3 +39,4 @@ markdown_extensions:
       permalink: true
 nav:
     - Home: index.md
+    - Quick Start: quick-start.md
