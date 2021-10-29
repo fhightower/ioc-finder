@@ -8,8 +8,14 @@
 [![License: LGPL v3](https://img.shields.io/badge/License-LGPL%20v3-blue.svg)](https://choosealicense.com/licenses/lgpl-3.0/)
 [![live demo](https://img.shields.io/badge/live%20demo-%E2%86%92-green)](https://hightower.space/ioc-finder/)
 
-Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) (also known as "observables" or "network data" - e.g. urls, email addresses, etc) from text. You can explore this library in our [interactive documentation](https://hightower.space/ioc-finder/).
+Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) (also known as "observables" or "network data" - e.g. urls, email addresses, etc) from text.
 
+We're exited to announce that we've been working on [interactive documentation](https://hightower.space/ioc-finder)
+that lets you actually use and explore the library from your browser! Check it out [here](https://hightower.space/https://hightower.space/ioc-finder)!
+
+Below is our old documentation:
+
+<details>
 ```python
 from ioc_finder import find_iocs
 text = "This is just an foobar.com https://example.org/test/bingo.php"
@@ -61,22 +67,6 @@ Also provides some helpful features like:
 - When parsing **registry key paths**, this library will NOT properly parse a registry key path where the last section contains a space. For example, `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced on` will be parsed as `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced` (the space in the final section is removed).
 - The items listed above (in the "Capabilities" section) that are postceded by "(*beta*)" are not very robust and may still have major issues. Any feedback or issues related to these items are much appreciated.
 - When parsing **markdown**, if there is a domain name that is surrounded by underscores (which would make the domain name italic in some flavours of markdown - e.g. `_google.com_`), the domain will be parsed *including* the leading underscore (e.g. `_google.com_` would be parsed as `_google.com`).
-
-## Python2 Support
-
-All versions of the IOC Finder package *before* version 2.x are compatible with python2.7 . **Beware: version 1.x of the IOC Finder package is no longer maintained.** This means that any bug fixes or improvements will **not** be back-ported to previous versions.
-
-To install a specific version of the IOC Finder package (or any other one) via pip, use the following formula:
-
-```
-pip install ioc-finder==<VERSION NUMBER>
-```
-
-For example:
-
-```
-pip install ioc-finder==1.2.18
-```
 
 ## Installation
 
@@ -351,3 +341,4 @@ There are a number of projects available to find Indicators of Compromise. Your 
 - [https://github.com/InQuest/python-iocextract](https://github.com/InQuest/python-iocextract)
 - [https://github.com/sroberts/cacador](https://github.com/sroberts/cacador)
 - [https://github.com/armbues/ioc_parser](https://github.com/armbues/ioc_parser)
+</details>
