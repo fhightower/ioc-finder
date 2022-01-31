@@ -18,13 +18,15 @@ from pyparsing import (
     ZeroOrMore,
     alphanums,
     alphas,
-    downcaseTokens,
     hexnums,
     nums,
     printables,
     replaceWith,
-    upcaseTokens,
 )
+
+from pyparsing import common
+
+
 
 from ioc_finder.data import (
     enterprise_attack_mitigations,
@@ -51,7 +53,7 @@ domain_name = (
         Combine(OneOrMore(label + ('.' + FollowedBy(Word(alphanums + '-_')))))('domain_labels') + domain_tld('tld')
     )
     + alphanum_word_end
-).setParseAction(downcaseTokens)
+).setParseAction(common.downcaseTokens)
 
 ipv4_section = (
     Word(nums, asKeyword=True, max=3)
@@ -100,7 +102,7 @@ complete_email_address = Combine(
     + Or([domain_name, '[' + ipv4_address + ']', '[IPv6:' + ipv6_address + ']'])('email_address_domain')
 )
 
-email_local_part = Word(alphanums, bodyChars=alphanums + "+-_.").setParseAction(downcaseTokens)
+email_local_part = Word(alphanums, bodyChars=alphanums + "+-_.").setParseAction(common.downcaseTokens)
 email_address = alphanum_word_start + Combine(
     email_local_part('email_address_local_part')
     + "@"
@@ -141,20 +143,20 @@ scheme_less_url = alphanum_word_start + Combine(
 # this allows for matching file hashes preceeded with an 'x' or 'X'...
 # see https://github.com/fhightower/ioc-finder/issues/41
 file_hash_word_start = WordStart(wordChars=alphanums.replace('x', '').replace('X', ''))
-md5 = file_hash_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
+md5 = file_hash_word_start + Word(hexnums, exact=32).setParseAction(common.downcaseTokens) + alphanum_word_end
 imphash = Combine(
     Or(['imphash', 'import hash']) + Optional(Word(printables, excludeChars=alphanums)) + md5('hash'),
     joinString=' ',
     adjacent=False,
 )
-sha1 = file_hash_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
-sha256 = file_hash_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
+sha1 = file_hash_word_start + Word(hexnums, exact=40).setParseAction(common.downcaseTokens) + alphanum_word_end
+sha256 = file_hash_word_start + Word(hexnums, exact=64).setParseAction(common.downcaseTokens) + alphanum_word_end
 authentihash = Combine(
     Or(['authentihash']) + Optional(Word(printables, excludeChars=alphanums)) + sha256('hash'),
     joinString=' ',
     adjacent=False,
 )
-sha512 = file_hash_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end
+sha512 = file_hash_word_start + Word(hexnums, exact=128).setParseAction(common.downcaseTokens) + alphanum_word_end
 
 year = Word('12') + Word(nums, exact=3)
 cve = (
@@ -260,7 +262,7 @@ registry_key_path = (
 # see https://support.google.com/adsense/answer/2923881?hl=en
 google_adsense_publisher_id = (
     alphanum_word_start
-    + Combine(Or(['pub-', 'PUB-']) + Word(nums, exact=16)).setParseAction(downcaseTokens)
+    + Combine(Or(['pub-', 'PUB-']) + Word(nums, exact=16)).setParseAction(common.downcaseTokens)
     + alphanum_word_end
 )
 
@@ -269,7 +271,7 @@ google_analytics_tracker_id = (
     alphanum_word_start
     + Combine(
         Or(['UA-', 'ua-']) + Word(nums, min=6)('account_number') + '-' + Word(nums)('property_number')
-    ).setParseAction(upcaseTokens)
+    ).setParseAction(common.upcaseTokens)
     + alphanum_word_end
 )
 
@@ -359,13 +361,13 @@ phone_number = Or([phone_number_format_1])
 attack_sub_technique = Literal('.') + Word(nums, exact=3)
 pre_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in pre_attack_tactics]).setParseAction(upcaseTokens)
+    + Or([CaselessLiteral(i) for i in pre_attack_tactics]).setParseAction(common.upcaseTokens)
     + alphanum_word_end
 )
 pre_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(upcaseTokens)
+        Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(common.upcaseTokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
@@ -376,13 +378,13 @@ enterprise_attack_mitigations_grammar = (
 )
 enterprise_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).setParseAction(upcaseTokens)
+    + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).setParseAction(common.upcaseTokens)
     + alphanum_word_end
 )
 enterprise_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(upcaseTokens)
+        Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(common.upcaseTokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
@@ -393,13 +395,13 @@ mobile_attack_mitigations_grammar = (
 )
 mobile_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).setParseAction(upcaseTokens)
+    + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).setParseAction(common.upcaseTokens)
     + alphanum_word_end
 )
 mobile_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(upcaseTokens)
+        Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(common.upcaseTokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
@@ -412,4 +414,4 @@ tlp_label = Combine(
     CaselessLiteral('tlp')
     + Or([Literal(':'), Literal('-'), Literal(' '), Empty()]).setParseAction(lambda x: ':')
     + tlp_colors
-).setParseAction(upcaseTokens)
+).setParseAction(common.upcaseTokens)
