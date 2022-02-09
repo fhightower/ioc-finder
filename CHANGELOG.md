@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-- Removed phone number parsing ([#115](https://github.com/fhightower/ioc-finder/issues/115))
+- Removed phone number parsing ([#155](https://github.com/fhightower/ioc-finder/issues/155))
 
 ## [6.0.1] - 2021.06.09
 
