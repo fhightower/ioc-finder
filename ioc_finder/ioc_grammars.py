@@ -345,17 +345,6 @@ unix_file_path = unix_file_path_wordstart + Combine(
 ).addCondition(lambda tokens: '//' not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
 
-# be aware that the phone_number grammar assumes that the text being sent to it has been reversed
-phone_number_connector = Word(' .-', max=3)
-phone_number_format_1 = Combine(
-    Word(nums, exact=4)
-    + phone_number_connector
-    + Word(nums, exact=3)
-    + Optional(phone_number_connector + Optional(')') + Word(nums) + Optional('('))
-)
-
-phone_number = Or([phone_number_format_1])
-
 attack_sub_technique = Literal('.') + Word(nums, exact=3)
 pre_attack_tactics_grammar = (
     alphanum_word_start

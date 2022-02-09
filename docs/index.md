@@ -44,7 +44,6 @@ This terminal uses [Pyodide](https://pyodide.org/en/stable/index.html) to provid
     - IP address (IPv4 and IPv6)
     - MAC addresses (*beta*)
     - Monero (crypto-currency) addresses
-    - Phone numbers (*beta*)
     - Registry key paths (e.g. `"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows`)
     - SSDeep hashes (*beta*)
     - URLs (URLs with and without schemes)
