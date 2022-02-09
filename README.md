@@ -11,11 +11,12 @@
 Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) (also known as "observables" or "network data" - e.g. urls, email addresses, etc) from text.
 
 We're exited to announce that we've been working on [interactive documentation](https://hightower.space/ioc-finder)
-that lets you actually use and explore the library from your browser! Check it out [here](https://hightower.space/https://hightower.space/ioc-finder)!
+that lets you actually use and explore the library from your browser! Check it out [here](https://hightower.space/ioc-finder)!
 
 Below is our old documentation:
 
 <details>
+
 ```python
 from ioc_finder import find_iocs
 text = "This is just an foobar.com https://example.org/test/bingo.php"
