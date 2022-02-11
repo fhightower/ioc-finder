@@ -22,7 +22,6 @@ from .ioc_finder import (
     parse_md5s,
     parse_mobile_attack_tactics,
     parse_mobile_attack_techniques,
-    parse_phone_numbers,
     parse_pre_attack_tactics,
     parse_pre_attack_techniques,
     parse_registry_key_paths,

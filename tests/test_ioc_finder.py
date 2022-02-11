@@ -412,20 +412,6 @@ def test_user_agents():
     assert 'Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0' in iocs['user_agents']
 
 
-def test_phone_numbers():
-    phone_number_blocks = [['123', '4567'], ['123', '456', '7890'], ['(123)', '456', '7890']]
-
-    block_connectors = ['-', ' - ', '.', ' . ', ' ']
-
-    for block in phone_number_blocks:
-        for connector in block_connectors:
-            phone_number = connector.join(block)
-            print(phone_number)
-            iocs = find_iocs(phone_number)
-            assert len(iocs['phone_numbers']) == 1
-            assert iocs['phone_numbers'][0] == phone_number
-
-
 def test_monero_addresses():
     result = find_iocs(
         '496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp'

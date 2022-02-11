@@ -278,12 +278,6 @@ def parse_file_paths(text):
     return _listify(file_paths)
 
 
-def parse_phone_numbers(text):
-    """."""
-    phone_numbers = ioc_grammars.phone_number.searchString(text[::-1])
-    return [phone_number[::-1] for phone_number in _listify(phone_numbers)]
-
-
 def parse_pre_attack_tactics(text):
     """."""
     data = ioc_grammars.pre_attack_tactics_grammar.searchString(text)
@@ -412,7 +406,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_authentihashes: bool = True,
 ) -> Dict[str, List]:
     """Find observables in the given text."""
-    iocs = dict()
+    iocs = {}
 
     text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
@@ -497,7 +491,6 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     iocs['monero_addresses'] = parse_monero_addresses(text)
     iocs['mac_addresses'] = parse_mac_addresses(text)
     iocs['user_agents'] = parse_user_agents(text)
-    iocs['phone_numbers'] = parse_phone_numbers(text)
     iocs['tlp_labels'] = parse_tlp_labels(original_text)
 
     iocs['attack_mitigations'] = {  # type: ignore

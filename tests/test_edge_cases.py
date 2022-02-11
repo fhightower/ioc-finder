@@ -500,13 +500,6 @@ def test_unix_file_paths__not_detect_url():
     assert iocs['file_paths'] == []
 
 
-def test_phone_number_parsing():
-    # https://github.com/fhightower/ioc-finder/issues/43
-    s = '3-2-1 0.02'
-    iocs = find_iocs(s)
-    assert iocs['phone_numbers'] == []
-
-
 def test_ipv6_parsing():
     # https://github.com/fhightower/ioc-finder/issues/37
     s = '11:04:10 -0500'
