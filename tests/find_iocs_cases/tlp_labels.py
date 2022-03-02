@@ -1,10 +1,14 @@
-def case_tlp_label_len_2():
-    text = "tlp amber and TLP:RED"
-    results = {"tlp_labels": ["TLP:RED", "TLP:AMBER"]}
-    return text, results
+from pytest import param
 
-
-def case_tlp_label_len_3():
-    text = "tlp-Amber and TLPRED TlpGreen"
-    results = {"tlp_labels": ["TLP:RED", "TLP:AMBER", "TLP:GREEN"]}
-    return text, results
+TLP_DATA = [
+    param(
+        "tlp amber and TLP:RED",
+        {"tlp_labels": ["TLP:RED", "TLP:AMBER"]},
+        id="tlp_1"
+    ),
+    param(
+        "tlp-Amber and TLPRED TlpGreen",
+        {"tlp_labels": ["TLP:RED", "TLP:AMBER", "TLP:GREEN"]},
+        id="tlp_2"
+    )
+]
