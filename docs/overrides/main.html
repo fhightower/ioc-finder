@@ -26,7 +26,7 @@
   
         async function main() {
           globalThis.pyodide = await loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/",
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.19.1/full/",
           });
           let namespace = pyodide.globals.get("dict")();
           pyodide.runPython(
