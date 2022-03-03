@@ -16,7 +16,7 @@ def test_find_iocs(text: str, results):
     results_keys = list(results.keys())
 
     # Test output with expected results
-    assert sorted(ioc_finder_keys) == sorted(results_keys)
+    assert sorted(ioc_finder_keys) == sorted(results_keys), f"Key values don't match '{ioc_finder_keys} vs '{results_keys}'"
     for key in ioc_finder_keys:
         # Compare lists
         if type(iocs[key]) == list:
