@@ -5,10 +5,10 @@ from ioc_finder import find_iocs
 from .find_iocs_cases import ALL_TESTS
 
 
-@pytest.mark.parametrize("text,results", ALL_TESTS)
-def test_find_iocs(text: str, results):
+@pytest.mark.parametrize("text,results, args", ALL_TESTS)
+def test_find_iocs(text: str, results: dict, args: dict):
     # Parse input
-    iocs = find_iocs(text)
+    iocs = find_iocs(text, **args)
 
     # Get all keys
     ioc_finder_keys = _get_nonempty_keys(iocs)
