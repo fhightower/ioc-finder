@@ -7,9 +7,11 @@ HASH_DATA = [
             "md5s": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
             "sha1s": ["bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],
             "sha256s": ["cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"],
-            "sha512s": ["dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"]
+            "sha512s": [
+                "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+            ],
         },
         {},
-        id="hash_1"
+        id="hash_1",
     )
 ]

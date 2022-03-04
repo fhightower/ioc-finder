@@ -1,12 +1,11 @@
 from typing import Dict, List
-
 import pytest
 from ioc_finder import find_iocs
 from .find_iocs_cases import ALL_TESTS
 
 
-@pytest.mark.parametrize("text,results, args", ALL_TESTS)
-def test_find_iocs(text: str, results: dict, args: dict):
+@pytest.mark.parametrize("text, results, args", ALL_TESTS)
+def test_find_iocs(text: str, results: Dict, args: Dict):
     # Parse input
     iocs = find_iocs(text, **args)
 
@@ -16,7 +15,9 @@ def test_find_iocs(text: str, results: dict, args: dict):
     results_keys = list(results.keys())
 
     # Test output with expected results
-    assert sorted(ioc_finder_keys) == sorted(results_keys), f"Key values don't match '{ioc_finder_keys} vs '{results_keys}'"
+    assert sorted(ioc_finder_keys) == sorted(
+        results_keys
+    ), f"Key values don't match '{ioc_finder_keys} vs '{results_keys}'"
     for key in ioc_finder_keys:
         # Compare lists
         if type(iocs[key]) == list:
@@ -29,7 +30,9 @@ def test_find_iocs(text: str, results: dict, args: dict):
 
 
 def _compare_lists(ioc_list: List, result_list: List):
-    assert sorted(ioc_list) == sorted(result_list), f"Expected result '{result_list}' did not match parsed IOCs '{ioc_list}'"
+    assert sorted(ioc_list) == sorted(
+        result_list
+    ), f"Expected result '{result_list}' did not match parsed IOCs '{ioc_list}'"
 
 
 def _get_nonempty_keys(input: Dict):

@@ -28,19 +28,10 @@ EMAIL_DATA = [
                 "\"John..Doe\"@example.com",
                 "test@[192.168.0.1]",
             ],
-            "ipv4s": [
-                "192.168.0.1"
-            ],
-            "domains": [
-                "a.com",
-                "en.wikipedia.com",
-                "b.a.com",
-                "test-ing.com",
-                "2600.com",
-                "example.com"
-            ]
+            "ipv4s": ["192.168.0.1"],
+            "domains": ["a.com", "en.wikipedia.com", "b.a.com", "test-ing.com", "2600.com", "example.com"],
         },
         {},
-        id="email_1"
+        id="email_1",
     )
 ]
