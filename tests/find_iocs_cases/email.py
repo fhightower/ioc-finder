@@ -40,6 +40,7 @@ EMAIL_DATA = [
                 "example.com"
             ]
         },
+        {},
         id="email_1"
     )
 ]

@@ -9,6 +9,7 @@ HASH_DATA = [
             "sha256s": ["cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"],
             "sha512s": ["dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"]
         },
+        {},
         id="hash_1"
     )
 ]
