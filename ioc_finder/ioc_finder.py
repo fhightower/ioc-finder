@@ -2,7 +2,7 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import click
 import ioc_fanger
@@ -404,7 +404,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-) -> Dict[str, List]:
+) -> Dict[str, Union[List, Dict[str, List]]]:
     """Find observables in the given text."""
     iocs = {}
 
