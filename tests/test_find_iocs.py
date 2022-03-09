@@ -1,6 +1,9 @@
 from typing import Dict, List
+
 import pytest
+
 from ioc_finder import find_iocs
+
 from .find_iocs_cases import ALL_TESTS
 
 
