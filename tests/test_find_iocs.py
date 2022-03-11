@@ -15,13 +15,13 @@ def test_find_iocs(text: str, results: Dict, args: Dict) -> None:
 
     # Get all keys
     ioc_finder_keys = _get_nonempty_keys(iocs)
-    results_keys = list(results.keys())
+    results_keys = _get_nonempty_keys(results)
 
     # Test output with expected results
     assert sorted(ioc_finder_keys) == sorted(
         results_keys
     ), f"Key values don't match '{ioc_finder_keys}' vs '{results_keys}'"
-    for key in ioc_finder_keys:
+    for key in results.keys():
         # Compare lists
         if isinstance(iocs[key], list):
             _compare_lists(iocs[key], results[key])  # type: ignore
@@ -37,7 +37,7 @@ def _compare_lists(ioc_list: IndicatorList, result_list: IndicatorList) -> None:
 
 
 def _compare_dicts(ioc_dict: IndicatorDict, result_dict: IndicatorDict) -> None:
-    for key in ioc_dict.keys():
+    for key in result_dict.keys():
         assert key in result_dict, f"Expected key '{key}' not found in {result_dict.keys()}"
         _compare_lists(ioc_dict[key], result_dict[key])
 
