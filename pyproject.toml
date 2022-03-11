@@ -11,5 +11,5 @@ max-line-length = 120
 disable = "C0114, R1705, C0103"
 
 [tool.pytest.ini_options]
-addopts = "-v --cov=. --cov-report term-missing --cov-fail-under 98"
+addopts = "-n auto -v --cov=. --cov-report term-missing --cov-fail-under 98"
 python_files = "tests/test_*.py"

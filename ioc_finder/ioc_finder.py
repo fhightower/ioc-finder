@@ -2,7 +2,7 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Dict, List, Union
+from typing import Dict, List, Mapping, Union
 
 import click
 import ioc_fanger
@@ -10,6 +10,11 @@ from d8s_strings import string_remove_from_end
 from pyparsing import ParseResults
 
 from ioc_finder import ioc_grammars
+
+IndicatorList = List[str]
+IndicatorDict = Dict[str, IndicatorList]
+# using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
+IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
 
 
 def _deduplicate(indicator_list: List) -> List:
@@ -404,7 +409,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-) -> Dict[str, Union[List, Dict[str, List]]]:
+) -> IndicatorData:
     """Find observables in the given text."""
     iocs = {}
 
