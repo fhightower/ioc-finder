@@ -11,7 +11,7 @@ ATTACK_DATA = [
         Configur''',
         {'attack_mitigations': {'enterprise': ['M1036', 'M1015']}},
         {},
-        id="attack_data_1"
+        id="attack_data_1",
     ),
     param(
         ''' Name    Description
@@ -22,7 +22,7 @@ ATTACK_DATA = [
         Enterprises can vet applications for exploitable vulnerabilities or unwanted (privacy-invasive or malicious) behaviors. Enterprises can inspect appl''',
         {'attack_mitigations': {'enterprise': ['M1013'], 'mobile': ['M1013', 'M1005']}},
         {},
-        id="attack_data_2"
+        id="attack_data_2",
     ),
     param(
         """
@@ -36,7 +36,7 @@ ATTACK_DATA = [
         T1308""",
         {'attack_techniques': {'pre_attack': ['T1329', 'T1307', 'T1308']}},
         {},
-        id="attack_pattern_3"
+        id="attack_pattern_3",
     ),
     param(
         """
@@ -46,82 +46,27 @@ ATTACK_DATA = [
         TA0014  Targ""",
         {'attack_tactics': {'pre_attack': ['TA0012', 'TA0013', 'TA0014']}},
         {},
-        id="attack_pattern_4"
+        id="attack_pattern_4",
     ),
-    param(
-        """FOOT1329""",
-        {},
-        {},
-        id="attack_pattern_5"
-    ),
-    param(
-        """T1329FUN""",
-        {},
-        {},
-        id="attack_pattern_6"
-    ),
-    param(
-        """foot1329""",
-        {},
-        {},
-        id="attack_pattern_7"
-    ),
-    param(
-        """t1329""",
-        {'attack_techniques': {'pre_attack': ['T1329']}},
-        {},
-        id="attack_pattern_8"
-    ),
-    param(
-        'T1156',
-        {'attack_techniques': {'enterprise': ['T1156']}},
-        {},
-        id="attack_pattern_9"
-    ),
-    param(
-        'AT0001',
-        {},
-        {},
-        id="attack_pattern_10"
-    ),
-    param(
-        'TA0001FUN',
-        {},
-        {},
-        id="attack_pattern_11"
-    ),
-    param(
-        'foota0001',
-        {},
-        {},
-        id="attack_pattern_12"
-    ),
-    param(
-        'ta0001',
-        {'attack_tactics': {'enterprise': ['TA0001']}},
-        {},
-        id="attack_pattern_13"
-    ),
+    param("""FOOT1329""", {}, {}, id="attack_pattern_5"),
+    param("""T1329FUN""", {}, {}, id="attack_pattern_6"),
+    param("""foot1329""", {}, {}, id="attack_pattern_7"),
+    param("""t1329""", {'attack_techniques': {'pre_attack': ['T1329']}}, {}, id="attack_pattern_8"),
+    param('T1156', {'attack_techniques': {'enterprise': ['T1156']}}, {}, id="attack_pattern_9"),
+    param('AT0001', {}, {}, id="attack_pattern_10"),
+    param('TA0001FUN', {}, {}, id="attack_pattern_11"),
+    param('foota0001', {}, {}, id="attack_pattern_12"),
+    param('ta0001', {'attack_tactics': {'enterprise': ['TA0001']}}, {}, id="attack_pattern_13"),
     param(
         'https://attack.mitre.org/tactics/TA0001/',
         {
             'attack_tactics': {'enterprise': ['TA0001']},
             'urls': ["https://attack.mitre.org/tactics/TA0001/"],
-            'domains': ["attack.mitre.org"]
+            'domains': ["attack.mitre.org"],
         },
         {},
-        id="attack_pattern_14"
+        id="attack_pattern_14",
     ),
-    param(
-        'T1546.004',
-        {'attack_techniques': {'enterprise': ['T1546.004']}},
-        {},
-        id="attack_pattern_15"
-    ),
-    param(
-        'T1156.0012',
-        {},
-        {},
-        id="attack_pattern_16"
-    )
+    param('T1546.004', {'attack_techniques': {'enterprise': ['T1546.004']}}, {}, id="attack_pattern_15"),
+    param('T1156.0012', {}, {}, id="attack_pattern_16"),
 ]
