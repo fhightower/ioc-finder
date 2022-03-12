@@ -27,7 +27,7 @@ cases = [
     ID_DATA,
     COIN_DATA,
     MAC_DATA,
-    UA_DATA
+    UA_DATA,
 ]
 
 ALL_TESTS = [val for sublist in cases for val in sublist]

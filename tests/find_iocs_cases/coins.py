@@ -59,17 +59,23 @@ COIN_DATA = [
     ),
     param(
         "496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp",
-        {"monero_addresses": [
-            "496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp"]},
+        {
+            "monero_addresses": [
+                "496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp"
+            ]
+        },
         {},
-        id="monero_1"
+        id="monero_1",
     ),
     param(
         "49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk 498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh",
-        {"monero_addresses": [
-            "49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk",
-            "498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh"]},
+        {
+            "monero_addresses": [
+                "49Bmp3SfddJRRGNW7GhHyAA2JgcYmZ4EGEix6p3eMNFCd15P2VsK9BHWcZWUNYF3nhf17MoRTRK4j5b7FUMA9zanSn9D3Nk",
+                "498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh",
+            ]
+        },
         {},
-        id="monero_2"
-    )
+        id="monero_2",
+    ),
 ]

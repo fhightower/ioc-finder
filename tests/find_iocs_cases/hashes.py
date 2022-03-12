@@ -54,7 +54,7 @@ HASH_DATA = [
                 "48:CScrEd3jk5BsRSFCWfVsEWABbbpnWSgSX45dc6b5Qla9A+o5R6k7CyNRD5J:XcrEdzHRSFr9sE7XnsDe1CyNRNJ",
                 "24:N8Rw5AF4REesFtPP6k216xoWya1oxOKHHwa8peRK8FdigZY5tODrRRK8RfMfde8:N8Rw5AF4+XPyooa2EKnwaGeRJFYpfwzQ",
                 "1536:yB+A8bMtMeRlbIzvDqZL4QzNxVDm+5gt+M2hDDDvNZ3YZ7sU:N4tMsbOGcyrV6BQvnoZ4U",
-                "196608:rNI4QlKQbWQobu0u3QRBBibfv+Z4Hjy5M+IjunAadLLtt42fAtQSqFhx:rNkK2obu0uBb3K4H28yAGc4RSax"
+                "196608:rNI4QlKQbWQobu0u3QRBBibfv+Z4Hjy5M+IjunAadLLtt42fAtQSqFhx:rNkK2obu0uBb3K4H28yAGc4RSax",
             ]
         },
         {},
@@ -148,7 +148,7 @@ HASH_DATA = [
         """,
         {"authentihashes": ["3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"]},
         {},
-        id="authentihash_1"
+        id="authentihash_1",
     ),
     param(
         """
@@ -163,6 +163,6 @@ HASH_DATA = [
         """,
         {"authentihashes": ["3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"]},
         {},
-        id="authentihash_2"
-    )
+        id="authentihash_2",
+    ),
 ]
