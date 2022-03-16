@@ -54,4 +54,16 @@ DOMAIN_DATA = [
         {},
         id="domain-percent_encoding_not_unquoted_if_not_in_url_2",
     ),
+    # See https://github.com/fhightower/ioc-finder/issues/91.
+    param(
+        "1.1.1.1/0 foobar.com/test/bingo.php",
+        {
+            "urls": ["foobar.com/test/bingo.php"],
+            "domains": ["foobar.com"],
+            "ipv4_cidrs": ["1.1.1.1/0"],
+            "ipv4s": ["1.1.1.1"],
+        },
+        {},
+        id="url_cidr_1",
+    ),
 ]
