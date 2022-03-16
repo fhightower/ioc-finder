@@ -25,7 +25,7 @@ def test_find_iocs(text: str, results: Dict, args: Dict) -> None:
 def _compare_lists(key_name: str, ioc_list: IndicatorList, result_list: IndicatorList) -> None:
     assert sorted(ioc_list) == sorted(
         result_list
-    ), f"Unexpected result for key '[{key_name}]': Expected: '{result_list}' Received'{ioc_list}'"
+    ), f"Unexpected result for key '[{key_name}]' -> Expected: '{result_list}' Received: '{ioc_list}'"
 
 
 def _compare_dicts(key_name: str, ioc_dict: IndicatorDict, result_dict: IndicatorDict) -> None:
