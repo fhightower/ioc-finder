@@ -38,7 +38,7 @@ def _compare_lists(ioc_list: IndicatorList, result_list: IndicatorList) -> None:
 
 def _compare_dicts(ioc_dict: IndicatorDict, result_dict: IndicatorDict) -> None:
     for key in result_dict.keys():
-        assert key in result_dict, f"Expected key '{key}' not found in {result_dict.keys()}"
+        assert key in ioc_dict, f"Expected key '{key}' not found in {ioc_dict.keys()}"
         _compare_lists(ioc_dict[key], result_dict[key])
 
 
