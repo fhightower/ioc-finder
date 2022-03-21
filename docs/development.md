@@ -40,6 +40,16 @@ docker-compose run --rm dev
 
 To see what this command does, take a look at the `dev` service in the project's `docker-compose.yml` file.
 
+## Run Docs Locally 📖
+
+To view the docs for ioc-finder locally, run the following command from the root directory of the project:
+
+```shell
+docker-compose run --rm mkdocs
+```
+
+This will serve the documentation at `http://localhost:8000`.
+
 # Questions? Please Ask!
 
 If you have any follow-up questions, don't hesitate to ask! It takes practice to understand how to contribute to open-source software, so there is no shame in asking for help.
