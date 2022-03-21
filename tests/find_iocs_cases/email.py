@@ -33,5 +33,26 @@ EMAIL_DATA = [
         },
         {},
         id="email_1",
-    )
+    ),
+    param(
+        "foo@swissjabber.de bar@jabber.zone bom@jabber.sow.as me@example.com",
+        {
+            "xmpp_addresses": ["foo@swissjabber.de", "bar@jabber.zone", "bom@jabber.sow.as"],
+            "domains": ["swissjabber.de", "jabber.zone", "jabber.sow.as", "example.com"],
+            "email_addresses": ["me@example.com"],
+            "email_addresses_complete": ["me@example.com"],
+        },
+        {},
+        id="xmpp_1",
+    ),
+    param(
+        "foo@swissjabber.de bar@jabber.zone bom@jabber.sow.as me@example.com",
+        {
+            "xmpp_addresses": ["foo@swissjabber.de", "bar@jabber.zone", "bom@jabber.sow.as"],
+            "email_addresses": ["me@example.com"],
+            "email_addresses_complete": ["me@example.com"],
+        },
+        {"parse_domain_name_from_xmpp_address": False, "parse_domain_from_email_address": False},
+        id="xmpp_2",
+    ),
 ]
