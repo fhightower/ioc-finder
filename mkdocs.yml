@@ -40,3 +40,4 @@ markdown_extensions:
 nav:
     - Home: index.md
     - Quick Start: quick-start.md
+    - Developer Docs: development.md
