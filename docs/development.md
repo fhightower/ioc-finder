@@ -20,6 +20,27 @@ docker-compose run --rm test
 
 Typically, this command will run [pytest][pytest-link] on the project's test suite. To view the details of what this command does, take a look at the `test` service in the project's `docker-compose.yml` file.
 
+### Understanding our Testing Framework
+
+There are two types of tests in the `ioc-finder/tests/` directory:
+
+1. Standard tests is test_*.py files
+2. Tests run by `ioc-finder/tests/test_find_iocs.py`
+
+In this section of the documentation, we'll discuss the second set of tests (those run by `ioc-finder/tests/test_find_iocs.py`).
+
+In the `ioc-finder/tests/find_iocs_cases` dir, there are files which define test cases with an input and expected output for different types of observables (a.k.a. indicators).
+
+A test case is a [`pytest.param`](https://docs.pytest.org/en/stable/reference/reference.html?highlight=The%20id%20to%20attribute%20to%20this%20parameter%20set#pytest.param) object
+that takes these arguments:
+
+- The input to the `ioc_finder.find_iocs` function (a string)
+- The expected output from the `ioc_finder.find_iocs` function (a dict)
+- (*Optional*) Kwargs for the `ioc_finder.find_iocs` function (a dict)
+- The `id` kwarg providing a name for the test (a string)
+
+`ioc-finder/tests/test_find_iocs.py` collects data from the `ioc-finder/tests/find_iocs_cases` dir and runs tests to make sure the `find_iocs` function returns the expected data.
+
 ## Lint ioc-finder 🧹
 
 To lint ioc-finder, run the following command from the root directory of the project:
