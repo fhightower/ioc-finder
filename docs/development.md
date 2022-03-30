@@ -24,7 +24,7 @@ Typically, this command will run [pytest][pytest-link] on the project's test sui
 
 There are two types of tests in the `ioc-finder/tests/` directory:
 
-1. Standard tests is test_*.py files
+1. Standard tests in test_*.py files
 2. Tests run by `ioc-finder/tests/test_find_iocs.py`
 
 In this section of the documentation, we'll discuss the second set of tests (those run by `ioc-finder/tests/test_find_iocs.py`).
@@ -39,7 +39,15 @@ that takes these arguments:
 - (*Optional*) Kwargs for the `ioc_finder.find_iocs` function (a dict)
 - The `id` kwarg providing a name for the test (a string)
 
-`ioc-finder/tests/test_find_iocs.py` collects data from the `ioc-finder/tests/find_iocs_cases` dir and runs tests to make sure the `find_iocs` function returns the expected data.
+An example looks like:
+
+```python
+from pytest import param
+
+param('as1234', {'asns': ['ASN1234']}, {}, id="asn_1")
+```
+
+`ioc-finder/tests/test_find_iocs.py` collects data from the `ioc-finder/tests/find_iocs_cases/` dir and runs tests to make sure the `find_iocs` function returns the expected data.
 
 ## Lint ioc-finder 🧹
 

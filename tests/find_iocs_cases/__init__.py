@@ -1,16 +1,16 @@
 from .asns import ASN_DATA
+from .attack_data import ATTACK_DATA
+from .coins import COIN_DATA
 from .cves import CVE_DATA
 from .domains import DOMAIN_DATA
 from .email import EMAIL_DATA
-from .hashes import HASH_DATA
-from .ip_addr import IP_DATA
-from .tlp_labels import TLP_DATA
-from .attack_data import ATTACK_DATA
-from .registry_keys import REGISTRY_DATA
 from .file_paths import PATH_DATA
+from .hashes import HASH_DATA
 from .ids import ID_DATA
-from .coins import COIN_DATA
+from .ip_addr import IP_DATA
 from .mac_addr import MAC_DATA
+from .registry_keys import REGISTRY_DATA
+from .tlp_labels import TLP_DATA
 from .user_agents import UA_DATA
 
 cases = [
