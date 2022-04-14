@@ -268,6 +268,7 @@ REGISTRY_DATA = [
         {
             'registry_key_paths': [
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Shell",
+                "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Shell",
             ],
             'domains': [
                 "citizenlab.ca",
@@ -295,10 +296,10 @@ REGISTRY_DATA = [
             'urls': [
                 "https://citizenlab.ca/2016/05/stealth-falcon-appendices",
                 "https://citizenlab.ca/2016/05/stealth-falcon/",
-                "https://citizenlab.ca/about/",
+                "https://citizenlab.ca/about/),",
                 "https://docs.microsoft.com/en-us/windows/win32/bits/background-intelligent-transfer-service-portal",
                 "https://www.reuters.com/investigates/special-report/usa-spying-raven/",
-                "https://www.secureworks.com/blog/malware-lingers-with-bits",
+                "https://www.secureworks.com/blog/malware-lingers-with-bits).",
             ],
             'attack_techniques': {
                 'enterprise': [
