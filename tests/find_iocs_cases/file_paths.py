@@ -47,7 +47,12 @@ PATH_DATA = [
         {},
         id="file_path_2",
     ),
-    param("and this is a file ~/foo/bar/abc.py", {'file_paths': ["~/foo/bar/abc.py"]}, {}, id="file_path_3"),
+    param(
+        "and this is a file ~/foo/bar/abc.py",
+        {'file_paths': ["~/foo/bar/abc.py"], 'domains': ['abc.py']},
+        {},
+        id="file_path_3",
+    ),
     param(
         "test /Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/pivtoken.appex file",
         {'file_paths': ["/Library/Storage/File System/HFS/25cf5d02-e50b-4288-870a-528d56c3cf6e/pivtoken.appex"]},
@@ -56,7 +61,7 @@ PATH_DATA = [
     ),
     param(
         "another home directory ~/Desktop/test.py python file",
-        {'file_paths': ["~/Desktop/test.py"]},
+        {'file_paths': ["~/Desktop/test.py"], 'domains': ['test.py']},
         {},
         id="file_path_5",
     ),

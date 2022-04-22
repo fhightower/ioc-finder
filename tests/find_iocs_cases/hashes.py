@@ -71,39 +71,17 @@ HASH_DATA = [
         imphash\t18ddf28a71089acdbab5038f58044c0a
         imphash\n18ddf28a71089acdbab5038f58044c0a
         imphash - 18ddf28a71089acdbab5038f58044c0a""",
-        {"imphashes": ["18ddf28a71089acdbab5038f58044c0a"], "ipv4s": ["210.209.127.8"]},
+        {
+            "imphashes": [
+                "18ddf28a71089acdbab5038f58044c0a",
+                "18ddf28a71089acdbab5038f58044c0a",
+                "18ddf28a71089acdbab5038f58044c0a",
+            ],
+            "ipv4s": ["210.209.127.8"],
+            "sha256s": ["093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a"],
+        },
         {},
         id="imphash_1",
-    ),
-    param(
-        """SHA-256 093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a
-        Dropper imphash: 18ddf28a71089acdbab5038f58044c0a
-        C2 IP: 210.209.127.8:443
-        imphash: 18ddf28a71089acdbab5038f58044c0a
-        imphash 18ddf28a71089acdbab5038f58044c0a
-        imphash  18ddf28a71089acdbab5038f58044c0a
-        imphash:     18ddf28a71089acdbab5038f58044c0a
-        imphash\t18ddf28a71089acdbab5038f58044c0a
-        imphash\n18ddf28a71089acdbab5038f58044c0a
-        imphash - 18ddf28a71089acdbab5038f58044c0a""",
-        {"imphashes": ["18ddf28a71089acdbab5038f58044c0a"], "ipv4s": ["210.209.127.8"]},
-        {},
-        id="imphash_1",
-    ),
-    param(
-        """SHA-256 093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a
-        Dropper IMPHASH: 18ddf28a71089acdbab5038f58044c0a
-        C2 IP: 210.209.127.8:443
-        IMPHASH: 18ddf28a71089acdbab5038f58044c0a
-        IMPHASH 18ddf28a71089acdbab5038f58044c0a
-        IMPHASH  18ddf28a71089acdbab5038f58044c0a
-        IMPHASH:     18ddf28a71089acdbab5038f58044c0a
-        IMPHASH\t18ddf28a71089acdbab5038f58044c0a
-        IMPHASH\n18ddf28a71089acdbab5038f58044c0a
-        IMPHASH - 18ddf28a71089acdbab5038f58044c0a""",
-        {"imphashes": ["18ddf28a71089acdbab5038f58044c0a"], "ipv4s": ["210.209.127.8"]},
-        {},
-        id="imphash_2",
     ),
     param(
         """SHA-256 093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a
@@ -116,7 +94,15 @@ HASH_DATA = [
         import hash\t18ddf28a71089acdbab5038f58044c0a
         import hash\n18ddf28a71089acdbab5038f58044c0a
         import hash - 18ddf28a71089acdbab5038f58044c0a""",
-        {"imphashes": ["18ddf28a71089acdbab5038f58044c0a"], "ipv4s": ["210.209.127.8"]},
+        {
+            "imphashes": [
+                "18ddf28a71089acdbab5038f58044c0a",
+                "18ddf28a71089acdbab5038f58044c0a",
+                "18ddf28a71089acdbab5038f58044c0a",
+            ],
+            "ipv4s": ["210.209.127.8"],
+            "sha256s": ["093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a"],
+        },
         {},
         id="imphash_3",
     ),
@@ -131,7 +117,15 @@ HASH_DATA = [
         IMPORT HASH\t18ddf28a71089acdbab5038f58044c0a
         IMPORT HASH\n18ddf28a71089acdbab5038f58044c0a
         IMPORT HASH - 18ddf28a71089acdbab5038f58044c0a""",
-        {"imphashes": ["18ddf28a71089acdbab5038f58044c0a"], "ipv4s": ["210.209.127.8"]},
+        {
+            "imphashes": [
+                "18ddf28a71089acdbab5038f58044c0a",
+                "18ddf28a71089acdbab5038f58044c0a",
+                "18ddf28a71089acdbab5038f58044c0a",
+            ],
+            "ipv4s": ["210.209.127.8"],
+            "sha256s": ["093e394933c4545ba7019f511961b9a5ab91156cf791f45de074acad03d1a44a"],
+        },
         {},
         id="imphash_4",
     ),
@@ -146,7 +140,13 @@ HASH_DATA = [
         authentihash\t3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
         authentihash\n3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
         """,
-        {"authentihashes": ["3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"]},
+        {
+            "authentihashes": [
+                "3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+                "3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+                "3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+            ]
+        },
         {},
         id="authentihash_1",
     ),
@@ -161,7 +161,13 @@ HASH_DATA = [
         AUTHENTIHASH\t3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
         AUTHENTIHASH\n3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4',
         """,
-        {"authentihashes": ["3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"]},
+        {
+            "authentihashes": [
+                "3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+                "3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+                "3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+            ]
+        },
         {},
         id="authentihash_2",
     ),
