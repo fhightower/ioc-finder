@@ -9,6 +9,8 @@
 
 Welcome to the documentation for the `ioc-finder` library - a library to find different types of [indicators of compromise](https://digitalguardian.com/blog/what-are-indicators-compromise) (a.k.a observables) and data pertinent to indicators of compromise!
 
+📢 *Announcement*: I'm looking for [sponsorship](https://github.com/sponsors/fhightower) for this project. I have a number of improvements and helpful features I'd like to add, but need some support to continue working on this project. If you use this project for work and/or find it useful, please consider [contributing](https://github.com/sponsors/fhightower) even a small amount. Thanks!
+
 ## Overview (INTERACTIVE!)
 
 Copy this example and paste it in the terminal below to get an idea of what this package does:

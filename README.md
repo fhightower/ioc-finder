@@ -10,6 +10,8 @@
 
 Parse [indicators of compromise](https://searchsecurity.techtarget.com/definition/Indicators-of-Compromise-IOC) (also known as "observables" or "network data" - e.g. urls, email addresses, etc) from text.
 
+📢 *Announcement*: I'm looking for [sponsorship](https://github.com/sponsors/fhightower) for this project. I have a number of improvements and helpful features I'd like to add, but need some support to continue working on this project. If you use this project for work and/or find it useful, please consider [contributing](https://github.com/sponsors/fhightower) even a small amount. Thanks!
+
 We're exited to announce that we've been working on [interactive documentation](https://hightower.space/ioc-finder)
 that lets you actually use and explore the library from your browser! Check it out [here](https://hightower.space/ioc-finder)!
 
