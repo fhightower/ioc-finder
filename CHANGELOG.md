@@ -4,11 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [7.0.0] - UNRELEASED
 
-- Removed phone number parsing ([#155](https://github.com/fhightower/ioc-finder/issues/155))
-- Dropping support for Python 3.6 ([#187](https://github.com/fhightower/ioc-finder/issues/187))
-- Add support for Python 3.10 ([#188](https://github.com/fhightower/ioc-finder/issues/188))
+### Added
+
+- Support for Python 3.10 ([#188](https://github.com/fhightower/ioc-finder/issues/188))
+
+### Removed
+
+- Phone number parsing ([#155](https://github.com/fhightower/ioc-finder/issues/155))
+- Support for Python 3.6 ([#187](https://github.com/fhightower/ioc-finder/issues/187))
 
 ## [6.0.1] - 2021.06.09
 
