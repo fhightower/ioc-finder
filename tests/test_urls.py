@@ -142,3 +142,9 @@ def test_url__percent_encoded_path():
         result['domains'], ['example.com', 'bar.com']
     )  # the key here is that "foo.com" is not parsed because it is part of the path (which has been removed)
     assert result['file_paths'] == []
+
+
+def test_percent_encoded_url_in_path__found():
+    s = 'https://example.com/mail?url=http%3A%2F%2Ffoobar.com/'
+    results = find_iocs(s)
+    assert iterables_have_same_items(results['urls'], ['https://example.com/mail?url=http%3A%2F%2Ffoobar.com/', 'http://foobar.com/'])
