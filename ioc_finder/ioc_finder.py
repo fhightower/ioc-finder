@@ -15,6 +15,38 @@ IndicatorList = List[str]
 IndicatorDict = Dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
 IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
+POSSIBLE_DATA_TYPES = [
+    "urls", 
+    "xmpp_addresses",
+    "email_addresses_complete",
+    "email_addresses",
+    "ipv4_cidrs", 
+    "imphashes", 
+    "authentihashes", 
+    "domains",
+    "ipv4s", 
+    "ipv6s", 
+    "sha512s",
+    "sha256s",
+    "sha1s", 
+    "md5s", 
+    "ssdeeps", 
+    "asns", 
+    "cves", 
+    "registry_key_paths", 
+    "google_adsense_publisher_ids", 
+    "google_analytics_tracker_ids",
+    "bitcoin_addresses",
+    "monero_addresses", 
+    "mac_addresses", 
+    "user_agents", 
+    "tlp_labels", 
+    "attack_mitigations", 
+    "attack_tactics", 
+    "attack_techniques", 
+    "file_paths", 
+]
+
 
 
 def _deduplicate(indicator_list: List) -> List:
@@ -397,7 +429,6 @@ def cli_find_iocs(
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
 
-
 def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     text: str,
     *,
@@ -409,7 +440,8 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-    data_types: List[str] = [],
+    data_types: List[str] = POSSIBLE_DATA_TYPES, 
+
 ) -> IndicatorData:
     """Find observables in the given text."""
     iocs = {}
@@ -419,7 +451,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     original_text = text
 
     # urls
-    if len(data_types) == 0 or "urls" in data_types:
+    if "urls" in data_types:
         iocs['urls'] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
         if not parse_domain_from_url and not parse_from_url_path:
             text = _remove_items(iocs['urls'], text)
@@ -433,7 +465,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
             text = _percent_decode_url(iocs['urls'], text)
 
     # xmpp addresses
-    if len(data_types) == 0 or "xmpp_addresses" in data_types:
+    if "xmpp_addresses" in data_types:
         iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
         if not parse_domain_name_from_xmpp_address:
             text = _remove_items(iocs['xmpp_addresses'], text)
@@ -443,11 +475,11 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
             text = _remove_xmpp_local_part(iocs['xmpp_addresses'], text)
 
     # complete email addresses
-    if len(data_types) == 0 or "email_addresses_complete" in data_types:
+    if "email_addresses_complete" in data_types:
         iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
 
     # simple email addresses
-    if len(data_types) == 0 or "email_addresses" in data_types:
+    if "email_addresses" in data_types:
         iocs['email_addresses'] = parse_email_addresses(text)
         if not parse_domain_from_email_address:
             text = _remove_items(iocs['email_addresses_complete'], text)
@@ -455,11 +487,11 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         # after parsing the email addresses, we need to remove the
         # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
 
-    #if len(data_types) == 0 or "" in data_types:
+    #if "" in data_types:
     text = _remove_items(['[IPv6:'], text)
 
     # cidr ranges
-    if len(data_types) == 0 or "ipv4_cidrs" in data_types:
+    if "ipv4_cidrs" in data_types:
         iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
         if not parse_address_from_cidr:
             text = _remove_items(iocs['ipv4_cidrs'], text)
@@ -471,76 +503,76 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
                     iocs['urls'].remove(cidr)
 
     # file hashes
-    if len(data_types) == 0 or "imphashes" in data_types:
+    if "imphashes" in data_types:
         if parse_imphashes:
             iocs['imphashes'] = parse_imphashes_(text)
             # remove the imphashes so they are not also parsed as md5s
             text = _remove_items(iocs['imphashes'], text)
 
-    if len(data_types) == 0 or "authentihashes" in data_types:
+    if "authentihashes" in data_types:
         if parse_authentihashes:
             iocs['authentihashes'] = parse_authentihashes_(text)
             # remove the authentihashes so they are not also parsed as sha256s
             text = _remove_items(iocs['authentihashes'], text)
 
     # domains
-    if len(data_types) == 0 or "domains" in data_types:
+    if "domains" in data_types:
         iocs['domains'] = parse_domain_names(text)
 
     # ip addresses
-    if len(data_types) == 0 or "ipv4s" in data_types:
+    if "ipv4s" in data_types:
         iocs['ipv4s'] = parse_ipv4_addresses(text)
-    if len(data_types) == 0 or "ipv6s" in data_types:
+    if "ipv6s" in data_types:
         iocs['ipv6s'] = parse_ipv6_addresses(text)
 
     # file hashes
-    if len(data_types) == 0 or "sha512s" in data_types:
+    if "sha512s" in data_types:
         iocs['sha512s'] = parse_sha512s(text)
-    if len(data_types) == 0 or "sha256s" in data_types:
+    if "sha256s" in data_types:
         iocs['sha256s'] = parse_sha256s(text)
-    if len(data_types) == 0 or "sha1s" in data_types:
+    if "sha1s" in data_types:
         iocs['sha1s'] = parse_sha1s(text)
-    if len(data_types) == 0 or "md5s" in data_types:
+    if "md5s" in data_types:
         iocs['md5s'] = parse_md5s(text)
-    if len(data_types) == 0 or "ssdeeps" in data_types:
+    if "ssdeeps" in data_types:
         iocs['ssdeeps'] = parse_ssdeeps(text)
 
     # misc
-    if len(data_types) == 0 or "asns" in data_types:
+    if "asns" in data_types:
         iocs['asns'] = parse_asns(text)
-    if len(data_types) == 0 or "cves" in data_types:
+    if "cves" in data_types:
         iocs['cves'] = parse_cves(original_text)
-    if len(data_types) == 0 or "registry_key_paths" in data_types:
+    if "registry_key_paths" in data_types:
         iocs['registry_key_paths'] = parse_registry_key_paths(text)
-    if len(data_types) == 0 or "google_adsense_publisher_ids" in data_types:
+    if "google_adsense_publisher_ids" in data_types:
         iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
-    if len(data_types) == 0 or "google_analytics_tracker_ids" in data_types:
+    if "google_analytics_tracker_ids" in data_types:
         iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
-    if len(data_types) == 0 or "bitcoin_addresses" in data_types:
+    if "bitcoin_addresses" in data_types:
         iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
-    if len(data_types) == 0 or "monero_addresses" in data_types:
+    if "monero_addresses" in data_types:
         iocs['monero_addresses'] = parse_monero_addresses(text)
-    if len(data_types) == 0 or "mac_addresses" in data_types:
+    if "mac_addresses" in data_types:
         iocs['mac_addresses'] = parse_mac_addresses(text)
-    if len(data_types) == 0 or "user_agents" in data_types:
+    if "user_agents" in data_types:
         iocs['user_agents'] = parse_user_agents(text)
-    if len(data_types) == 0 or "tlp_labels" in data_types:
+    if "tlp_labels" in data_types:
         iocs['tlp_labels'] = parse_tlp_labels(original_text)
 
-    if len(data_types) == 0 or "attack_mitigations" in data_types:
+    if "attack_mitigations" in data_types:
         iocs['attack_mitigations'] = {  # type: ignore
             "enterprise": parse_enterprise_attack_mitigations(original_text),
             "mobile": parse_mobile_attack_mitigations(original_text),
         }
 
-    if len(data_types) == 0 or "attack_tactics" in data_types:
+    if "attack_tactics" in data_types:
         iocs['attack_tactics'] = {  # type: ignore
             "pre_attack": parse_pre_attack_tactics(original_text),
             "enterprise": parse_enterprise_attack_tactics(original_text),
             "mobile": parse_mobile_attack_tactics(original_text),
         }
 
-    if len(data_types) == 0 or "attack_techniques" in data_types:
+    if "attack_techniques" in data_types:
         iocs['attack_techniques'] = {  # type: ignore
             "pre_attack": parse_pre_attack_techniques(original_text),
             "enterprise": parse_enterprise_attack_techniques(original_text),
@@ -551,6 +583,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     if parse_from_url_path:
         text = _remove_url_paths(iocs['urls'], text)
 
-    iocs['file_paths'] = parse_file_paths(text)
+    if "file_paths" in data_types:
+        iocs['file_paths'] = parse_file_paths(text)
 
     return iocs
