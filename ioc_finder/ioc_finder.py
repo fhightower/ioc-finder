@@ -409,7 +409,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-    data_types = List[str] = [],
+    data_types: List[str] = [],
 ) -> IndicatorData:
     """Find observables in the given text."""
     iocs = {}
