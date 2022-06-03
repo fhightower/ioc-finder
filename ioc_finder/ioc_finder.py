@@ -467,12 +467,13 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     # xmpp addresses
     if "xmpp_addresses" in data_types:
         iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
-        if not parse_domain_name_from_xmpp_address:
-            text = _remove_items(iocs['xmpp_addresses'], text)
-        # even if we want to parse domain names from the xmpp_address,
-        # we don't want them also being caught as email addresses so we'll remove everything before the `@`
-        else:
-            text = _remove_xmpp_local_part(iocs['xmpp_addresses'], text)
+
+    if 'domains' in data_types and not parse_domain_name_from_xmpp_address:
+        text = _remove_items(iocs.get('xmpp_addresses', parse_xmpp_addresses(text)), text)
+    # even if we want to parse domain names from the xmpp_address,
+    # we don't want them also being caught as email addresses so we'll remove everything before the `@`
+    if 'email_addresses_complete' in data_types or 'email_addresses' in data_types:
+        text = _remove_xmpp_local_part(iocs.get('xmpp_addresses', parse_xmpp_addresses(text)), text)
 
     # complete email addresses
     if "email_addresses_complete" in data_types:
@@ -510,14 +511,16 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     if "imphashes" in data_types:
         if parse_imphashes:
             iocs['imphashes'] = parse_imphashes_(text)
-            # remove the imphashes so they are not also parsed as md5s
-            text = _remove_items(iocs['imphashes'], text)
+    if 'md5s' in data_types:
+        # remove the imphashes so they are not also parsed as md5s
+        text = _remove_items(iocs.get('imphashes', parse_imphashes_(text)), text)
 
     if "authentihashes" in data_types:
         if parse_authentihashes:
             iocs['authentihashes'] = parse_authentihashes_(text)
-            # remove the authentihashes so they are not also parsed as sha256s
-            text = _remove_items(iocs['authentihashes'], text)
+    if 'sha256s' in data_types:
+        # remove the authentihashes so they are not also parsed as sha256s
+        text = _remove_items(iocs.get('authentihashes', parse_authentihashes_(text)), text)
 
     # domains
     if "domains" in data_types:
