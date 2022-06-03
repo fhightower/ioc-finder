@@ -493,14 +493,18 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     # cidr ranges
     if "ipv4_cidrs" in data_types:
         iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
-        if not parse_address_from_cidr:
-            text = _remove_items(iocs['ipv4_cidrs'], text)
 
-        # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
-        if parse_urls_without_scheme:
-            for cidr in iocs['ipv4_cidrs']:
+    # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
+    url_parsing_requires_cidr_removal = 'urls' in data_types and parse_urls_without_scheme
+    ip_address_parsing_requires_cidr_removal = 'ipv4' in data_types and not parse_address_from_cidr
+    if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
+        cidr_ranges = iocs.get('ipv4_cidrs', parse_ipv4_cidrs(text))
+        if url_parsing_requires_cidr_removal:
+            for cidr in cidr_ranges:
                 if cidr in iocs['urls']:
                     iocs['urls'].remove(cidr)
+        if ip_address_parsing_requires_cidr_removal:
+            text = _remove_items(cidr_ranges, text)
 
     # file hashes
     if "imphashes" in data_types:
@@ -580,15 +584,11 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         }
 
     if "file_paths" in data_types:
-        # if we haven't parsed URLs already, parse them now as we need to remove them so they aren't parsed as file names
-        if "url" not in data_types:
-            urls = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
-        else:
-            urls = iocs['urls']
-
         # if there are still url paths in the text, remove them so they don't get parsed as file names
         if parse_from_url_path:
-            text = _remove_url_paths(urls, text)
+            text = _remove_url_paths(
+                iocs.get('urls', parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)), text
+            )
 
         iocs['file_paths'] = parse_file_paths(text)
 
