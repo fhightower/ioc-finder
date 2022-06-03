@@ -15,38 +15,38 @@ IndicatorList = List[str]
 IndicatorDict = Dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
 IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
-POSSIBLE_DATA_TYPES = [
-    "urls", 
-    "xmpp_addresses",
-    "email_addresses_complete",
-    "email_addresses",
-    "ipv4_cidrs", 
-    "imphashes", 
-    "authentihashes", 
-    "domains",
-    "ipv4s", 
-    "ipv6s", 
-    "sha512s",
-    "sha256s",
-    "sha1s", 
-    "md5s", 
-    "ssdeeps", 
-    "asns", 
-    "cves", 
-    "registry_key_paths", 
-    "google_adsense_publisher_ids", 
-    "google_analytics_tracker_ids",
-    "bitcoin_addresses",
-    "monero_addresses", 
-    "mac_addresses", 
-    "user_agents", 
-    "tlp_labels", 
-    "attack_mitigations", 
-    "attack_tactics", 
-    "attack_techniques", 
-    "file_paths", 
-]
 
+POSSIBLE_DATA_TYPES = [
+    "asns",
+    "attack_mitigations",
+    "attack_tactics",
+    "attack_techniques",
+    "authentihashes",
+    "bitcoin_addresses",
+    "cves",
+    "domains",
+    "email_addresses",
+    "email_addresses_complete",
+    "file_paths",
+    "google_adsense_publisher_ids",
+    "google_analytics_tracker_ids",
+    "imphashes",
+    "ipv4_cidrs",
+    "ipv4s",
+    "ipv6s",
+    "mac_addresses",
+    "md5s",
+    "monero_addresses",
+    "registry_key_paths",
+    "sha1s",
+    "sha256s",
+    "sha512s",
+    "ssdeeps",
+    "tlp_labels",
+    "urls",
+    "user_agents",
+    "xmpp_addresses",
+]
 
 
 def _deduplicate(indicator_list: List) -> List:
@@ -429,6 +429,7 @@ def cli_find_iocs(
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
 
+
 def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     text: str,
     *,
@@ -440,8 +441,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-    data_types: List[str] = POSSIBLE_DATA_TYPES, 
-
+    data_types: List[str] = POSSIBLE_DATA_TYPES,
 ) -> IndicatorData:
     """Find observables in the given text."""
     iocs = {}
@@ -449,6 +449,16 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
+
+    # cidr ranges
+    url_parsing_requires_cidr_removal = 'urls' in data_types and parse_urls_without_scheme
+    if url_parsing_requires_cidr_removal or 'ipv4_cidrs' in data_types:
+        ipv4_cidrs = parse_ipv4_cidrs(text)
+        if "ipv4_cidrs" in data_types:
+            iocs['ipv4_cidrs'] = ipv4_cidrs
+
+        # we remove all cidr ranges so they are not mistaken for URLs (see https://github.com/fhightower/ioc-finder/issues/91)
+        text = _remove_items(ipv4_cidrs, text)
 
     # urls
     if "urls" in data_types:
@@ -487,20 +497,9 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         # after parsing the email addresses, we need to remove the
         # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
 
-    #if "" in data_types:
+    # if "" in data_types:
     text = _remove_items(['[IPv6:'], text)
 
-    # cidr ranges
-    if "ipv4_cidrs" in data_types:
-        iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
-        if not parse_address_from_cidr:
-            text = _remove_items(iocs['ipv4_cidrs'], text)
-
-        # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
-        if parse_urls_without_scheme:
-            for cidr in iocs['ipv4_cidrs']:
-                if cidr in iocs['urls']:
-                    iocs['urls'].remove(cidr)
 
     # file hashes
     if "imphashes" in data_types:
@@ -579,11 +578,17 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
             "mobile": parse_mobile_attack_techniques(original_text),
         }
 
-    # if there are still url paths in the text, remove them so they don't get parsed as file names
-    if parse_from_url_path:
-        text = _remove_url_paths(iocs['urls'], text)
-
     if "file_paths" in data_types:
+        # if we haven't parsed URLs already, parse them now as we need to remove them so they aren't parsed as file names
+        if "url" not in data_types:
+            urls = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
+        else:
+            urls = iocs['urls']
+
+        # if there are still url paths in the text, remove them so they don't get parsed as file names
+        if parse_from_url_path:
+            text = _remove_url_paths(urls, text)
+
         iocs['file_paths'] = parse_file_paths(text)
 
     return iocs
