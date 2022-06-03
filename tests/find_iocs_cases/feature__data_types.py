@@ -12,7 +12,7 @@ IOC_EXAMPLES = {
     'email_addresses_complete': ['me@example.com'],
     'email_addresses': ['me@example.com'],
     'ipv4_cidrs': ['1.1.1.1/0'],
-    'imphashes': ['18ddf28a71089acdbab5038f58044c0a'],
+    'imphashes': ['imphash 18ddf28a71089acdbab5038f58044c0a'],
     'authentihashes': ['3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4'],
     'ipv4s': ['1.1.1.1'],
     'ipv6s': ['2001:0db8:0000:0000:0000:ff00:0042:8329'],
@@ -27,6 +27,15 @@ IOC_EXAMPLES = {
     'google_adsense_publisher_ids': ['pub-1234567891234567'],
     'google_analytics_tracker_ids': ['UA-000000-1'],
     'bitcoin_addresses': ['3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy'],
+    'monero_addresses': ['496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp'],
+    'mac_addresses': ['AA-F2-C9-A6-B3-4F'],
+    'user_agents': ['Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1)'],
+    'tlp_labels': ['TLP:RED'],
+    'mac_addresses': ['AA-F2-C9-A6-B3-4F'],
+    'file_paths': ['~/foo/bar/abc.py'],
+    'attack_mitigations': {'enterprise': ['M1036', 'M1015']},
+    'attack_tactics': [],
+    'attack_techniques': [],
 }
 ALL_IOC_TEXT = ' '.join([val for sublist in IOC_EXAMPLES.values() for val in sublist])
 
@@ -36,22 +45,9 @@ for type_ in POSSIBLE_DATA_TYPES:
     individual_data_types_tests.append(param(
         ALL_IOC_TEXT ,
         {
-            # TODO: CHANGE THIS TO `IOC_EXAMPLES[type_]` ONCE ALL TYPES ARE ADDED TO IOC_EXAMPLES
-            type_: IOC_EXAMPLES.get(type_, [])
+            type_: IOC_EXAMPLES[type_]
         },
         {"data_types": [type_]},
         id=f"Only find {type_} with data_types"
     ))
 
-
-# TODO: ADD EXAMPLES FOR EACH OF THE IOC TYPES BELOW
-DATA_TYPES = [
-    "monero_addresses",
-    "mac_addresses",
-    "user_agents",
-    "tlp_labels",
-    "attack_mitigations",
-    "attack_tactics",
-    "attack_techniques",
-    "file_paths",
-    ]
