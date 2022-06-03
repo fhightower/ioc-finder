@@ -450,16 +450,6 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
 
-    # cidr ranges
-    url_parsing_requires_cidr_removal = 'urls' in data_types and parse_urls_without_scheme
-    if url_parsing_requires_cidr_removal or 'ipv4_cidrs' in data_types:
-        ipv4_cidrs = parse_ipv4_cidrs(text)
-        if "ipv4_cidrs" in data_types:
-            iocs['ipv4_cidrs'] = ipv4_cidrs
-
-        # we remove all cidr ranges so they are not mistaken for URLs (see https://github.com/fhightower/ioc-finder/issues/91)
-        text = _remove_items(ipv4_cidrs, text)
-
     # urls
     if "urls" in data_types:
         iocs['urls'] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
@@ -500,6 +490,17 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     # if "" in data_types:
     text = _remove_items(['[IPv6:'], text)
 
+    # cidr ranges
+    if "ipv4_cidrs" in data_types:
+        iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
+        if not parse_address_from_cidr:
+            text = _remove_items(iocs['ipv4_cidrs'], text)
+
+        # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
+        if parse_urls_without_scheme:
+            for cidr in iocs['ipv4_cidrs']:
+                if cidr in iocs['urls']:
+                    iocs['urls'].remove(cidr)
 
     # file hashes
     if "imphashes" in data_types:
