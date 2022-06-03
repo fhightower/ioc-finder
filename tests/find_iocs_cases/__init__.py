@@ -4,7 +4,7 @@ from .coins import COIN_DATA
 from .cves import CVE_DATA
 from .domains import DOMAIN_DATA
 from .email import EMAIL_DATA
-from .feature__data_types import DATA_TYPES_DATA
+from .feature__data_types import individual_data_types_tests
 from .file_paths import PATH_DATA
 from .hashes import HASH_DATA
 from .ids import ID_DATA
@@ -17,7 +17,7 @@ from .user_agents import UA_DATA
 
 cases = [
     TLP_DATA,
-    DATA_TYPES_DATA,
+    individual_data_types_tests,
     DOMAIN_DATA,
     EMAIL_DATA,
     HASH_DATA,
