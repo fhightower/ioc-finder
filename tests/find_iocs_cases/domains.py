@@ -21,9 +21,9 @@ DOMAIN_DATA = [
             "urls": [
                 "https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip",
             ],
-            "domains": ['cba0019_file_00002_pdf.zip', 'freasdfuewriter.com', 'uniddloos.zddfdd.org'],
+            "domains": ["cba0019_file_00002_pdf.zip", "freasdfuewriter.com", "uniddloos.zddfdd.org"],
         },
-        {'parse_domain_from_url': False},
+        {"parse_domain_from_url": False},
         id="domain-issue_104__domains_read_from_percent_encoded_url_query_params__with_options_false",
     ),
     param(
@@ -34,7 +34,7 @@ DOMAIN_DATA = [
                 "https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip",
             ],
         },
-        {'parse_from_url_path': False},
+        {"parse_from_url_path": False},
         id="domain-issue_104__domains_read_from_percent_encoded_url_query_params__with_options_false_2",
     ),
     param(

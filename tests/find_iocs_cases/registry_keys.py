@@ -3,8 +3,8 @@ from pytest import param
 REGISTRY_DATA = [
     # see https://github.com/fhightower/ioc-finder/issues/63 - matching registry key paths with content between '<' and '>'
     param(
-        'The registry value “ntdll” was added to the “HKEY_USERS\\<USER SID>\\Software\\Microsoft\\Windows\\CurrentVersion\\Run” key.',
-        {'registry_key_paths': ['HKEY_USERS\\<USER SID>\\Software\\Microsoft\\Windows\\CurrentVersion\\Run']},
+        "The registry value “ntdll” was added to the “HKEY_USERS\\<USER SID>\\Software\\Microsoft\\Windows\\CurrentVersion\\Run” key.",
+        {"registry_key_paths": ["HKEY_USERS\\<USER SID>\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"]},
         {},
         id="registry_1",
     ),
@@ -28,7 +28,7 @@ REGISTRY_DATA = [
         <HKLM>\\SOFTWARE\\WOW6432NODE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN
         Value Name: avscan""",
         {
-            'registry_key_paths': [
+            "registry_key_paths": [
                 "HKCU\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\EXPLORER\\ADVANCED",
                 "HKLM\\SOFTWARE\\WOW6432NODE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\EXPLORER\\ADVANCED\\FOLDER\\HIDEFILEEXT",
                 "HKLM\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\POLICIES\\EXPLORER\\RUN",
@@ -41,7 +41,7 @@ REGISTRY_DATA = [
     param(
         """HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME HKLM\\SOFTWARE\\WOW6432NODE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN""",
         {
-            'registry_key_paths': [
+            "registry_key_paths": [
                 "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME",
                 "HKLM\\SOFTWARE\\WOW6432NODE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\RUN",
             ]
@@ -51,46 +51,46 @@ REGISTRY_DATA = [
     ),
     param(
         """HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME""",
-        {'registry_key_paths': ['HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME']},
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME"]},
         {},
         id="registry_5",
     ),
     param(
         """Found a registry key like <HKCU>\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\EXPLORER\\ADVANCED on the windows box""",
-        {'registry_key_paths': ['HKCU\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\EXPLORER\\ADVANCED']},
+        {"registry_key_paths": ["HKCU\\SOFTWARE\\MICROSOFT\\WINDOWS\\CURRENTVERSION\\EXPLORER\\ADVANCED"]},
         {},
         id="registry_6",
     ),
     param(
         """Found a registry key like HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME on the windows box""",
-        {'registry_key_paths': ['HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME']},
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console\\ConsoleIME"]},
         {},
         id="registry_7",
     ),
-    param('HKLM\\SOFTWARE\\foo bar\\b', {'registry_key_paths': ['HKLM\\SOFTWARE\\foo bar\\b']}, {}, id="registry_8"),
+    param("HKLM\\SOFTWARE\\foo bar\\b", {"registry_key_paths": ["HKLM\\SOFTWARE\\foo bar\\b"]}, {}, id="registry_8"),
     param(
-        'HKLM\\SOFTWARE\\foo bar\\bing buzz\\b',
-        {'registry_key_paths': ['HKLM\\SOFTWARE\\foo bar\\bing buzz\\b']},
+        "HKLM\\SOFTWARE\\foo bar\\bing buzz\\b",
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\foo bar\\bing buzz\\b"]},
         {},
         id="registry_9",
     ),
     param(
-        'HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b',
-        {'registry_key_paths': ['HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b']},
+        "HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b",
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\foo bar bing\\buzz boom\\b"]},
         {},
         id="registry_10",
     ),
     param(
-        'HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b',
-        {'registry_key_paths': ['HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b']},
+        "HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b",
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\foo bar\\bing buzz boom\\b"]},
         {},
         id="registry_11",
     ),
     param(
-        'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\notepad.exe',
+        "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\notepad.exe",
         {
-            'registry_key_paths': [
-                'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\notepad.exe'
+            "registry_key_paths": [
+                "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\notepad.exe"
             ]
         },
         {},
@@ -98,14 +98,14 @@ REGISTRY_DATA = [
     ),
     param(
         """HKLM\\SOFTWARE\\Microsoft\\Windows  NT\\CurrentVersion\\Console\\ConsoleIME""",
-        {'registry_key_paths': ['HKLM\\SOFTWARE\\Microsoft\\Windows']},
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\Microsoft\\Windows"]},
         {},
         id="registry_13",
     ),
     param(
         "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows HKLM\\Software\\Microsoft\\Windows HKCC\\Software\\Microsoft\\Windows",
         {
-            'registry_key_paths': [
+            "registry_key_paths": [
                 "HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows",
                 "HKLM\\Software\\Microsoft\\Windows",
                 "HKCC\\Software\\Microsoft\\Windows",
@@ -266,11 +266,11 @@ REGISTRY_DATA = [
         T1041| Exfiltration Over Command and Control Channel| Malware exfiltrates data over the C&C channel.
         9 Sep 2019 - 11:30AM""",
         {
-            'registry_key_paths': [
+            "registry_key_paths": [
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Shell",
                 "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Shell",
             ],
-            'domains': [
+            "domains": [
                 "citizenlab.ca",
                 "www.secureworks.com",
                 "www.reuters.com",
@@ -281,19 +281,19 @@ REGISTRY_DATA = [
                 "docs.microsoft.com",
                 "upnpdiscover.org",
             ],
-            'sha1s': [
+            "sha1s": [
                 "31b54aebdaf5fbc73a66ac41ccb35943cc9b7f72",
                 "50973a3fc57d70c7911f7a952356188b9939e56b",
                 "244eb62b9ac30934098ca4204447440d6fc4e259",
                 "5c8f83cc4ff57e7c67925df4d9daabe5d0cc07e2",
             ],
-            'sha256s': [
+            "sha256s": [
                 "258a4a9d139823f55d7b9da1825d101107fbf88634a870de9800580dad556ba3",
                 "2519db0ffec604d6c9a655cf56b98edce10405de36810bc3dcf125cde30ba5a2",
                 "3edb6ea77cd0987668b360365d5f39fdcf6b366d0deac9ece5adc6ffd20227f6",
                 "8dffde77a39f3af46d0ce0b84a189db25a2a0fefd71a0cd0054d8e0d60ab08de",
             ],
-            'urls': [
+            "urls": [
                 "https://citizenlab.ca/2016/05/stealth-falcon-appendices",
                 "https://citizenlab.ca/2016/05/stealth-falcon/",
                 "https://citizenlab.ca/about/),",
@@ -301,27 +301,27 @@ REGISTRY_DATA = [
                 "https://www.reuters.com/investigates/special-report/usa-spying-raven/",
                 "https://www.secureworks.com/blog/malware-lingers-with-bits).",
             ],
-            'attack_techniques': {
-                'enterprise': [
-                    'T1106',
-                    'T1197',
-                    'T1112',
-                    'T1140',
-                    'T1027',
-                    'T1022',
-                    'T1059',
-                    'T1036',
-                    'T1063',
-                    'T1085',
-                    'T1005',
-                    'T1053',
-                    'T1041',
-                    'T1032',
-                    'T1020',
-                    'T1008',
-                    'T1074',
-                    'T1105',
-                    'T1107',
+            "attack_techniques": {
+                "enterprise": [
+                    "T1106",
+                    "T1197",
+                    "T1112",
+                    "T1140",
+                    "T1027",
+                    "T1022",
+                    "T1059",
+                    "T1036",
+                    "T1063",
+                    "T1085",
+                    "T1005",
+                    "T1053",
+                    "T1041",
+                    "T1032",
+                    "T1020",
+                    "T1008",
+                    "T1074",
+                    "T1105",
+                    "T1107",
                 ]
             },
         },
