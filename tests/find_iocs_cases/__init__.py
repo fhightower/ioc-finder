@@ -4,7 +4,7 @@ from .coins import COIN_DATA
 from .cves import CVE_DATA
 from .domains import DOMAIN_DATA
 from .email import EMAIL_DATA
-from .feature__data_types import individual_data_types_tests, multiple_data_types_tests
+from .feature__included_ioc_types import individual_included_ioc_types_tests, multiple_included_ioc_types_tests
 from .file_paths import PATH_DATA
 from .hashes import HASH_DATA
 from .ids import ID_DATA
@@ -17,8 +17,8 @@ from .user_agents import UA_DATA
 
 cases = [
     TLP_DATA,
-    individual_data_types_tests,
-    multiple_data_types_tests,
+    individual_included_ioc_types_tests,
+    multiple_included_ioc_types_tests,
     DOMAIN_DATA,
     EMAIL_DATA,
     HASH_DATA,

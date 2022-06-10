@@ -1,9 +1,10 @@
-"""These tests make sure the data_types parameter is working properly.
+"""These tests make sure the included_ioc_types parameter is working properly.
 
-Each test below passes a string with two IOC types into the find_iocs function, but only specifies one `data_types` argument to ensure it is handled properly."""
+Each test below passes a string with two IOC types into the find_iocs function, but only specifies one `included_ioc_types` argument to ensure it is handled properly."""
 
 from pytest import param
-from ioc_finder.ioc_finder import POSSIBLE_DATA_TYPES
+
+from ioc_finder.ioc_finder import DEFAULT_IOC_TYPES
 
 IOC_EXAMPLES = {
     'domains': ['abc.py', 'bar.com', 'example.com', 'foo.com', 'swissjabber.de'],
@@ -49,51 +50,54 @@ all_ioc_text = ' '.join([val for sublist in IOC_EXAMPLES.values() for val in sub
 
 # this is a hack to be fixed in https://github.com/fhightower/ioc-finder/issues/224
 # imphashes and authentihashes require the hash to be prefixed with `imphash` and `authentihash` respectively, but when parsed, only the hash itself will be present
-all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES['imphashes'][0], f'imphash {IOC_EXAMPLES["imphashes"][0]}')
+all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES['imphashes'][0], f'imphash {IOC_EXAMPLES["imphashes"][0]}')  # type: ignore
 all_ioc_text = all_ioc_text.replace(
-    IOC_EXAMPLES['authentihashes'][0], f'authentihash {IOC_EXAMPLES["authentihashes"][0]}'
+    IOC_EXAMPLES['authentihashes'][0], f'authentihash {IOC_EXAMPLES["authentihashes"][0]}'  # type: ignore
 )
-all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES['user_agents'][0], IOC_EXAMPLES['user_agents'][0].rstrip(' TLP'))
+all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES['user_agents'][0], IOC_EXAMPLES['user_agents'][0].rstrip(' TLP'))  # type: ignore
 # add the attack data
-all_ioc_text = all_ioc_text + ' ' + ' '.join(IOC_EXAMPLES['attack_mitigations']['enterprise'])
-all_ioc_text = all_ioc_text + ' ' + ' '.join(IOC_EXAMPLES['attack_tactics']['pre_attack'])
-all_ioc_text = all_ioc_text + ' ' + ' '.join(IOC_EXAMPLES['attack_techniques']['pre_attack'])
+all_ioc_text = all_ioc_text + ' ' + ' '.join(IOC_EXAMPLES['attack_mitigations']['enterprise'])  # type: ignore
+all_ioc_text = all_ioc_text + ' ' + ' '.join(IOC_EXAMPLES['attack_tactics']['pre_attack'])  # type: ignore
+all_ioc_text = all_ioc_text + ' ' + ' '.join(IOC_EXAMPLES['attack_techniques']['pre_attack'])  # type: ignore
 
 
-individual_data_types_tests = []
+individual_included_ioc_types_tests = []
 
-for type_ in POSSIBLE_DATA_TYPES:
-    individual_data_types_tests.append(
+for type_ in DEFAULT_IOC_TYPES:
+    individual_included_ioc_types_tests.append(
         param(
-            all_ioc_text, {type_: IOC_EXAMPLES[type_]}, {"data_types": [type_]}, id=f"Only find {type_} with data_types"
+            all_ioc_text,
+            {type_: IOC_EXAMPLES[type_]},
+            {"included_ioc_types": [type_]},
+            id=f"Only find {type_} with included_ioc_types",
         )
     )
 
 
-multiple_data_types_tests = []
+multiple_included_ioc_types_tests = []
 
-# make sure multiple data_types are handled properly
-multiple_data_types_tests.append(
+# make sure multiple included_ioc_types are handled properly
+multiple_included_ioc_types_tests.append(
     param(
         'https://example.com/test%20page/foo.com/bingo.php?q=bar.com',
         {
             'domains': ['bar.com', 'example.com', 'foo.com'],
             'urls': ['https://example.com/test%20page/foo.com/bingo.php?q=bar.com'],
         },
-        {'data_types': ['domains', 'urls']},
+        {'included_ioc_types': ['domains', 'urls']},
         id='Find multiple data types',
     )
 )
 
-# make sure multiple data_types work well with other kwargs - the list of domains is missing `foo.com` b/c `parse_from_url_path` is False
-multiple_data_types_tests.append(
+# make sure multiple included_ioc_types work well with other kwargs - the list of domains is missing `foo.com` b/c `parse_from_url_path` is False
+multiple_included_ioc_types_tests.append(
     param(
         'https://example.com/test%20page/foo.com/bingo.php?q=bar.com',
         {
             'domains': ['bar.com', 'example.com'],
             'urls': ['https://example.com/test%20page/foo.com/bingo.php?q=bar.com'],
         },
-        {'data_types': ['domains', 'urls'], 'parse_from_url_path': False},
+        {'included_ioc_types': ['domains', 'urls'], 'parse_from_url_path': False},
         id='Find multiple data types',
     )
 )
