@@ -487,8 +487,6 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
             text = _remove_items(iocs['email_addresses'], text)
         # after parsing the email addresses, we need to remove the
         # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
-
-    # if "" in included_ioc_types:
     text = _remove_items(['[IPv6:'], text)
 
     # cidr ranges
