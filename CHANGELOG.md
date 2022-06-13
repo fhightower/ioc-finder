@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
-- `included_ioc_types` option ([#218](https://github.com/fhightower/ioc-finder/issues/218))
+- `included_ioc_types` option to only parse specified IOC types ([#218](https://github.com/fhightower/ioc-finder/issues/218))
 
 ### Changed
 
