@@ -476,18 +476,20 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         text = _remove_xmpp_local_part(iocs.get('xmpp_addresses', parse_xmpp_addresses(text)), text)
 
     # complete email addresses
-    if "email_addresses_complete" in included_ioc_types:
-        iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
+    if "email_addresses_complete" in included_ioc_types or "email_addresses" in included_ioc_types:
+        if "email_addresses_complete" in included_ioc_types:
+            iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
+        if "email_addresses" in included_ioc_types:
+            iocs['email_addresses'] = parse_email_addresses(text)
 
-    # simple email addresses
-    if "email_addresses" in included_ioc_types:
-        iocs['email_addresses'] = parse_email_addresses(text)
         if not parse_domain_from_email_address:
             text = _remove_items(iocs['email_addresses_complete'], text)
             text = _remove_items(iocs['email_addresses'], text)
-        # after parsing the email addresses, we need to remove the
-        # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
-    text = _remove_items(['[IPv6:'], text)
+
+        if 'ipv6s' in included_ioc_types:
+            # after parsing the email addresses, we need to remove the
+            # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
+            text = _remove_items(['[IPv6:'], text)
 
     # cidr ranges
     if "ipv4_cidrs" in included_ioc_types:
