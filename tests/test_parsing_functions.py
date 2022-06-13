@@ -4,5 +4,5 @@ from ioc_finder import parse_urls
 
 
 def test_url_parsing_func():
-    results = parse_urls('https://google.com')
-    assert results == ['https://google.com']
+    results = parse_urls("https://google.com")
+    assert results == ["https://google.com"]

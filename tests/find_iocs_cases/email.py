@@ -25,7 +25,7 @@ EMAIL_DATA = [
                 "me@2600.com",
                 "john.smith(comment)@example.com",
                 "(comment)john.smith@example.com",
-                "\"John..Doe\"@example.com",
+                '"John..Doe"@example.com',
                 "test@[192.168.0.1]",
             ],
             "ipv4s": ["192.168.0.1"],
