@@ -477,14 +477,16 @@ def test_not_parsing_imphash():
     s = 'imphash 18ddf28a71089acdbab5038f58044c0a'
     iocs = find_iocs(s, parse_imphashes=False)
     assert 'imphashes' not in iocs
-    assert iocs['md5s'] == ['18ddf28a71089acdbab5038f58044c0a']
+    # even if we aren't parsing imphashes, they will still be removed and, thus, not parsed as md5s
+    assert iocs['md5s'] == []
 
 
 def test_not_parsing_authentihash():
     s = 'authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4'
     iocs = find_iocs(s, parse_authentihashes=False)
     assert 'authentihashes' not in iocs
-    assert iocs['sha256s'] == ['3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4']
+    # even if we aren't parsing authentihashes, they will still be removed and, thus, not parsed as sha256s
+    assert iocs['sha256s'] == []
 
 
 def test_mac_address_parsing():

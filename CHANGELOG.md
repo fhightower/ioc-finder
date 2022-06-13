@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [7.1.0] - UNRELEASED
+
+### Added
+
+- `included_ioc_types` option to only parse specified IOC types ([#218](https://github.com/fhightower/ioc-finder/issues/218))
+
+### Changed
+
+- Imphashes are no longer parsed as md5s even when `parse_imphashes` is False ([#231](https://github.com/fhightower/ioc-finder/issues/231))
+- Authentihashes are no longer parsed as sha256s even when `parse_authentihashes` is False ([#231](https://github.com/fhightower/ioc-finder/issues/231))
+
 ## [7.0.0] - UNRELEASED
 
 ### Added

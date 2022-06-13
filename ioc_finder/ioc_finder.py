@@ -16,6 +16,38 @@ IndicatorDict = Dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
 IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
 
+DEFAULT_IOC_TYPES = [
+    "asns",
+    "attack_mitigations",
+    "attack_tactics",
+    "attack_techniques",
+    "authentihashes",
+    "bitcoin_addresses",
+    "cves",
+    "domains",
+    "email_addresses",
+    "email_addresses_complete",
+    "file_paths",
+    "google_adsense_publisher_ids",
+    "google_analytics_tracker_ids",
+    "imphashes",
+    "ipv4_cidrs",
+    "ipv4s",
+    "ipv6s",
+    "mac_addresses",
+    "md5s",
+    "monero_addresses",
+    "registry_key_paths",
+    "sha1s",
+    "sha256s",
+    "sha512s",
+    "ssdeeps",
+    "tlp_labels",
+    "urls",
+    "user_agents",
+    "xmpp_addresses",
+]
+
 
 def _deduplicate(indicator_list: List) -> List:
     """Deduplicate the list of observables."""
@@ -409,6 +441,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
+    included_ioc_types: List[str] = DEFAULT_IOC_TYPES,
 ) -> IndicatorData:
     """Find observables in the given text."""
     iocs = {}
@@ -418,105 +451,147 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     original_text = text
 
     # urls
-    iocs['urls'] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
-    if not parse_domain_from_url and not parse_from_url_path:
-        text = _remove_items(iocs['urls'], text)
-    elif not parse_domain_from_url:
-        text = _percent_decode_url(iocs['urls'], text)
-        text = _remove_url_domain_name(iocs['urls'], text)
-    elif not parse_from_url_path:
-        text = _percent_decode_url(iocs['urls'], text)
-        text = _remove_url_paths(iocs['urls'], text)
-    else:
-        text = _percent_decode_url(iocs['urls'], text)
+    if "urls" in included_ioc_types:
+        iocs['urls'] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
+        if not parse_domain_from_url and not parse_from_url_path:
+            text = _remove_items(iocs['urls'], text)
+        elif not parse_domain_from_url:
+            text = _percent_decode_url(iocs['urls'], text)
+            text = _remove_url_domain_name(iocs['urls'], text)
+        elif not parse_from_url_path:
+            text = _percent_decode_url(iocs['urls'], text)
+            text = _remove_url_paths(iocs['urls'], text)
+        else:
+            text = _percent_decode_url(iocs['urls'], text)
 
     # xmpp addresses
-    iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
-    if not parse_domain_name_from_xmpp_address:
-        text = _remove_items(iocs['xmpp_addresses'], text)
+    if "xmpp_addresses" in included_ioc_types:
+        iocs['xmpp_addresses'] = parse_xmpp_addresses(text)
+
+    if 'domains' in included_ioc_types and not parse_domain_name_from_xmpp_address:
+        text = _remove_items(iocs.get('xmpp_addresses', parse_xmpp_addresses(text)), text)
     # even if we want to parse domain names from the xmpp_address,
     # we don't want them also being caught as email addresses so we'll remove everything before the `@`
-    else:
-        text = _remove_xmpp_local_part(iocs['xmpp_addresses'], text)
+    elif 'email_addresses_complete' in included_ioc_types or 'email_addresses' in included_ioc_types:
+        text = _remove_xmpp_local_part(iocs.get('xmpp_addresses', parse_xmpp_addresses(text)), text)
 
     # complete email addresses
-    iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
-    # simple email addresses
-    iocs['email_addresses'] = parse_email_addresses(text)
+    if "email_addresses_complete" in included_ioc_types:
+        iocs['email_addresses_complete'] = parse_complete_email_addresses(text)
+    if "email_addresses" in included_ioc_types:
+        iocs['email_addresses'] = parse_email_addresses(text)
+
     if not parse_domain_from_email_address:
-        text = _remove_items(iocs['email_addresses_complete'], text)
-        text = _remove_items(iocs['email_addresses'], text)
-    # after parsing the email addresses, we need to remove the
-    # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
-    text = _remove_items(['[IPv6:'], text)
+        text = _remove_items(iocs.get('email_addresses_complete', parse_complete_email_addresses(text)), text)
+        text = _remove_items(iocs.get('email_addresses', parse_email_addresses(text)), text)
+
+    if 'ipv6s' in included_ioc_types:
+        # after parsing the email addresses, we need to remove the
+        # '[IPv6:' bit from any of the email addresses so that ipv6 addresses are not extraneously parsed
+        text = _remove_items(['[IPv6:'], text)
 
     # cidr ranges
-    iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
-    if not parse_address_from_cidr:
-        text = _remove_items(iocs['ipv4_cidrs'], text)
+    if "ipv4_cidrs" in included_ioc_types:
+        iocs['ipv4_cidrs'] = parse_ipv4_cidrs(text)
 
     # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
-    if parse_urls_without_scheme:
-        for cidr in iocs['ipv4_cidrs']:
-            if cidr in iocs['urls']:
-                iocs['urls'].remove(cidr)
+    url_parsing_requires_cidr_removal = 'urls' in included_ioc_types and parse_urls_without_scheme
+    ip_address_parsing_requires_cidr_removal = 'ipv4s' in included_ioc_types and not parse_address_from_cidr
+    if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
+        cidr_ranges = iocs.get('ipv4_cidrs', parse_ipv4_cidrs(text))
+        if url_parsing_requires_cidr_removal:
+            for cidr in cidr_ranges:
+                if cidr in iocs['urls']:
+                    iocs['urls'].remove(cidr)
+        if ip_address_parsing_requires_cidr_removal:
+            text = _remove_items(cidr_ranges, text)
 
     # file hashes
-    if parse_imphashes:
-        iocs['imphashes'] = parse_imphashes_(text)
+    if "imphashes" in included_ioc_types:
+        if parse_imphashes:
+            iocs['imphashes'] = parse_imphashes_(text)
+    if 'md5s' in included_ioc_types:
         # remove the imphashes so they are not also parsed as md5s
-        text = _remove_items(iocs['imphashes'], text)
+        text = _remove_items(iocs.get('imphashes', parse_imphashes_(text)), text)
 
-    if parse_authentihashes:
-        iocs['authentihashes'] = parse_authentihashes_(text)
+    if "authentihashes" in included_ioc_types:
+        if parse_authentihashes:
+            iocs['authentihashes'] = parse_authentihashes_(text)
+    if 'sha256s' in included_ioc_types:
         # remove the authentihashes so they are not also parsed as sha256s
-        text = _remove_items(iocs['authentihashes'], text)
+        text = _remove_items(iocs.get('authentihashes', parse_authentihashes_(text)), text)
 
     # domains
-    iocs['domains'] = parse_domain_names(text)
+    if "domains" in included_ioc_types:
+        iocs['domains'] = parse_domain_names(text)
 
     # ip addresses
-    iocs['ipv4s'] = parse_ipv4_addresses(text)
-    iocs['ipv6s'] = parse_ipv6_addresses(text)
+    if "ipv4s" in included_ioc_types:
+        iocs['ipv4s'] = parse_ipv4_addresses(text)
+    if "ipv6s" in included_ioc_types:
+        iocs['ipv6s'] = parse_ipv6_addresses(text)
 
     # file hashes
-    iocs['sha512s'] = parse_sha512s(text)
-    iocs['sha256s'] = parse_sha256s(text)
-    iocs['sha1s'] = parse_sha1s(text)
-    iocs['md5s'] = parse_md5s(text)
-    iocs['ssdeeps'] = parse_ssdeeps(text)
+    if "sha512s" in included_ioc_types:
+        iocs['sha512s'] = parse_sha512s(text)
+    if "sha256s" in included_ioc_types:
+        iocs['sha256s'] = parse_sha256s(text)
+    if "sha1s" in included_ioc_types:
+        iocs['sha1s'] = parse_sha1s(text)
+    if "md5s" in included_ioc_types:
+        iocs['md5s'] = parse_md5s(text)
+    if "ssdeeps" in included_ioc_types:
+        iocs['ssdeeps'] = parse_ssdeeps(text)
 
     # misc
-    iocs['asns'] = parse_asns(text)
-    iocs['cves'] = parse_cves(original_text)
-    iocs['registry_key_paths'] = parse_registry_key_paths(text)
-    iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
-    iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
-    iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
-    iocs['monero_addresses'] = parse_monero_addresses(text)
-    iocs['mac_addresses'] = parse_mac_addresses(text)
-    iocs['user_agents'] = parse_user_agents(text)
-    iocs['tlp_labels'] = parse_tlp_labels(original_text)
+    if "asns" in included_ioc_types:
+        iocs['asns'] = parse_asns(text)
+    if "cves" in included_ioc_types:
+        iocs['cves'] = parse_cves(original_text)
+    if "registry_key_paths" in included_ioc_types:
+        iocs['registry_key_paths'] = parse_registry_key_paths(text)
+    if "google_adsense_publisher_ids" in included_ioc_types:
+        iocs['google_adsense_publisher_ids'] = parse_google_adsense_ids(text)
+    if "google_analytics_tracker_ids" in included_ioc_types:
+        iocs['google_analytics_tracker_ids'] = parse_google_analytics_ids(text)
+    if "bitcoin_addresses" in included_ioc_types:
+        iocs['bitcoin_addresses'] = parse_bitcoin_addresses(text)
+    if "monero_addresses" in included_ioc_types:
+        iocs['monero_addresses'] = parse_monero_addresses(text)
+    if "mac_addresses" in included_ioc_types:
+        iocs['mac_addresses'] = parse_mac_addresses(text)
+    if "user_agents" in included_ioc_types:
+        iocs['user_agents'] = parse_user_agents(text)
+    if "tlp_labels" in included_ioc_types:
+        iocs['tlp_labels'] = parse_tlp_labels(original_text)
 
-    iocs['attack_mitigations'] = {  # type: ignore
-        "enterprise": parse_enterprise_attack_mitigations(original_text),
-        "mobile": parse_mobile_attack_mitigations(original_text),
-    }
-    iocs['attack_tactics'] = {  # type: ignore
-        "pre_attack": parse_pre_attack_tactics(original_text),
-        "enterprise": parse_enterprise_attack_tactics(original_text),
-        "mobile": parse_mobile_attack_tactics(original_text),
-    }
-    iocs['attack_techniques'] = {  # type: ignore
-        "pre_attack": parse_pre_attack_techniques(original_text),
-        "enterprise": parse_enterprise_attack_techniques(original_text),
-        "mobile": parse_mobile_attack_techniques(original_text),
-    }
+    if "attack_mitigations" in included_ioc_types:
+        iocs['attack_mitigations'] = {  # type: ignore
+            "enterprise": parse_enterprise_attack_mitigations(original_text),
+            "mobile": parse_mobile_attack_mitigations(original_text),
+        }
 
-    # if there are still url paths in the text, remove them so they don't get parsed as file names
-    if parse_from_url_path:
-        text = _remove_url_paths(iocs['urls'], text)
+    if "attack_tactics" in included_ioc_types:
+        iocs['attack_tactics'] = {  # type: ignore
+            "pre_attack": parse_pre_attack_tactics(original_text),
+            "enterprise": parse_enterprise_attack_tactics(original_text),
+            "mobile": parse_mobile_attack_tactics(original_text),
+        }
 
-    iocs['file_paths'] = parse_file_paths(text)
+    if "attack_techniques" in included_ioc_types:
+        iocs['attack_techniques'] = {  # type: ignore
+            "pre_attack": parse_pre_attack_techniques(original_text),
+            "enterprise": parse_enterprise_attack_techniques(original_text),
+            "mobile": parse_mobile_attack_techniques(original_text),
+        }
+
+    if "file_paths" in included_ioc_types:
+        # if there are still url paths in the text, remove them so they don't get parsed as file names
+        if parse_from_url_path:
+            text = _remove_url_paths(
+                iocs.get('urls', parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)), text
+            )
+
+        iocs['file_paths'] = parse_file_paths(text)
 
     return iocs
