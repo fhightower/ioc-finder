@@ -102,43 +102,43 @@ from ioc_finder import find_iocs
 
 def test_cidr_ranges_not_found_as_urls():
     """See https://github.com/fhightower/ioc-finder/issues/91."""
-    result = find_iocs('1.1.1.1/0')
-    assert result['urls'] == []
+    result = find_iocs("1.1.1.1/0")
+    assert result["urls"] == []
 
-    result = find_iocs('1.1.1.1/0', parse_urls_without_scheme=False)
-    assert result['urls'] == []
+    result = find_iocs("1.1.1.1/0", parse_urls_without_scheme=False)
+    assert result["urls"] == []
 
-    result = find_iocs('1.1.1.1/0 foobar.com/test/bingo.php')
-    assert result['urls'] == ['foobar.com/test/bingo.php']
+    result = find_iocs("1.1.1.1/0 foobar.com/test/bingo.php")
+    assert result["urls"] == ["foobar.com/test/bingo.php"]
 
 
 def test_parse_domain_from_url_not_removing_entire_url():
     """See https://github.com/fhightower/ioc-finder/issues/90."""
     # default behaviour
-    result = find_iocs('https://foobar.com/test/bingo.com/bar')
-    assert iterables_have_same_items(result['domains'], ['foobar.com', 'bingo.com'])
+    result = find_iocs("https://foobar.com/test/bingo.com/bar")
+    assert iterables_have_same_items(result["domains"], ["foobar.com", "bingo.com"])
 
-    result = find_iocs('https://foobar.com/test/bingo.com/bar', parse_domain_from_url=False)
-    assert result['domains'] == ['bingo.com']
+    result = find_iocs("https://foobar.com/test/bingo.com/bar", parse_domain_from_url=False)
+    assert result["domains"] == ["bingo.com"]
 
-    result = find_iocs('https://foobar.com/test/bingo.com/bar', parse_domain_from_url=False, parse_from_url_path=False)
-    assert result['domains'] == []
+    result = find_iocs("https://foobar.com/test/bingo.com/bar", parse_domain_from_url=False, parse_from_url_path=False)
+    assert result["domains"] == []
 
 
 def test_issue_104__encoded_url_properly_parsed():
-    s = 'https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip'
+    s = "https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip"
     result = find_iocs(s)
-    assert result['urls'] == [
-        'https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip'
+    assert result["urls"] == [
+        "https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip"
     ]
 
 
 def test_url__percent_encoded_path():
     # make sure a percent encoded path is properly removed so that nothing is parsed from it
-    s = 'https://example.com/test%20page/foo.com/bingo.php?q=bar.com'
+    s = "https://example.com/test%20page/foo.com/bingo.php?q=bar.com"
     result = find_iocs(s, parse_from_url_path=False)
-    assert result['urls'] == ['https://example.com/test%20page/foo.com/bingo.php?q=bar.com']
+    assert result["urls"] == ["https://example.com/test%20page/foo.com/bingo.php?q=bar.com"]
     assert iterables_have_same_items(
-        result['domains'], ['example.com', 'bar.com']
+        result["domains"], ["example.com", "bar.com"]
     )  # the key here is that "foo.com" is not parsed because it is part of the path (which has been removed)
-    assert result['file_paths'] == []
+    assert result["file_paths"] == []

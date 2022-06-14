@@ -72,5 +72,5 @@ __all__ = [
     "prepare_text",
 ]
 
-__author__ = '''Floyd Hightower'''
-__version__ = '7.1.0'
+__author__ = """Floyd Hightower"""
+__version__ = "7.1.0"
