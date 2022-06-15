@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Update required pyparsing version to [v3](https://github.com/pyparsing/pyparsing/blob/966d6fded149c6c11993746b0d72166bc04e4504/CHANGES#L49)
+
 ## [6.0.1] - 2021.06.09
 
 ### Fixed
