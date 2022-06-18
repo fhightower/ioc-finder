@@ -78,10 +78,10 @@ def prepare_text(text: str) -> str:
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     """."""
     if parse_urls_without_scheme:
-        urls = ioc_grammars.scheme_less_url.searchString(text)
+        url_parse_results = ioc_grammars.scheme_less_url.searchString(text)
     else:
-        urls = ioc_grammars.url.searchString(text)
-    urls = _listify(urls)
+        url_parse_results = ioc_grammars.url.searchString(text)
+    urls = _listify(url_parse_results)
 
     clean_urls = []
 
@@ -165,8 +165,7 @@ def parse_email_addresses(text: str) -> List:
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
 def parse_imphashes_(text: str) -> List:
     """."""
-    full_imphash_instances = ioc_grammars.imphash.searchString(text.lower())
-    full_imphash_instances = _listify(full_imphash_instances)
+    full_imphash_instances = _listify(ioc_grammars.imphash.searchString(text.lower()))
 
     imphashes = []
 
@@ -179,8 +178,7 @@ def parse_imphashes_(text: str) -> List:
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
 def parse_authentihashes_(text: str) -> List:
     """."""
-    full_authentihash_instances = ioc_grammars.authentihash.searchString(text.lower())
-    full_authentihash_instances = _listify(full_authentihash_instances)
+    full_authentihash_instances = _listify(ioc_grammars.authentihash.searchString(text.lower()))
 
     authentihashes = []
 

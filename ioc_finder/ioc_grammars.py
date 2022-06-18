@@ -43,7 +43,8 @@ alphanum_word_end = WordEnd(wordChars=alphanums)
 
 # the label definition ignores the fact that labels should not end in an hyphen
 label = Word(initChars=alphanums + "_", bodyChars=alphanums + "-_", max=63)
-domain_tld = Or(tlds)
+tld_literals = (CaselessLiteral(i) for i in tlds)
+domain_tld = Or(tld_literals)
 domain_name = (
     alphanum_word_start
     + Combine(
@@ -90,7 +91,7 @@ complete_email_comment = Combine("(" + Word(alphanums) + ")")
 # (and the double-quotes and backslash should be preceded by a backslash)
 complete_email_local_part = Combine(
     Optional(complete_email_comment)("email_address_start_comment")
-    + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), "\\@"]))
+    + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), CaselessLiteral("\\@")]))
     + Optional(complete_email_comment)("email_address_end_comment")
 )
 complete_email_address = Combine(
@@ -106,13 +107,14 @@ email_address = alphanum_word_start + Combine(
     + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
 )
 
-url_scheme = Or(schemes)
+scheme_literals = (CaselessLiteral(i) for i in schemes)
+url_scheme = Or(scheme_literals)
 port = Combine(":" + Word(nums))
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
 # although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
 url_path_word = Word(alphanums + "-._~!$&'()*+,;:=%")
-url_path = Combine(OneOrMore(Or([url_path_word, "/"])))
+url_path = Combine(OneOrMore(Or([url_path_word, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")
 url = alphanum_word_start + Combine(
@@ -146,7 +148,9 @@ md5 = (
     + alphanum_word_end
 )
 imphash = Combine(
-    Or(["imphash", "import hash"]) + Optional(Word(printables, excludeChars=alphanums)) + md5("hash"),
+    Or([CaselessLiteral("imphash"), CaselessLiteral("import hash")])
+    + Optional(Word(printables, excludeChars=alphanums))
+    + md5("hash"),
     joinString=" ",
     adjacent=False,
 )
@@ -161,7 +165,7 @@ sha256 = (
     + alphanum_word_end
 )
 authentihash = Combine(
-    Or(["authentihash"]) + Optional(Word(printables, excludeChars=alphanums)) + sha256("hash"),
+    CaselessLiteral("authentihash") + Optional(Word(printables, excludeChars=alphanums)) + sha256("hash"),
     joinString=" ",
     adjacent=False,
 )
@@ -175,7 +179,7 @@ year = Word("12") + Word(nums, exact=3)
 cve = (
     alphanum_word_start
     + Combine(
-        Or(["cve", "CVE"]).set_parse_action(replace_with("CVE"))
+        CaselessLiteral("cve").set_parse_action(replace_with("CVE"))
         + Word("- ").set_parse_action(replace_with("-"))
         + year("year")
         + Word("-")
@@ -219,8 +223,9 @@ root_key_list = [
     "HKEY_PERFORMANCE_DATA",
     "HKEY_DYN_DATA",
 ]
+root_key_literals = (Literal(i) for i in root_key_list)
 
-root_key = Or(root_key_list)
+root_key = Or(root_key_literals)
 
 
 def hasMultipleConsecutiveSpaces(string):
@@ -275,7 +280,11 @@ registry_key_path = (
 # see https://support.google.com/adsense/answer/2923881?hl=en
 google_adsense_publisher_id = (
     alphanum_word_start
-    + Combine(Or(["pub-", "PUB-"]) + Word(nums, exact=16)).set_parse_action(pyparsing_common.downcase_tokens)
+    # we use `Or([Literal("pub-")...` instead of something like `CaselessLiteral("pub-")` b/c...
+    # we only want to parse "pub" when it is all upper or lowercased (not "pUb" or other, similar variations)
+    + Combine(Or([Literal("pub-"), Literal("PUB-")]) + Word(nums, exact=16)).set_parse_action(
+        pyparsing_common.downcase_tokens
+    )
     + alphanum_word_end
 )
 
@@ -283,7 +292,12 @@ google_adsense_publisher_id = (
 google_analytics_tracker_id = (
     alphanum_word_start
     + Combine(
-        Or(["UA-", "ua-"]) + Word(nums, min=6)("account_number") + "-" + Word(nums)("property_number")
+        # we use `Or([Literal("ua-")...` instead of something like `CaselessLiteral("ua-")` b/c...
+        # we only want to parse "ua" when it is all upper or lowercased (not "uA" or other, similar variations)
+        Or([Literal("ua-"), Literal("UA-")])
+        + Word(nums, min=6)("account_number")
+        + "-"
+        + Word(nums)("property_number")
     ).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
@@ -311,7 +325,9 @@ xmpp_address = alphanum_word_start + Combine(
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
-mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(["-", ":"])) * 5 + Word(hexnums, exact=2))
+mac_address_16_bit_section = Combine(
+    (Word(hexnums, exact=2) + Or([Literal("-"), Literal(":")])) * 5 + Word(hexnums, exact=2)
+)
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + ".") * 2 + Word(hexnums, exact=4))
 mac_address_word_start = WordStart(wordChars=alphanums + ":-.")
@@ -356,7 +372,7 @@ unix_file_path_wordstart.wordChars.add("/")
 unix_file_path_wordstart.wordChars.add("~")
 
 unix_file_path = unix_file_path_wordstart + Combine(
-    Or(["~", "/"]) + Word(printables.replace(".", "") + " ") + "." + file_ending
+    Or([Literal("~"), Literal("/")]) + Word(printables.replace(".", "") + " ") + "." + file_ending
 ).addCondition(lambda tokens: "//" not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
 
