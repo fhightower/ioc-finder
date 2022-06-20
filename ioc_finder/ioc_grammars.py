@@ -18,12 +18,11 @@ from pyparsing import (
     ZeroOrMore,
     alphanums,
     alphas,
-    downcaseTokens,
     hexnums,
     nums,
     printables,
-    replaceWith,
-    upcaseTokens,
+    pyparsing_common,
+    replace_with,
 )
 
 from ioc_finder.data import (
@@ -44,18 +43,19 @@ alphanum_word_end = WordEnd(wordChars=alphanums)
 
 # the label definition ignores the fact that labels should not end in an hyphen
 label = Word(initChars=alphanums + "_", bodyChars=alphanums + "-_", max=63)
-domain_tld = Or(tlds)
+tld_literals = (CaselessLiteral(i) for i in tlds)
+domain_tld = Or(tld_literals)
 domain_name = (
     alphanum_word_start
     + Combine(
         Combine(OneOrMore(label + ("." + FollowedBy(Word(alphanums + "-_")))))("domain_labels") + domain_tld("tld")
     )
     + alphanum_word_end
-).setParseAction(downcaseTokens)
+).set_parse_action(pyparsing_common.downcase_tokens)
 
 ipv4_section = (
     Word(nums, asKeyword=True, max=3)
-    .setParseAction(lambda x: str(int(x[0])))
+    .set_parse_action(lambda x: str(int(x[0])))
     .addCondition(lambda tokens: int(tokens[0]) < 256)
 )
 # basically, the grammar below says: start any words that start with a '.' or a number;
@@ -91,7 +91,7 @@ complete_email_comment = Combine("(" + Word(alphanums) + ")")
 # (and the double-quotes and backslash should be preceded by a backslash)
 complete_email_local_part = Combine(
     Optional(complete_email_comment)("email_address_start_comment")
-    + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), "\\@"]))
+    + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), CaselessLiteral("\\@")]))
     + Optional(complete_email_comment)("email_address_end_comment")
 )
 complete_email_address = Combine(
@@ -100,20 +100,21 @@ complete_email_address = Combine(
     + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
 )
 
-email_local_part = Word(alphanums, bodyChars=alphanums + "+-_.").setParseAction(downcaseTokens)
+email_local_part = Word(alphanums, bodyChars=alphanums + "+-_.").set_parse_action(pyparsing_common.downcase_tokens)
 email_address = alphanum_word_start + Combine(
     email_local_part("email_address_local_part")
     + "@"
     + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
 )
 
-url_scheme = Or(schemes)
+scheme_literals = (CaselessLiteral(i) for i in schemes)
+url_scheme = Or(scheme_literals)
 port = Combine(":" + Word(nums))
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
 # although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
 url_path_word = Word(alphanums + "-._~!$&'()*+,;:=%")
-url_path = Combine(OneOrMore(Or([url_path_word, "/"])))
+url_path = Combine(OneOrMore(Or([url_path_word, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")
 url = alphanum_word_start + Combine(
@@ -141,27 +142,45 @@ scheme_less_url = alphanum_word_start + Combine(
 # this allows for matching file hashes preceeded with an 'x' or 'X'...
 # see https://github.com/fhightower/ioc-finder/issues/41
 file_hash_word_start = WordStart(wordChars=alphanums.replace("x", "").replace("X", ""))
-md5 = file_hash_word_start + Word(hexnums, exact=32).setParseAction(downcaseTokens) + alphanum_word_end
+md5 = (
+    file_hash_word_start
+    + Word(hexnums, exact=32).set_parse_action(pyparsing_common.downcase_tokens)
+    + alphanum_word_end
+)
 imphash = Combine(
-    Or(["imphash", "import hash"]) + Optional(Word(printables, excludeChars=alphanums)) + md5("hash"),
+    Or([CaselessLiteral("imphash"), CaselessLiteral("import hash")])
+    + Optional(Word(printables, excludeChars=alphanums))
+    + md5("hash"),
     joinString=" ",
     adjacent=False,
 )
-sha1 = file_hash_word_start + Word(hexnums, exact=40).setParseAction(downcaseTokens) + alphanum_word_end
-sha256 = file_hash_word_start + Word(hexnums, exact=64).setParseAction(downcaseTokens) + alphanum_word_end
+sha1 = (
+    file_hash_word_start
+    + Word(hexnums, exact=40).set_parse_action(pyparsing_common.downcase_tokens)
+    + alphanum_word_end
+)
+sha256 = (
+    file_hash_word_start
+    + Word(hexnums, exact=64).set_parse_action(pyparsing_common.downcase_tokens)
+    + alphanum_word_end
+)
 authentihash = Combine(
-    Or(["authentihash"]) + Optional(Word(printables, excludeChars=alphanums)) + sha256("hash"),
+    CaselessLiteral("authentihash") + Optional(Word(printables, excludeChars=alphanums)) + sha256("hash"),
     joinString=" ",
     adjacent=False,
 )
-sha512 = file_hash_word_start + Word(hexnums, exact=128).setParseAction(downcaseTokens) + alphanum_word_end
+sha512 = (
+    file_hash_word_start
+    + Word(hexnums, exact=128).set_parse_action(pyparsing_common.downcase_tokens)
+    + alphanum_word_end
+)
 
 year = Word("12") + Word(nums, exact=3)
 cve = (
     alphanum_word_start
     + Combine(
-        Or(["cve", "CVE"]).setParseAction(replaceWith("CVE"))
-        + Word("- ").setParseAction(replaceWith("-"))
+        CaselessLiteral("cve").set_parse_action(replace_with("CVE"))
+        + Word("- ").set_parse_action(replace_with("-"))
         + year("year")
         + Word("-")
         + Word(nums, min=4)("cve_id")
@@ -174,9 +193,9 @@ asn = (
     + Combine(
         Or(
             [
-                Literal("AS") + Optional(Word("N ")).setParseAction(replaceWith("N")),
-                Literal("as").setParseAction(replaceWith("ASN")),
-                (Literal("asn") + Optional(" ")).setParseAction(replaceWith("ASN")),
+                Literal("AS") + Optional(Word("N ")).set_parse_action(replace_with("N")),
+                Literal("as").set_parse_action(replace_with("ASN")),
+                (Literal("asn") + Optional(" ")).set_parse_action(replace_with("ASN")),
             ]
         )
         + Word(nums)("as_number")
@@ -204,8 +223,9 @@ root_key_list = [
     "HKEY_PERFORMANCE_DATA",
     "HKEY_DYN_DATA",
 ]
+root_key_literals = (Literal(i) for i in root_key_list)
 
-root_key = Or(root_key_list)
+root_key = Or(root_key_literals)
 
 
 def hasMultipleConsecutiveSpaces(string):
@@ -249,9 +269,9 @@ registry_key_subpath = OneOrMore(registry_key_subpath_section)
 registry_key_path = (
     alphanum_word_start
     + Combine(
-        Optional("<").setParseAction(replaceWith(""))
+        Optional("<").set_parse_action(replace_with(""))
         + root_key("registry_key_root")
-        + Optional(">").setParseAction(replaceWith(""))
+        + Optional(">").set_parse_action(replace_with(""))
         + registry_key_subpath("registry_key_subpath")
     )
     + alphanum_word_end
@@ -260,7 +280,11 @@ registry_key_path = (
 # see https://support.google.com/adsense/answer/2923881?hl=en
 google_adsense_publisher_id = (
     alphanum_word_start
-    + Combine(Or(["pub-", "PUB-"]) + Word(nums, exact=16)).setParseAction(downcaseTokens)
+    # we use `Or([Literal("pub-")...` instead of something like `CaselessLiteral("pub-")` b/c...
+    # we only want to parse "pub" when it is all upper or lowercased (not "pUb" or other, similar variations)
+    + Combine(Or([Literal("pub-"), Literal("PUB-")]) + Word(nums, exact=16)).set_parse_action(
+        pyparsing_common.downcase_tokens
+    )
     + alphanum_word_end
 )
 
@@ -268,8 +292,13 @@ google_adsense_publisher_id = (
 google_analytics_tracker_id = (
     alphanum_word_start
     + Combine(
-        Or(["UA-", "ua-"]) + Word(nums, min=6)("account_number") + "-" + Word(nums)("property_number")
-    ).setParseAction(upcaseTokens)
+        # we use `Or([Literal("ua-")...` instead of something like `CaselessLiteral("ua-")` b/c...
+        # we only want to parse "ua" when it is all upper or lowercased (not "uA" or other, similar variations)
+        Or([Literal("ua-"), Literal("UA-")])
+        + Word(nums, min=6)("account_number")
+        + "-"
+        + Word(nums)("property_number")
+    ).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
 
@@ -296,7 +325,9 @@ xmpp_address = alphanum_word_start + Combine(
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
-mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + Or(["-", ":"])) * 5 + Word(hexnums, exact=2))
+mac_address_16_bit_section = Combine(
+    (Word(hexnums, exact=2) + Or([Literal("-"), Literal(":")])) * 5 + Word(hexnums, exact=2)
+)
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + ".") * 2 + Word(hexnums, exact=4))
 mac_address_word_start = WordStart(wordChars=alphanums + ":-.")
@@ -341,20 +372,31 @@ unix_file_path_wordstart.wordChars.add("/")
 unix_file_path_wordstart.wordChars.add("~")
 
 unix_file_path = unix_file_path_wordstart + Combine(
-    Or(["~", "/"]) + Word(printables.replace(".", "") + " ") + "." + file_ending
+    Or([Literal("~"), Literal("/")]) + Word(printables.replace(".", "") + " ") + "." + file_ending
 ).addCondition(lambda tokens: "//" not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
+
+# be aware that the phone_number grammar assumes that the text being sent to it has been reversed
+phone_number_connector = Word(" .-", max=3)
+phone_number_format_1 = Combine(
+    Word(nums, exact=4)
+    + phone_number_connector
+    + Word(nums, exact=3)
+    + Optional(phone_number_connector + Optional(")") + Word(nums) + Optional("("))
+)
+
+phone_number = Or([phone_number_format_1])
 
 attack_sub_technique = Literal(".") + Word(nums, exact=3)
 pre_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in pre_attack_tactics]).setParseAction(upcaseTokens)
+    + Or([CaselessLiteral(i) for i in pre_attack_tactics]).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
 pre_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in pre_attack_techniques]).setParseAction(upcaseTokens)
+        Or([CaselessLiteral(i) for i in pre_attack_techniques]).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
@@ -365,13 +407,13 @@ enterprise_attack_mitigations_grammar = (
 )
 enterprise_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).setParseAction(upcaseTokens)
+    + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
 enterprise_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).setParseAction(upcaseTokens)
+        Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
@@ -382,13 +424,13 @@ mobile_attack_mitigations_grammar = (
 )
 mobile_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).setParseAction(upcaseTokens)
+    + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
 mobile_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in mobile_attack_techniques]).setParseAction(upcaseTokens)
+        Or([CaselessLiteral(i) for i in mobile_attack_techniques]).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
@@ -399,6 +441,6 @@ tlp_colors = Or(tlp_colors_list)
 
 tlp_label = Combine(
     CaselessLiteral("tlp")
-    + Or([Literal(":"), Literal("-"), Literal(" "), Empty()]).setParseAction(lambda x: ":")
+    + Or([Literal(":"), Literal("-"), Literal(" "), Empty()]).set_parse_action(lambda x: ":")
     + tlp_colors
-).setParseAction(upcaseTokens)
+).set_parse_action(pyparsing_common.upcase_tokens)

@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [7.2.0] - 2022.06.20
+
+### Changed
+
+- *Possible breaking change:* Update required pyparsing version to [v3](https://github.com/pyparsing/pyparsing/blob/966d6fded149c6c11993746b0d72166bc04e4504/CHANGES#L49)
+  - Although there are no public API changes associated with this version, this may be a breaking change if you are using ioc-finder and have pyparsing pinned to a version less than v3
+  - I've chosen to release this as a new minor version b/c I think requirement version updates w/ no API changes and no system requirement changes constitute a minor version change
+- Updated parsing of Google Analytics Tracker IDs so that matched must be all lower-cased or all upper-cased (e.g. `ua-...` and `UA-...` will be matched, but `uA-...` will not)  (this makes the parsing consistent with how Google Adsense Publisher IDs are parsed)
+
 ## [7.1.0] - 2022.06.13
 
 ### Added

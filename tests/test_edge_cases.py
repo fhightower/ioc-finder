@@ -456,9 +456,21 @@ def test_google_adsense_publisher_ids():
     iocs = find_iocs(s)
     assert iocs["google_adsense_publisher_ids"] == []
 
+    s = "PUB-1234567891234567"
+    iocs = find_iocs(s)
+    assert iocs["google_adsense_publisher_ids"] == ["pub-1234567891234567"]
+
 
 def test_google_analyitics_tracker_ids():
     s = "ua-000000-1"
+    iocs = find_iocs(s)
+    assert iocs["google_analytics_tracker_ids"] == ["UA-000000-1"]
+
+    s = "uA-000000-1"
+    iocs = find_iocs(s)
+    assert iocs["google_analytics_tracker_ids"] == []
+
+    s = "UA-000000-1"
     iocs = find_iocs(s)
     assert iocs["google_analytics_tracker_ids"] == ["UA-000000-1"]
 
