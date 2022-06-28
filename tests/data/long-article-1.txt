@@ -1,0 +1,115 @@
+# Source: https://threatconnect.com/blog/guccifer-2-all-roads-lead-russia/
+
+07.26.16
+Guccifer 2.0: All Roads Lead to Russia
+IN THREAT RESEARCH | BY THREATCONNECT RESEARCH TEAM
+BG All Roads Lead to Russia
+Guccifer 2.0: All Roads Lead to Russia
+Update 07/26/2016  4:00pm EDT
+Joe Uchill with The Hill, who has previously covered Guccifer 2.0 and the Wikileaks DNC data dump, has provided us with redacted information on his communications with Guccifer 2.0 that has raised our confidence in our current assessments and hypotheses.
+
+Check out Joe’s story here.
+
+ 
+
+ThreatConnect follows Guccifer 2.0’s French breadcrumbs back to a Russian VPN Service
+Read the full series of ThreatConnect posts following the DNC Breach: “Rebooting Watergate: Tapping into the Democratic National Committee“, “Shiny Object? Guccifer 2.0 and the DNC Breach“, “What’s in a Name Server?“, “Guccifer 2.0: the Man, the Myth, the Legend?“, “Guccifer 2.0: All Roads Lead to Russia“, “FANCY BEAR Has an (IT) Itch that They Can’t Scratch“, “Does a BEAR Leak in the Woods?“, “Russian Cyber Operations on Steroids“, and “Can a BEAR Fit Down a Rabbit Hole?“.
+
+In our initial Guccifer 2.0 analysis, ThreatConnect highlighted technical and non-technical inconsistencies in the purported DNC hacker’s story as well as a curious theme of French “connections” surrounding various Guccifer 2.0 interactions with the media. We called out these connections as they overlapped, albeit minimally, with FANCY BEAR infrastructure identified in CrowdStrike’s DNC report.
+
+Now, after further investigation, we can confirm that Guccifer 2.0 is using the Russia-based Elite VPN service to communicate and leak documents directly with the media. We reached this conclusion by analyzing the infrastructure associated with an email exchange with Guccifer 2.0 shared with ThreatConnect by Vocativ’s Senior Privacy and Security reporter Kevin Collier. This discovery strengthens our ongoing assessment that Guccifer 2.0 is a Russian propaganda effort and not an independent actor.
+
+Analyzing the Headers from Guccifer 2.0 Emails
+On June 21, 2016, TheSmokingGun reported they communicated with Guccifer 2.0 via a French AOL account. We examined the French language settings observed in Guccifer 2.0’s Twitter metadata as well as a pattern of Twitter follows that suggested Guccifer 2.0’s account was created from a French IP address. We hypothesized at the time that Guccifer 2.0 might be using French infrastructure to interact with the media.
+
+WHITE PAPER: 6 EASY WAYS TO ADVANCE YOUR CYBERSECURITY PROGRAM WHEN YOU HAVE A SMALL TEAM
+As a result of our continuing analysis series that focused on FANCY BEAR infrastructure, Guccifer 2.0’s background, and his claims, media sources who have interacted with Guccifer 2.0 via Twitter and email shared additional data with us. One of which is Vocativ’s Kevin Collier, details of his story can be found here.
+
+Using the ThreatConnect Email Analyze feature we were able to analyze an email exchange Kevin had with Guccifer 2.0, identifying details of the adversary (Guccifer 2.0’s) email account and infrastructure while also redacting sensitive details of Kevin’s email and infrastructure. Analyzing the metadata revealed several additional investigative leads.
+
+During the Email Import process ThreatConnect analyzes an email message header and highlights indicators of interest with a color code that reveals if the indicators already exist within the platform. This helps overburdened eyes or greenhorn analysts quickly understand what they are seeing. At the same time ThreatConnect excludes legitimate or benign details that are not of value to our investigation.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 1
+As we can see here within ThreatConnect, Guccifer 2.0’s AOL email message reveals the originating IP address as 95.130.15[.]34 (DigiCube SaS – France). This is the IP address of the host which authenticated into AOL’s web user interface and sent the email. We can also tell this IP was not spoofed because the metadata was added by AOL when sent from within their infrastructure with appropriate DomainKeys Identified Mail (DKIM) configurations.
+
+The fact that Guccifer 2.0 is indeed leveraging a French AOL account stands out from a technical perspective. Very few hackers with Guccifer 2.0’s self-acclaimed skills would use a free webmail service that would give away a useful indicator like the originating IP address. Most seasoned security professionals will be familiar with email providers that are more likely to cooperate with law enforcement and how much metadata a provider might reveal about their users. Taken together with inconsistencies in Guccifer 2.0’s remarks that make his technical claims sound implausible, this detail makes us think the individual(s) operating the AOL account are not really hackers or even that technically savvy. Instead, propagandist or public relations individuals who are interacting with journalists.
+
+Drilling into Guccifer 2.0 Infrastructure: Picture of a VPN Starts to Emerge
+As we focused in on IP Address 95.130.15[.]34 we queried public sources such as Shodan as well as Censys to discover what services might be enabled on this host. The goal of this was to better understand if this infrastructure is owned and operated, leased or co-opted by Guccifer 2.0 and how the infrastructure might be used to create space between an originating “source” network and investigators, or curious journalists.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 2According to Shodan, OpenSSH (TCP/22), DNS (UDP/53) and Point-to-Point Tunneling Protocol (PPTP) (TCP/1723) services have been enabled on this host. Secure shell (SSH) and point-to-point tunneling protocol services strongly suggest a VPN and/or a proxy, both of which would allow the Guccifer 2.0 persona to put distance between his originating network and those with whom he is communicating.
+
+The SSH fingerprint can be used as an identifier, linking other IP addresses that use the same SSH encryption key. The SSH fingerprint for 95.130.15[.]34 (DigiCube SaS – France) is Fingerprint: 80:19:eb:c8:80:a1:c6:ea:ea:37:ba:c0:26:c6:7f:61. Searching for other servers that share this fingerprint at the time of writing, we discovered six additional IP Addresses over the course of our research (95.130.9[.]198; 95.130.15[.]36; 95.130.15[.]37; 95.130.15[.]38; 95.130.15[.]40;  95.130.15[.]41).
+
+Each IP address falls within the 95.130.8.0/21 network range. This range is assigned to Digicube SAS, a French hosting provider which is assigned the Autonomous System AS196689. An IP address is analogous to the apartment numbers in an apartment building. The entire building is owned and operated by AS196689, but certain IP addresses may be let out to other companies and organizations.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia fingerprint
+The fact that Guccifer 2.0 would use a proxy service is not surprising, and our first stop was to check with various TOR proxy registration sites. None of these seven IP addresses are part of reported TOR infrastructure from what we were able to uncover.
+
+These seven IP addresses are all connected by the same SSH fingerprint, so another interesting line of inquiry is to look at those neighbors to see if we can deduce anything useful about the Guccifer 2.0 IP address. Using ThreatConnect’s Farsight Security Passive DNS integration, we see one of our IP addresses of interest – 95.130.9[.]198 – has previously hosted the domain fr1.vpn-service[.]us since February 2015. The naming convention is consistent with our working hypothesis that Guccifer 2.0 is leveraging French-based VPN infrastructure to communicate with journalists.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 3
+Next, we turned to our friends at DomainTools to examine the registrant information behind the fr1.vpn-service[.]us domain.  We quickly found more evidence to support our previous research that Guccifer 2.0 maintains Russian origins.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 2004 VPN
+In the figure above, the current domain resolution for vpn-service[.]us is seemingly associated with a New York-based registrant named James Dermount, operating under Security and Host Ltd. We can also see this domain was registered in 2004, and was last updated in March of 2015 with an expiration date of 2019.
+
+When we compare that information with the DomainTools screenshot below of the original 2004 registration, Russia themes continue to emerge. We can see our same New York-based registrant James Dermount, but this time operating under VPN Services Inc. This 2004 record lists the registrant email as sec.service@mail[.]ru, which uses the free Russian webmail service mail.ru and was previously referenced in Russian language forums related to job postings and automobiles. The latter of those forums associates the username “Антон_Харьков” (Anton_Harkov, of the Iron Man franchise) with the email address.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 4
+The name server used in the 2004 vpn-service[.]us registration is listed as xocma[.]net – also different from the 2016 record. The xocma[.]net domain lists Moscow-based Azer Karyagdy and TK Rustelekom LLC as the registrant name and organization. For more information about leveraging name servers for analysis, see our blog post here.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 5
+According to DomainTools Historic Whois, in September 2007 the same registrant also registered vpn-security[.]us with the same phone number and a vpn_support@mail[.]ru email account. Finally, the domain vpn-service[.]com also leads to the Elite VPN website and is hosted on the same IP as vpn-service[.]us but was most recently registered using a privacy protection service.
+
+Getting to Know Russia’s Elite VPN Services
+Browsing to vpn-service[.]us, we find a Russian language webpage for Elite VPN Services. The site mentions that English language support is available via email and ICQ. CORRECTION: The site offers an English language translation when Javascript is enabled in a browser.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 6
+We created an account on the Elite VPN Service and were able to see which VPN nodes are offered from within France. From here, we confirmed the SSH Fingerprint we identified from Guccifer 2.0’s email is unique to Elite VPN Service. All of the Elite VPN Service nodes offered in their web interface and the IP address used by Guccifer 2.0 to communicate via email returned the same SSH fingerprint.
+
+It is important to note that the IP address seen in the Guccifer 2.0 AOL communications – 95.130.15[.]34 – is not listed as an option within Elite VPN Service.  Although it has an identical SSH fingerprint and has the exact same port (1723, PPTP) open as the listed options. This demonstrates the server was cloned from the same server image as all the Elite VPN servers but may be a private or dedicated version of the service.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia IPS
+Based on this information, we can confirm that Guccifer 2.0 is using the Russia-based Elite VPN Service, and is able to leverage IP infrastructure that is not available to other users. We cannot identify whether the 95.130.15[.]34 IP address is used exclusively by the individual(s) behind Guccifer 2.0, and consequently any activity associated with the IP address may not be indicative of Guccifer 2.0 activity. The persona’s continued use of the IP address or additional information on Elite VPN’s service offerings could help us identify the extent to which the address is exclusively used by Russian actors. However, for now, the IP itself merits further investigation.
+
+WHITE PAPER: MATURING A THREAT INTELLIGENCE PROGRAM
+There are no readily available details of known host resolution history for the 95.130.15[.]34 IP; however, we can find incidental evidence that it has been used in previous malicious activity. This activity includes Russian bride scams from October 2014 as well as WordPress bruteforcing in October 2015. Interestingly we also find references to this IP address within a current EDR Coin Cryptocurrency EDRC nodelist.
+
+ThreatConnect Research Guccifer 2.0: All Roads Lead to Russia 8
+Finally, the Guccifer 2.0 AOL IP Address 95.130.15[.]34 can also be found referenced within an online SMS messaging proxy service which contains a series of Russian language SMS messages that date back to August 2015. The specific message mentioning 95.130.15[.]34 appears to be an automatic message that states that “a text message ‘1’ from www.smsc[.]ru has been scheduled from IP 95.130.15[.]34”. If it turns out that the 95.130.15[.]34 VPN IP is exclusively used by the individuals or organization behind Guccifer 2.0, this previous activity may provide investigative leads that could ferret out additional information on those actors.
+
+Conclusion:
+ThreatConnect is the first to identify and detail analysis of Guccifer 2.0’s operational infrastructure. In our original hypothesis, we suspected Guccifer 2.0 might be leveraging French infrastructure to communicate with the global media, and we have validated this finding with the help of the media. As more details continue to surface surrounding Guccifer 2.0, we continue to identify heavy traces of Russian activity, from the specific Russian-based VPN service provider, domain registrants, and registrars as well as various discrete events that have circumstantial marks of Russian origins.
+
+As we pointed out in our previous analysis, we conclude Guccifer 2.0 is an apparition created under a hasty Russian D&D campaign, which has clearly evolved into an Active Measures Campaign. Those who are operating under the Guccifer 2.0 Twitter, WordPress and Email communications are likely made up a cadre of non-technical politruk attempting to establish “Guccifer 2.0” as a static fixture on the world stage along the likes of Manning, Assange or Snowden. Their use of Russian VPN services with French infrastructure may shed light on a method Russian intelligence operatives use — domestic services coupled with foreign infrastructure — to help hide their hand and deter any potential attribution to Russia.
+
+Guccifer 2.0 has subsequently claimed responsibility, both publicly and privately, for the 19,000+ DNC emails posted on Wikileaks on 22 July, and it appears that his persona is not fading in the run up to the election. The execution of Guccifer 2.0’s campaign thus far is rife with errors that have allowed us to attribute this persona to Russian-based infrastructure.
+
+Maintaining a ruse of this nature within both the physical and virtual domains requires believable and verifiable events which do not contradict one another. That is not the case here. Our research into Guccifer 2.0’s infrastructure further solidifies our assessment that the persona is a Russia-controlled platform that can act as a censored hacktivist. Moscow determines what Guccifer 2.0 shares and thus can attempt to selectively impact media coverage, and potentially the election, in a way that ultimately benefits their national objectives.
+
+Update 07/26/2016  4:00pm EDT
+In our initial review of the infrastructure that the Russian persona Guccifer 2.0 used to communicate with journalists, we identified that they had used a Russian VPN service to connect to the France-based IP address 95.130.15[.]34. We assessed that this activity indicated the Russian actors behind Guccifer 2.0 probably use the Russian VPN as part of their security practices on a regular basis. At the time we also hypothesized that the French IP may be exclusive to the actors behind Guccifer 2.0 actors, but could not confirm that as we would need additional information to make such a determination. Thankfully, Joe Uchill with The Hill, who has previously covered Guccifer 2.0 and the Wikileaks DNC data dump, has provided us with redacted information on his communications with Guccifer 2.0 that has raised our confidence in our current assessments and hypotheses.
+
+Check out Joe’s story here.
+
+One email from Guccifer 2.0 leveraged ProtonMail, a free encrypted email client. Analyzing a second, more recent email from Guccifer 2.0 in the ThreatConnect platform, we were able to identify that the actors behind the Guccifer 2.0 persona used a 1&1 mail.com email address to send an encrypted email message from the same French IP (95.130.15[.]34). This communication occurred over a week after the email referenced in our initial review. These findings, which have been shared in ThreatConnect, have implications for two of our previous assessments:
+
+guccifer-update-russia-dnc
+ 
+
+Elite VPN Part of Russian OPSEC
+
+Using the same IP address with a different email address several days later suggests that the actors behind Guccifer 2.0 have operational security (OPSEC) procedures in place to specifically use the Russian Elite VPN service. This raises our confidence in our assessment that using the Elite VPN service is a practice that the actors behind Guccifer 2.0 leverage in an effort to hide their true identities. Their repeated use of the French IP address suggests that the Russian actors also have an OPSEC practice in place to connect to that specific IP address, rather than using infrastructure from other locations.
+
+Exclusivity to Russian Actors
+
+Their continued use of this IP, coupled with the fact that it is not available for other Elite VPN users, strengthens –but does not confirm– the notion that the IP is exclusively used by the Russian actors behind Guccifer 2.0. If connecting to this specific IP is a part of their OPSEC, then the Russian actors probably would have procured VPN services with this IP address for their sole use. By doing so, they could ensure that the services at that IP would not be overburdened by other users.
+
+Conclusion
+
+These actors’ consistent use of the Russian Elite VPN service is just another indicator that Guccifer 2.0 is not who or what he claims to be. There is still not enough evidence to confirm that this French IP is used exclusively by the individuals behind Guccifer 2.0. However, if it can be verified that the 95.130.15[.]34 VPN IP is exclusively used by the individuals or organization behind Guccifer 2.0, there are some significant leads — phone numbers, websites, and previous malicious activity — that may help us identify more information about those actors. Finally, as the actors behind Guccifer 2.0 continue to develop the persona, we would expect to see the their OPSEC practices similarly develop to reduce the amount of visibility we can gain into their operations.
+
+Read the full series of ThreatConnect posts following the DNC Breach: “Rebooting Watergate: Tapping into the Democratic National Committee“, “Shiny Object? Guccifer 2.0 and the DNC Breach“, “What’s in a Name Server?“, “Guccifer 2.0: the Man, the Myth, the Legend?“, “Guccifer 2.0: All Roads Lead to Russia“, “FANCY BEAR Has an (IT) Itch that They Can’t Scratch“, “Does a BEAR Leak in the Woods?“, “Russian Cyber Operations on Steroids“, and “Can a BEAR Fit Down a Rabbit Hole?“.
+
+
