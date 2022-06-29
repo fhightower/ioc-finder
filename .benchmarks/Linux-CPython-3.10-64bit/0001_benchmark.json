@@ -1,6 +1,6 @@
 {
     "machine_info": {
-        "node": "5dbb4cf789b4",
+        "node": "bc21ef2e9ac7",
         "processor": "",
         "machine": "x86_64",
         "python_compiler": "GCC 8.3.0",
@@ -120,9 +120,9 @@
         }
     },
     "commit_info": {
-        "id": "64b70a234220af3e7dfe7d23148f3883f3d8a084",
-        "time": "2022-06-20T09:32:50+00:00",
-        "author_time": "2022-06-20T09:32:50+00:00",
+        "id": "b545fd5c0aa71ac0f94bb7c7a1b383b3551dd487",
+        "time": "2022-06-29T05:19:12-04:00",
+        "author_time": "2022-06-29T05:19:12-04:00",
         "dirty": true,
         "project": "ioc-finder",
         "branch": "241-add-benchmarks"
@@ -130,8 +130,8 @@
     "benchmarks": [
         {
             "group": null,
-            "name": "test_benchmark_short_text",
-            "fullname": "tests/test_benchmarks.py::test_benchmark_short_text",
+            "name": "test_benchmarks",
+            "fullname": "code/tests/benchmarks.py::test_benchmarks",
             "params": null,
             "param": null,
             "extra_info": {},
@@ -144,26 +144,26 @@
                 "warmup": false
             },
             "stats": {
-                "min": 1.98949789989274,
-                "max": 2.2068415000103414,
-                "mean": 2.087699119979516,
-                "stddev": 0.09098150255862757,
+                "min": 34.80788290000055,
+                "max": 38.10692310007289,
+                "mean": 36.06044029998593,
+                "stddev": 1.2580582686340724,
                 "rounds": 5,
-                "median": 2.059439100092277,
-                "iqr": 0.15181707497686148,
-                "q1": 2.017152799962787,
-                "q3": 2.1689698749396484,
+                "median": 35.8286801999202,
+                "iqr": 1.4630297749245074,
+                "q1": 35.21735410002293,
+                "q3": 36.68038387494744,
                 "iqr_outliers": 0,
-                "stddev_outliers": 2,
-                "outliers": "2;0",
-                "ld15iqr": 1.98949789989274,
-                "hd15iqr": 2.2068415000103414,
-                "ops": 0.47899622624251137,
-                "total": 10.438495599897578,
+                "stddev_outliers": 1,
+                "outliers": "1;0",
+                "ld15iqr": 34.80788290000055,
+                "hd15iqr": 38.10692310007289,
+                "ops": 0.027731219909713365,
+                "total": 180.30220149992965,
                 "iterations": 1
             }
         }
     ],
-    "datetime": "2022-06-28T09:48:57.263338",
+    "datetime": "2022-06-29T09:19:47.098426",
     "version": "3.4.1"
 }
