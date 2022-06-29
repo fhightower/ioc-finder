@@ -7,14 +7,11 @@ SHORT_TEXT = '''abc.py bar.com example.com foo.com swissjabber.de https://exampl
 LONG_TEXT = Path(os.path.join(os.path.dirname(__file__), './data/long-article-1.txt')).read_text()
 
 
-def ioc_find_text(text):
-    return find_iocs(text)
+def ioc_find_text():
+    find_iocs(SHORT_TEXT)
+    find_iocs(LONG_TEXT)
 
 
-def test_benchmark_short_text(benchmark):
-    test_fanged_text = benchmark(ioc_find_text, SHORT_TEXT)
-
-
-def test_benchmark_long_text(benchmark):
-    test_fanged_text = benchmark(ioc_find_text, LONG_TEXT)
+def test_benchmarks(benchmark):
+    benchmark(ioc_find_text)
 
