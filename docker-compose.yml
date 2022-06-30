@@ -10,7 +10,6 @@ services:
       - ./:/code
       - ~/.gitconfig:/root/.gitconfig
 
-  # a fully loaded development environment to test new code
   dev:
     <<: *base
     command: ipython
@@ -34,12 +33,22 @@ services:
     <<: *base
     command: bumpversion major
 
-  # run tests
   test:
     <<: *base
     command: pytest
 
-  # run linters
+  test-benchmarks:
+    <<: *base
+    # the `-c "."` prevents pytest from using the config specified in the pyproject.toml (which we don't want to use for benchmarks)
+    command: pytest -c "." --benchmark-storage=.benchmarks/Linux-CPython-3.10-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:10% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
+
+  update-benchmarks:
+    <<: *base
+    command: >
+      bash -c "
+        pytest -c '.' --benchmark-storage=.benchmarks/Linux-CPython-3.10-64bit/ --benchmark-save=benchmark tests/benchmarks.py &&
+        mv .benchmarks/Linux-CPython-3.10-64bit/0002_benchmark.json .benchmarks/Linux-CPython-3.10-64bit/0001_benchmark.json"
+
   lint:
     <<: *base
     entrypoint: ./docker/lint.sh

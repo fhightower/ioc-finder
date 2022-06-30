@@ -31,6 +31,8 @@ jobs:
       run: |
         pytest
         codecov
+        # run benchmark tests
+        pytest -c "." --benchmark-storage=.benchmarks/Linux-CPython-3.10-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:10% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
 
   build_multi_py_versions:
     runs-on: ${{ matrix.os }}
