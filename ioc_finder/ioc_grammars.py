@@ -110,7 +110,7 @@ email_address = alphanum_word_start + Combine(
 scheme_literals = (CaselessLiteral(i) for i in schemes)
 url_scheme = Or(scheme_literals)
 port = Combine(":" + Word(nums))
-url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
+url_authority = Combine(Or([domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
 # although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
 url_path_word = Word(alphanums + "-._~!$&'()*+,;:=%")
@@ -124,6 +124,11 @@ url = alphanum_word_start + Combine(
     + Optional(Combine("/" + Optional(url_path)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
+# todo: try simplifying scheme_less_url to only find scheme-less urls and remove complete_email_address from url_authority
+# scheme_less_url = alphanum_word_start + Combine(
+#     Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
+#     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+# )
 scheme_less_url = alphanum_word_start + Combine(
     Or(
         [
