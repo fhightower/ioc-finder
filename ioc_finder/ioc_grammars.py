@@ -124,9 +124,14 @@ url = alphanum_word_start + Combine(
     + Optional(Combine("/" + Optional(url_path)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
-scheme_less_url = alphanum_word_start + Combine(
-    Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
-    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+scheme_less_url = alphanum_word_start + Or(
+    [
+        url,
+        Combine(
+            Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
+            + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+        ),
+    ]
 )
 
 # this allows for matching file hashes preceeded with an 'x' or 'X'...

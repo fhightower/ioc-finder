@@ -115,14 +115,10 @@ def test_url_parsing():
         "https://example.com",
         "http://example.com",
         "ftp://example.com",
-        'http://"John..Doe"@example.com',
-        "http://test@a.com",
-        "http://bingo@en.wikipedia.com",
-        "http://foo@{}.com".format("a" * 63),
     ]
 
     iocs = find_iocs(" ".join(valid_urls))
-    assert len(iocs["urls"]) == 13
+    assert len(iocs["urls"]) == 9
     # make sure domains are being parsed from the valid urls as well
     assert len(iocs["domains"]) == 7
 
