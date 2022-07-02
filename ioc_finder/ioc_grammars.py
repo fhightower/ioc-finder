@@ -124,23 +124,8 @@ url = alphanum_word_start + Combine(
     + Optional(Combine("/" + Optional(url_path)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
-# todo: try simplifying scheme_less_url to only find scheme-less urls and remove complete_email_address from url_authority
-# scheme_less_url = alphanum_word_start + Combine(
-#     Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
-#     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-# )
 scheme_less_url = alphanum_word_start + Combine(
-    Or(
-        [
-            Combine(
-                url_scheme("url_scheme")
-                + "://"
-                + url_authority("url_authority")
-                + Optional(Combine("/" + Optional(url_path)))("url_path")
-            ),
-            Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path")),
-        ]
-    )
+    Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
 

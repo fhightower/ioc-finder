@@ -7,7 +7,7 @@ from typing import Dict, List, Mapping, Union
 import click
 import ioc_fanger
 from d8s_strings import string_remove_from_end
-from pyparsing import ParseResults
+from pyparsing import ParseResults, ParseException
 
 from ioc_finder import ioc_grammars
 
@@ -77,11 +77,13 @@ def prepare_text(text: str) -> str:
 
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     """."""
+    parsed_url = ioc_grammars.url.searchString(text)
+
     if parse_urls_without_scheme:
-        url_parse_results = ioc_grammars.scheme_less_url.searchString(text)
-    else:
-        url_parse_results = ioc_grammars.url.searchString(text)
-    urls = _listify(url_parse_results)
+        scheme_less_urls = ioc_grammars.scheme_less_url.searchString(text)
+        parsed_url.extend(scheme_less_urls)
+
+    urls = _listify(parsed_url)
 
     clean_urls = []
 
@@ -105,10 +107,18 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     return _deduplicate(clean_urls)
 
 
+def _parse_url(url: str) -> ParseResults:
+    try:
+        parsed_url = ioc_grammars.url.parse_string(url)
+    except ParseException:
+        parsed_url = ioc_grammars.scheme_less_url.parse_string(url)
+    return parsed_url
+
+
 def _remove_url_domain_name(urls: List, text) -> str:
     """Remove the domain name of each url from the text."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url.parseString(url)
+        parsed_url = _parse_url(url)
         text = text.replace(parsed_url.url_authority, " ")
     return text
 
@@ -116,7 +126,7 @@ def _remove_url_domain_name(urls: List, text) -> str:
 def _remove_url_paths(urls: List, text: str) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url.parseString(url)
+        parsed_url = _parse_url(url)
         url_path = urlparse.unquote_plus(parsed_url.url_path)
 
         is_cidr_range = parse_ipv4_cidrs(str(url))
