@@ -77,13 +77,15 @@ def prepare_text(text: str) -> str:
 
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     """."""
-    parsed_url = ioc_grammars.url.searchString(text)
+    parsed_urls = ioc_grammars.url.search_string(text)
 
     if parse_urls_without_scheme:
-        scheme_less_urls = ioc_grammars.scheme_less_url.searchString(text)
-        parsed_url.extend(scheme_less_urls)
+        # remove URLs w/ schemes
+        text = _remove_items(_listify(parsed_urls), text)
+        scheme_less_urls = ioc_grammars.scheme_less_url.search_string(text)
+        parsed_urls.extend(scheme_less_urls)
 
-    urls = _listify(parsed_url)
+    urls = _listify(parsed_urls)
 
     clean_urls = []
 
