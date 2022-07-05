@@ -2,7 +2,7 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Dict, List, Mapping, Union, Callable
+from typing import Callable, Dict, List, Mapping, Union
 
 import click
 import ioc_fanger
@@ -66,8 +66,14 @@ def _remove_items(items: List[str], text: str) -> str:
     return text
 
 
-def _get_items(iocs: IndicatorData, key: str, func_if_none: Callable[[str], List[str]], text: str, **kwargs) -> List[str]:
-    data = iocs.get(key)
+def _get_items(
+    iocs: IndicatorData,
+    key: str,
+    func_if_none: Callable[[str], IndicatorList],
+    text: str,
+    **kwargs,
+) -> IndicatorList:
+    data: IndicatorList = iocs.get(key)  # type: ignore
     if data is None:
         data = func_if_none(text, **kwargs)
     return data
@@ -474,12 +480,12 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["xmpp_addresses"] = parse_xmpp_addresses(text)
 
     if "domains" in included_ioc_types and not parse_domain_name_from_xmpp_address:
-        xmpp_addresses = _get_items(iocs, 'xmpp_addresses', parse_xmpp_addresses, text)
+        xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
         text = _remove_items(xmpp_addresses, text)
     # even if we want to parse domain names from the xmpp_address,
     # we don't want them also being caught as email addresses so we'll remove everything before the `@`
     elif "email_addresses_complete" in included_ioc_types or "email_addresses" in included_ioc_types:
-        xmpp_addresses = _get_items(iocs, 'xmpp_addresses', parse_xmpp_addresses, text)
+        xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
         text = _remove_xmpp_local_part(xmpp_addresses, text)
 
     # complete email addresses
@@ -489,8 +495,8 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["email_addresses"] = parse_email_addresses(text)
 
     if not parse_domain_from_email_address:
-        email_addresses_complete = _get_items(iocs, 'email_addresses_complete', parse_complete_email_addresses, text)
-        email_addresses = _get_items(iocs, 'email_addresses', parse_email_addresses, text)
+        email_addresses_complete = _get_items(iocs, "email_addresses_complete", parse_complete_email_addresses, text)
+        email_addresses = _get_items(iocs, "email_addresses", parse_email_addresses, text)
 
         text = _remove_items(email_addresses_complete, text)
         text = _remove_items(email_addresses, text)
@@ -508,7 +514,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     url_parsing_requires_cidr_removal = "urls" in included_ioc_types and parse_urls_without_scheme
     ip_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
     if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
-        cidr_ranges = _get_items(iocs, 'ipv4_cidrs', parse_ipv4_cidrs, text)
+        cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
         if url_parsing_requires_cidr_removal:
             for cidr in cidr_ranges:
                 if cidr in iocs["urls"]:
@@ -600,10 +606,8 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     if "file_paths" in included_ioc_types:
         # if there are still url paths in the text, remove them so they don't get parsed as file names
         if parse_from_url_path:
-            urls = _get_items(iocs, 'urls', parse_urls, text, parse_urls_without_scheme=parse_urls_without_scheme)
-            text = _remove_url_paths(
-                urls, text
-            )
+            urls = _get_items(iocs, "urls", parse_urls, text, parse_urls_without_scheme=parse_urls_without_scheme)
+            text = _remove_url_paths(urls, text)
 
         iocs["file_paths"] = parse_file_paths(text)
 
