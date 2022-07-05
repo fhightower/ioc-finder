@@ -115,7 +115,7 @@ REGISTRY_DATA = [
         id="registry_14",
     ),
     param(
-        """
+        r"""
         ESET researchers discovered a backdoor linked to malware used by the Stealth Falcon group, an operator of targeted spyware attacks against journalists, activists and dissidents in the Middle East
 
         Stealth Falcon is a threat group, active since 2012, that targets political activists and journalists in the Middle East. It has been tracked by the Citizen Lab (https://citizenlab.ca/about/), a non-profit organization focusing on security and human rights, which published an analysis (https://citizenlab.ca/2016/05/stealth-falcon/) of a particular cyberattack in 2016. In January of 2019, Reuters published an investigative report (https://www.reuters.com/investigates/special-report/usa-spying-raven/) into Project Raven, an initiative allegedly employing former NSA operatives and aiming at the same types of targets as Stealth Falcon.
