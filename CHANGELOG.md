@@ -12,6 +12,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Our reasoning is that, although the userinfo can, technically, be present, it rarely is present
   - If you have concerns about this change or would like to see it added back in (it could be optionally enabled), please raise an issue
 
+## [7.2.1] - 2022.07.05
+
+### Fixed
+
+- Removed duplicative function calls
+
 ## [7.2.0] - 2022.06.20
 
 ### Changed

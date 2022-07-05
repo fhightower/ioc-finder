@@ -8,7 +8,7 @@ with open("requirements.txt") as requirements_file:
 
 setup(
     name="ioc_finder",
-    version="7.2.0",
+    version="7.2.1",
     description="Python package for finding and parsing indicators of compromise from text.",
     entry_points={"console_scripts": ["ioc-finder=ioc_finder.ioc_finder:cli_find_iocs"]},
     long_description=readme,

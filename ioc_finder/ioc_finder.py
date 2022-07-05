@@ -2,7 +2,7 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Dict, List, Mapping, Union
+from typing import Callable, Dict, List, Mapping, Union
 
 import click
 import ioc_fanger
@@ -64,6 +64,19 @@ def _remove_items(items: List[str], text: str) -> str:
     for item in items:
         text = text.replace(item, " ")
     return text
+
+
+def _get_items(
+    iocs: IndicatorData,
+    key: str,
+    func_if_none: Callable[[str], IndicatorList],
+    text: str,
+    **kwargs,
+) -> IndicatorList:
+    data: IndicatorList = iocs.get(key)  # type: ignore
+    if data is None:
+        data = func_if_none(text, **kwargs)
+    return data
 
 
 def prepare_text(text: str) -> str:
@@ -467,11 +480,13 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["xmpp_addresses"] = parse_xmpp_addresses(text)
 
     if "domains" in included_ioc_types and not parse_domain_name_from_xmpp_address:
-        text = _remove_items(iocs.get("xmpp_addresses", parse_xmpp_addresses(text)), text)
+        xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
+        text = _remove_items(xmpp_addresses, text)
     # even if we want to parse domain names from the xmpp_address,
     # we don't want them also being caught as email addresses so we'll remove everything before the `@`
     elif "email_addresses_complete" in included_ioc_types or "email_addresses" in included_ioc_types:
-        text = _remove_xmpp_local_part(iocs.get("xmpp_addresses", parse_xmpp_addresses(text)), text)
+        xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
+        text = _remove_xmpp_local_part(xmpp_addresses, text)
 
     # complete email addresses
     if "email_addresses_complete" in included_ioc_types:
@@ -480,8 +495,11 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["email_addresses"] = parse_email_addresses(text)
 
     if not parse_domain_from_email_address:
-        text = _remove_items(iocs.get("email_addresses_complete", parse_complete_email_addresses(text)), text)
-        text = _remove_items(iocs.get("email_addresses", parse_email_addresses(text)), text)
+        email_addresses_complete = _get_items(iocs, "email_addresses_complete", parse_complete_email_addresses, text)
+        email_addresses = _get_items(iocs, "email_addresses", parse_email_addresses, text)
+
+        text = _remove_items(email_addresses_complete, text)
+        text = _remove_items(email_addresses, text)
 
     if "ipv6s" in included_ioc_types:
         # after parsing the email addresses, we need to remove the
@@ -496,7 +514,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     url_parsing_requires_cidr_removal = "urls" in included_ioc_types and parse_urls_without_scheme
     ip_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
     if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
-        cidr_ranges = iocs.get("ipv4_cidrs", parse_ipv4_cidrs(text))
+        cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
         if url_parsing_requires_cidr_removal:
             for cidr in cidr_ranges:
                 if cidr in iocs["urls"]:
@@ -510,14 +528,16 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
             iocs["imphashes"] = parse_imphashes_(text)
     if "md5s" in included_ioc_types:
         # remove the imphashes so they are not also parsed as md5s
-        text = _remove_items(iocs.get("imphashes", parse_imphashes_(text)), text)
+        imphashes = _get_items(iocs, "imphashes", parse_imphashes_, text)
+        text = _remove_items(imphashes, text)
 
     if "authentihashes" in included_ioc_types:
         if parse_authentihashes:
             iocs["authentihashes"] = parse_authentihashes_(text)
     if "sha256s" in included_ioc_types:
         # remove the authentihashes so they are not also parsed as sha256s
-        text = _remove_items(iocs.get("authentihashes", parse_authentihashes_(text)), text)
+        authentihashes = _get_items(iocs, "authentihashes", parse_authentihashes_, text)
+        text = _remove_items(authentihashes, text)
 
     # domains
     if "domains" in included_ioc_types:
@@ -586,9 +606,8 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     if "file_paths" in included_ioc_types:
         # if there are still url paths in the text, remove them so they don't get parsed as file names
         if parse_from_url_path:
-            text = _remove_url_paths(
-                iocs.get("urls", parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)), text
-            )
+            urls = _get_items(iocs, "urls", parse_urls, text, parse_urls_without_scheme=parse_urls_without_scheme)
+            text = _remove_url_paths(urls, text)
 
         iocs["file_paths"] = parse_file_paths(text)
 
