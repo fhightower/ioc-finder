@@ -1,6 +1,6 @@
 {
     "machine_info": {
-        "node": "0fcf5f590688",
+        "node": "aa255b3a217e",
         "processor": "",
         "machine": "x86_64",
         "python_compiler": "GCC 8.3.0",
@@ -120,12 +120,12 @@
         }
     },
     "commit_info": {
-        "id": "e68302453d9ce38d86bcf786f036cd45f2956992",
-        "time": "2022-07-05T05:12:25-04:00",
-        "author_time": "2022-07-05T05:12:25-04:00",
+        "id": "157494888258df6c4019f1243d04694bd568a0d8",
+        "time": "2022-07-06T05:28:38-04:00",
+        "author_time": "2022-07-06T05:28:38-04:00",
         "dirty": true,
         "project": "ioc-finder",
-        "branch": "fix-get-function-calls"
+        "branch": "237-scheme-less-url-handling"
     },
     "benchmarks": [
         {
@@ -144,26 +144,61 @@
                 "warmup": false
             },
             "stats": {
-                "min": 29.195276199956425,
-                "max": 53.16727110010106,
-                "mean": 35.40547494001221,
-                "stddev": 10.041223735691608,
+                "min": 29.07806149998214,
+                "max": 35.390369699918665,
+                "mean": 30.923534719995224,
+                "stddev": 2.533010419217281,
                 "rounds": 5,
-                "median": 30.9054094000021,
-                "iqr": 8.152187225059606,
-                "q1": 30.12900654997793,
-                "q3": 38.281193775037536,
+                "median": 30.096494700061157,
+                "iqr": 1.6961421250307467,
+                "q1": 29.730263224977534,
+                "q3": 31.42640535000828,
                 "iqr_outliers": 1,
                 "stddev_outliers": 1,
                 "outliers": "1;1",
-                "ld15iqr": 29.195276199956425,
-                "hd15iqr": 53.16727110010106,
-                "ops": 0.02824421933879741,
-                "total": 177.02737470006105,
+                "ld15iqr": 29.07806149998214,
+                "hd15iqr": 35.390369699918665,
+                "ops": 0.03233782971625808,
+                "total": 154.61767359997611,
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_parse_urls",
+            "fullname": "code/tests/benchmarks.py::test_parse_urls",
+            "params": null,
+            "param": null,
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 6.333365599974059,
+                "max": 22.900106100016274,
+                "mean": 11.026737320004031,
+                "stddev": 6.790754912679911,
+                "rounds": 5,
+                "median": 8.23679820005782,
+                "iqr": 6.271664050000254,
+                "q1": 7.142133199988166,
+                "q3": 13.41379724998842,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 6.333365599974059,
+                "hd15iqr": 22.900106100016274,
+                "ops": 0.09068865712306952,
+                "total": 55.133686600020155,
                 "iterations": 1
             }
         }
     ],
-    "datetime": "2022-07-05T09:23:53.151506",
+    "datetime": "2022-07-06T09:32:33.122981",
     "version": "3.4.1"
 }
