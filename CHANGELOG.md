@@ -9,7 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 
 - To speed URL parsing, we no longer parse URLs with `userinfo "@"` in the authority (see [URL syntax guide for more details](https://en.wikipedia.org/wiki/URL#Syntax))
-  - Our reasoning is that, although the userinfo can, technically, be present, it rarely is present
+  - Our reasoning is that userinfo is rarely present
   - If you have concerns about this change or would like to see it added back in (it could be optionally enabled), please raise an issue
 
 ## [7.2.1] - 2022.07.05
