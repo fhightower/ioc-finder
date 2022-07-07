@@ -109,7 +109,7 @@ email_address = alphanum_word_start + Combine(
     + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
 )
 
-url_scheme = one_of(schemes)
+url_scheme = one_of(schemes, caseless=True)
 port = Word(":", nums, min=2)
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
 # although the ":" character is not valid in url paths,
