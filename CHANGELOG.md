@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [7.2.2] - 2022.07.08
+
+### Fixed
+
+- Poorly designed grammars which were SIGNIFICANTLY slowing down this project ([#250](https://github.com/fhightower/ioc-finder/pull/250))
+  - **🎉 This update improves mean run-times by [≈70%](https://github.com/fhightower/ioc-finder/pull/253/files#diff-8e67b346e4b32f0cd637dbd271c16ab649c05fdf6aa7fe443cc85c0d8ca6ad07R149)!**
+  - Thanks to @ptmcg for his contribution!
+
 ## [7.2.1] - 2022.07.05
 
 ### Fixed
