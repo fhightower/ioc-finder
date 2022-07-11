@@ -103,7 +103,7 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
         # remove `"` and `'` characters from the end of a URL
         url = url.rstrip('"').rstrip("'")
 
-        # remove a final ')' if there is a '(' in the url
+        # remove a final ')' if there is not a '(' in the url
         if url.endswith(")") and "(" not in url:
             url = url.rstrip(")")
 

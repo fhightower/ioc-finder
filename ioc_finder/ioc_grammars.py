@@ -112,9 +112,12 @@ email_address = alphanum_word_start + Combine(
 url_scheme = one_of(schemes, caseless=True)
 port = Word(":", nums, min=2)
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
-# although the ":" character is not valid in url paths,
+# The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt...
+# (of particular interest is "Appendix A.  Collected ABNF for URI")
+
+# Although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
-url_path_word = Word(alphanums + "-._~!$&'()*+,;:=%")
+url_path_word = Word(alphanums + "-._~!$&'()*+,;=:%")
 url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")

@@ -10,4 +10,36 @@ URL_DATA = [
         {},
         id="URL and domains parsed",
     ),
+    param(
+        "Foo https://citizenlab.ca/about/), bar",
+        {
+            "urls": ["https://citizenlab.ca/about/"],
+        },
+        {"parse_domain_from_url": False},
+        id="URL boundary w/ ) handled properly",
+    ),
+    param(
+        "DownloadString('https://example[.]com/rdp.ps1');g $I DownloadString(\"https://example[.]com/rdp.ps2\");g $I",
+        {
+            "urls": ["https://example.com/rdp.ps1", "https://example.com/rdp.ps2"],
+        },
+        {"parse_domain_from_url": False},
+        id="URL boundary w/ single or double quotes handled properly",
+    ),
+    param(
+        "url,https://example.com/g/foo,Malicious Google Groups discussion",
+        {
+            "urls": ["https://example.com/g/foo"],
+        },
+        {"parse_domain_from_url": False},
+        id="URL boundary w/ comma handled properly",
+    ),
+    param(
+        "https://example.com/g//foo",
+        {
+            "urls": ["https://example.com/g//foo"],
+        },
+        {"parse_domain_from_url": False},
+        id="Consecutive slashes handled properly",
+    ),
 ]
