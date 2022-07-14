@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [7.2.3] - 2022.07.14
+
+### Fixed
+
+- Update required version of [ioc-fanger](https://github.com/ioc-fang/ioc-fanger) which fixes issues with non-http(s) URL schemes ([#255](https://github.com/fhightower/ioc-finder/issues/255))
+
 ## [7.2.2] - 2022.07.08
 
 ### Fixed
