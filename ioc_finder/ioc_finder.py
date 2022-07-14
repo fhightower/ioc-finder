@@ -103,9 +103,9 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
         # remove `"` and `'` characters from the end of a URL
         url = url.rstrip('"').rstrip("'")
 
-        # remove a final ')' if there is not a '(' in the url
-        if url.endswith(")") and "(" not in url:
-            url = url.rstrip(")")
+        # if there is a ")" in the URL and not a "(", remove everything including and after the ")"
+        if ")" in url and "(" not in url:
+            url = url.split(")")[0]
 
         # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
         url = string_remove_from_end(url, "'/>")
