@@ -284,9 +284,7 @@ google_adsense_publisher_id = (
     alphanum_word_start
     # we use `Or([Literal("pub-")...` instead of something like `CaselessLiteral("pub-")` b/c...
     # we only want to parse "pub" when it is all upper or lowercased (not "pUb" or other, similar variations)
-    + Combine(one_of("pub- PUB-") + Word(nums, exact=16)).set_parse_action(
-        pyparsing_common.downcase_tokens
-    )
+    + Combine(one_of("pub- PUB-") + Word(nums, exact=16)).set_parse_action(pyparsing_common.downcase_tokens)
     + alphanum_word_end
 )
 
@@ -327,9 +325,7 @@ xmpp_address = alphanum_word_start + Combine(
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
-mac_address_16_bit_section = Combine(
-    (Word(hexnums, exact=2) + one_of("- :")) * 5 + Word(hexnums, exact=2)
-)
+mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + one_of("- :")) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + ".") * 2 + Word(hexnums, exact=4))
 mac_address_word_start = WordStart(wordChars=alphanums + ":-.")
@@ -417,7 +413,6 @@ enterprise_attack_techniques_grammar = (
     + Combine(
         one_of(enterprise_attack_techniques, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
-
     )
     + alphanum_word_end
 )
