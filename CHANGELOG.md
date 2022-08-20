@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Fixed
 
-- URL boundary to better respect the conventions of human language ([#130](https://github.com/fhightower/ioc-finder/issues/130))
+- URL boundary to better respect the conventions of human language regarding single quotation marks and parentheses ([#130](https://github.com/fhightower/ioc-finder/issues/130))
 
 ## [7.2.2] - 2022.07.08
 
