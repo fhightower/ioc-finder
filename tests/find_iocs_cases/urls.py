@@ -27,14 +27,6 @@ URL_DATA = [
         id="URL boundary w/ single or double quotes handled properly",
     ),
     param(
-        "url,https://example.com/g/foo,Malicious Google Groups discussion",
-        {
-            "urls": ["https://example.com/g/foo"],
-        },
-        {"parse_domain_from_url": False},
-        id="URL boundary w/ comma handled properly",
-    ),
-    param(
         "https://example.com/g//foo",
         {
             "urls": ["https://example.com/g//foo"],
