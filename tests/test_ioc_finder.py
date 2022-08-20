@@ -192,11 +192,13 @@ def test_ipv4_cidr_parsing():
 def test_registry_key_parsing():
     s = r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
     iocs = find_iocs(s)
-    assert sorted([
-        r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows",
-        r"HKLM\Software\Microsoft\Windows",
-        r"HKCC\Software\Microsoft\Windows",
-    ]) == sorted(iocs["registry_key_paths"])
+    assert sorted(
+        [
+            r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows",
+            r"HKLM\Software\Microsoft\Windows",
+            r"HKCC\Software\Microsoft\Windows",
+        ]
+    ) == sorted(iocs["registry_key_paths"])
 
 
 def test_adsense_publisher_id_parsing():

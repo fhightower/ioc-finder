@@ -112,9 +112,12 @@ email_address = alphanum_word_start + Combine(
 url_scheme = one_of(schemes, caseless=True)
 port = Word(":", nums, min=2)
 url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
-# although the ":" character is not valid in url paths,
+# The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt...
+# (of particular interest is "Appendix A.  Collected ABNF for URI")
+
+# Although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
-url_path_word = Word(alphanums + "-._~!$&'()*+,;:=%")
+url_path_word = Word(alphanums + "-._~!$&'()*+,;=:%")
 url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")
@@ -281,9 +284,7 @@ google_adsense_publisher_id = (
     alphanum_word_start
     # we use `Or([Literal("pub-")...` instead of something like `CaselessLiteral("pub-")` b/c...
     # we only want to parse "pub" when it is all upper or lowercased (not "pUb" or other, similar variations)
-    + Combine(one_of("pub- PUB-") + Word(nums, exact=16)).set_parse_action(
-        pyparsing_common.downcase_tokens
-    )
+    + Combine(one_of("pub- PUB-") + Word(nums, exact=16)).set_parse_action(pyparsing_common.downcase_tokens)
     + alphanum_word_end
 )
 
@@ -324,9 +325,7 @@ xmpp_address = alphanum_word_start + Combine(
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
-mac_address_16_bit_section = Combine(
-    (Word(hexnums, exact=2) + one_of("- :")) * 5 + Word(hexnums, exact=2)
-)
+mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + one_of("- :")) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + ".") * 2 + Word(hexnums, exact=4))
 mac_address_word_start = WordStart(wordChars=alphanums + ":-.")
@@ -414,7 +413,6 @@ enterprise_attack_techniques_grammar = (
     + Combine(
         one_of(enterprise_attack_techniques, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
-
     )
     + alphanum_word_end
 )

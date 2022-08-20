@@ -2,7 +2,7 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Callable, Dict, List, Mapping, Union
+from typing import Callable, Dict, Iterable, List, Mapping, Union
 
 import click
 import ioc_fanger
@@ -49,7 +49,7 @@ DEFAULT_IOC_TYPES = [
 ]
 
 
-def _deduplicate(indicator_list: List) -> List:
+def _deduplicate(indicator_list: Iterable) -> List:
     """Deduplicate the list of observables."""
     return list(set(indicator_list))
 
@@ -88,6 +88,22 @@ def prepare_text(text: str) -> str:
     return text
 
 
+def _clean_url(url: str) -> str:
+    """Clean the given URL, removing common, unwanted characters which are usually not part of the URL."""
+    # if there is a ")" in the URL and not a "(", remove everything including and after the ")"
+    if ")" in url and "(" not in url:
+        url = url.split(")")[0]
+
+    # remove `"` and `'` characters from the end of a URL
+    url = url.rstrip('"').rstrip("'")
+
+    # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
+    url = string_remove_from_end(url, "'/>")
+    url = string_remove_from_end(url, '"/>')
+
+    return url
+
+
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     """."""
     if parse_urls_without_scheme:
@@ -96,24 +112,8 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
         url_parse_results = ioc_grammars.url.searchString(text)
     urls = _listify(url_parse_results)
 
-    clean_urls = []
+    clean_urls = map(_clean_url, urls)
 
-    # clean the url
-    for url in urls:
-        # remove `"` and `'` characters from the end of a URL
-        url = url.rstrip('"').rstrip("'")
-
-        # remove a final ')' if there is a '(' in the url
-        if url.endswith(")") and "(" not in url:
-            url = url.rstrip(")")
-
-        # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
-        url = string_remove_from_end(url, "'/>")
-        url = string_remove_from_end(url, '"/>')
-
-        clean_urls.append(url)
-
-    # return the cleaned urls...
     # I deduplicate them again because the structure of the URL may have changed when it was cleaned
     return _deduplicate(clean_urls)
 
