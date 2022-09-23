@@ -52,3 +52,8 @@ services:
   lint:
     <<: *base
     entrypoint: ./docker/lint.sh
+    environment:
+      # this is used in ./docker/lint.sh to determine whether or not the lint step should fail if there files were...
+      # changed by black/isort. You can change this value to "ci" to test how the lint step will run in...
+      # the ci pipeline.
+      CONTEXT: "local"
