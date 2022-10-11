@@ -1,4 +1,4 @@
 click>=7.1.2,<9.0
-ioc-fanger>=4.0,<4.3
+ioc-fanger>=4.2.1,<4.3
 pyparsing>=3.0,<=3.0.9
 d8s-strings>=0.5.0,<1.0
