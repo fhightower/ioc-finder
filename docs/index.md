@@ -98,14 +98,6 @@ example(.)com => example.com
 me AT example(.)com => me@example.com
 ```
 
-### Similar Projects
-
-There are a number of projects available to find Indicators of Compromise. Your mileage may vary with them. If there are things that another package can do that you would like to see in this package, [let me know][issues_link]). Here are a few other ones:
-
-- [https://github.com/InQuest/python-iocextract](https://github.com/InQuest/python-iocextract)
-- [https://github.com/sroberts/cacador](https://github.com/sroberts/cacador)
-- [https://github.com/armbues/ioc_parser](https://github.com/armbues/ioc_parser)
-
 ## Credits
 
 This project uses the [ioc_fanger](https://github.com/ioc-fang/ioc_fanger) package to make sure that all indicators in the text are properly [fanged](https://ioc-fanger.hightower.space/).
