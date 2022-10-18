@@ -51,7 +51,7 @@ This terminal uses [Pyodide](https://pyodide.org/en/stable/index.html) to provid
     - URLs (URLs with and without schemes)
     - User agents (*beta*)
     - XMPP addresses (basically, this captures email addresses whose domain names contain "jabber" or "xmpp")
-    - MITRE ATT&CK data (see [more info](https://attack.mitre.org/)):
+    - MITRE ATT&CK data (see [more info](https://attack.mitre.org/))\*:
         - Pre-attack tactics and techniques (and [sub-techniques](https://medium.com/mitre-attack/attack-subs-what-you-need-to-know-99bce414ae0b))
         - Enterprise mitigations, tactics, and techniques (and [sub-techniques](https://medium.com/mitre-attack/    attack-subs-what-you-need-to-know-99bce414ae0b))
         - Mobile mitigations, tactics, and techniques (and [sub-techniques](https://medium.com/mitre-attack/    attack-subs-what-you-need-to-know-99bce414ae0b))
@@ -105,3 +105,5 @@ This project uses the [ioc_fanger](https://github.com/ioc-fang/ioc_fanger) packa
 This package was created with [Cookiecutter](https://github.com/audreyr/cookiecutter) and Floyd Hightower's [python-project-template](https://github.com/fhightower-templates/python-project-template) project template.
 
 [issues_link]: https://github.com/fhightower/ioc-finder/issues
+
+\* -  MITRE data is © 2021 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation. (View the MITRE data's [full license](https://github.com/mitre/cti/blob/master/LICENSE.txt))
