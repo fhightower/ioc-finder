@@ -106,4 +106,4 @@ This package was created with [Cookiecutter](https://github.com/audreyr/cookiecu
 
 [issues_link]: https://github.com/fhightower/ioc-finder/issues
 
-\* -  MITRE data is © 2021 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation. (View the MITRE data's [full license](https://github.com/mitre/cti/blob/master/LICENSE.txt))
+\* MITRE data is © 2021 The MITRE Corporation. This work is reproduced and distributed with the permission of The MITRE Corporation. (View the MITRE data's [full license](https://github.com/mitre/cti/blob/master/LICENSE.txt))
