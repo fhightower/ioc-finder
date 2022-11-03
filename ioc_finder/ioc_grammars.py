@@ -111,10 +111,9 @@ email_address = alphanum_word_start + Combine(
 
 url_scheme = one_of(schemes, caseless=True)
 port = Word(":", nums, min=2)
-url_authority = Combine(Or([complete_email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
+url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
 # The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt...
 # (of particular interest is "Appendix A.  Collected ABNF for URI")
-
 # Although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
 url_path_word = Word(alphanums + "-._~!$&'()*+,;=:%")
@@ -128,19 +127,14 @@ url = alphanum_word_start + Combine(
     + Optional(Combine("/" + Optional(url_path)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
-scheme_less_url = alphanum_word_start + Combine(
-    Or(
-        [
-            Combine(
-                url_scheme("url_scheme")
-                + "://"
-                + url_authority("url_authority")
-                + Optional(Combine("/" + Optional(url_path)))("url_path")
-            ),
-            Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path")),
-        ]
-    )
-    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+scheme_less_url = alphanum_word_start + Or(
+    [
+        url,
+        Combine(
+            Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
+            + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+        ),
+    ]
 )
 
 # this allows for matching file hashes preceeded with an 'x' or 'X'...

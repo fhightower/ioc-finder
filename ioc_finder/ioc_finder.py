@@ -454,7 +454,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_authentihashes: bool = True,
     included_ioc_types: List[str] = DEFAULT_IOC_TYPES,
 ) -> IndicatorData:
-    """Find observables in the given text."""
+    """Find observables (a.k.a. indicators of compromise) in the given text."""
     iocs = {}
 
     text = prepare_text(text)

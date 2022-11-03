@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [7.3.0] - UNRELEASED
+
+### Changed
+
+- To speed URL parsing, we no longer parse URLs with `userinfo "@"` in the authority (see [URL syntax guide for more details](https://en.wikipedia.org/wiki/URL#Syntax))
+  - Our reasoning is that userinfo is rarely present
+  - If you have concerns about this change or would like to see it added back in (it could be optionally enabled), please raise an issue
+
 ## [7.2.4] - 2022.08.25
 
 ### Fixed
