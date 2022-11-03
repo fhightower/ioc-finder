@@ -21,4 +21,3 @@ def test_benchmarks(benchmark):
 
 def test_parse_urls(benchmark):
     benchmark(_run, parse_urls)
-
