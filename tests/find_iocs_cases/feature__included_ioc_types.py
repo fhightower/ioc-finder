@@ -28,7 +28,7 @@ IOC_EXAMPLES = {
     ],  # I don't like that the components of an ipv6 can be parsed as an ssdeep... I've ticketed this here: https://github.com/fhightower/ioc-finder/issues/228
     "asns": ["ASN123"],
     "cves": ["CVE-2022-1234"],
-    "registry_key_paths": ["HKEY_LOCAL_MACHINE\Software\Microsoft\Windows"],
+    "registry_key_paths": [r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows"],
     "google_adsense_publisher_ids": ["pub-1234567891234567"],
     "google_analytics_tracker_ids": ["UA-000000-1"],
     "bitcoin_addresses": ["18ddf28a71089acdbab5038f58044c0a", "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy"],

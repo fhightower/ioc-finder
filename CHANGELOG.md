@@ -12,6 +12,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - Our reasoning is that userinfo is rarely present
   - If you have concerns about this change or would like to see it added back in (it could be optionally enabled), please raise an issue
 
+## [7.2.4] - 2022.08.25
+
+### Fixed
+
+- URL boundary to better respect the conventions of human language regarding quotation marks and parentheses ([#130](https://github.com/fhightower/ioc-finder/issues/130))
+
+## [7.2.3] - 2022.07.14
+
+### Fixed
+
+- Update required version of [ioc-fanger](https://github.com/ioc-fang/ioc-fanger) which fixes issues with non-http(s) URL schemes ([#255](https://github.com/fhightower/ioc-finder/issues/255))
+
+## [7.2.2] - 2022.07.08
+
+### Fixed
+
+- Poorly designed grammars which were SIGNIFICANTLY slowing down this project ([#250](https://github.com/fhightower/ioc-finder/pull/250))
+  - **🎉 This update improves mean run-times by [≈70%](https://github.com/fhightower/ioc-finder/pull/253/files#diff-8e67b346e4b32f0cd637dbd271c16ab649c05fdf6aa7fe443cc85c0d8ca6ad07R149)!**
+  - Thanks to @ptmcg for his contribution!
+
 ## [7.2.1] - 2022.07.05
 
 ### Fixed

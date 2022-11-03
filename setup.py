@@ -8,7 +8,7 @@ with open("requirements.txt") as requirements_file:
 
 setup(
     name="ioc_finder",
-    version="7.2.1",
+    version="7.2.4",
     description="Python package for finding and parsing indicators of compromise from text.",
     entry_points={"console_scripts": ["ioc-finder=ioc_finder.ioc_finder:cli_find_iocs"]},
     long_description=readme,
@@ -17,13 +17,11 @@ setup(
     author_email="",
     url="https://github.com/fhightower/ioc-finder",
     project_urls={
-        "Documentation": "https://github.com/fhightower/ioc-finder#ioc-finder",
-        "Say Thanks!": "https://saythanks.io/to/floyd.hightower27%40gmail.com",
-        "Source": "https://github.com/fhightower/ioc-finder",
-        "Tracker": "https://github.com/fhightower/ioc-finder/issues",
-        "PyPi": "https://pypi.org/project/ioc-finder/",
-        "CI": "https://github.com/fhightower/ioc-finder/actions",
         "Changelog": "https://github.com/fhightower/ioc-finder/blob/main/CHANGELOG.md",
+        "Documentation": "https://hightower.space/ioc-finder/",
+        "Source": "https://github.com/fhightower/ioc-finder",
+        "Issues": "https://github.com/fhightower/ioc-finder/issues",
+        "Sponsor": "https://github.com/sponsors/fhightower",
     },
     packages=find_packages(exclude=("tests", "docs")),
     include_package_data=True,

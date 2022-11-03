@@ -3,10 +3,12 @@ import re
 
 from pyparsing import (
     CaselessLiteral,
+    Char,
     Combine,
     Empty,
     FollowedBy,
     Literal,
+    MatchFirst,
     NotAny,
     OneOrMore,
     Optional,
@@ -20,6 +22,7 @@ from pyparsing import (
     alphas,
     hexnums,
     nums,
+    one_of,
     printables,
     pyparsing_common,
     replace_with,
@@ -43,8 +46,7 @@ alphanum_word_end = WordEnd(wordChars=alphanums)
 
 # the label definition ignores the fact that labels should not end in an hyphen
 label = Word(initChars=alphanums + "_", bodyChars=alphanums + "-_", max=63)
-tld_literals = (CaselessLiteral(i) for i in tlds)
-domain_tld = Or(tld_literals)
+domain_tld = one_of(tlds, caseless=True)
 domain_name = (
     alphanum_word_start
     + Combine(
@@ -85,13 +87,13 @@ ipv6_address = (
     + ipv6_word_end
 )
 
-complete_email_comment = Combine("(" + Word(alphanums) + ")")
+complete_email_comment = Regex(r"\([a-zA-Z0-9]+\)")
 # the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>>
 # are possible in a quoted complete_email_local_part
 # (and the double-quotes and backslash should be preceded by a backslash)
 complete_email_local_part = Combine(
     Optional(complete_email_comment)("email_address_start_comment")
-    + OneOrMore(Or([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), CaselessLiteral("\\@")]))
+    + OneOrMore(MatchFirst([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), CaselessLiteral("\\@")]))
     + Optional(complete_email_comment)("email_address_end_comment")
 )
 complete_email_address = Combine(
@@ -107,14 +109,15 @@ email_address = alphanum_word_start + Combine(
     + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
 )
 
-scheme_literals = (CaselessLiteral(i) for i in schemes)
-url_scheme = Or(scheme_literals)
-port = Combine(":" + Word(nums))
+url_scheme = one_of(schemes, caseless=True)
+port = Word(":", nums, min=2)
 url_authority = Combine(Or([domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
-# although the ":" character is not valid in url paths,
+# The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt...
+# (of particular interest is "Appendix A.  Collected ABNF for URI")
+# Although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
-url_path_word = Word(alphanums + "-._~!$&'()*+,;:=%")
-url_path = Combine(OneOrMore(Or([url_path_word, Literal("/")])))
+url_path_word = Word(alphanums + "-._~!$&'()*+,;=:%")
+url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")
 url = alphanum_word_start + Combine(
@@ -218,9 +221,7 @@ root_key_list = [
     "HKEY_PERFORMANCE_DATA",
     "HKEY_DYN_DATA",
 ]
-root_key_literals = (Literal(i) for i in root_key_list)
-
-root_key = Or(root_key_literals)
+root_key = one_of(root_key_list)
 
 
 def hasMultipleConsecutiveSpaces(string):
@@ -277,9 +278,7 @@ google_adsense_publisher_id = (
     alphanum_word_start
     # we use `Or([Literal("pub-")...` instead of something like `CaselessLiteral("pub-")` b/c...
     # we only want to parse "pub" when it is all upper or lowercased (not "pUb" or other, similar variations)
-    + Combine(Or([Literal("pub-"), Literal("PUB-")]) + Word(nums, exact=16)).set_parse_action(
-        pyparsing_common.downcase_tokens
-    )
+    + Combine(one_of("pub- PUB-") + Word(nums, exact=16)).set_parse_action(pyparsing_common.downcase_tokens)
     + alphanum_word_end
 )
 
@@ -289,7 +288,7 @@ google_analytics_tracker_id = (
     + Combine(
         # we use `Or([Literal("ua-")...` instead of something like `CaselessLiteral("ua-")` b/c...
         # we only want to parse "ua" when it is all upper or lowercased (not "uA" or other, similar variations)
-        Or([Literal("ua-"), Literal("UA-")])
+        one_of("ua- UA-")
         + Word(nums, min=6)("account_number")
         + "-"
         + Word(nums)("property_number")
@@ -301,11 +300,11 @@ google_analytics_tracker_id = (
 # (and https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#segwit-address-format for Bech32 addresses)
 bitcoin_address = (
     alphanum_word_start
-    + Or(
+    + MatchFirst(
         [
-            Combine("1" + Word(alphanums, min=25, max=34)),
-            Combine("3" + Word(alphanums, min=25, max=34)),
-            Combine("bc1" + Word(alphanums, min=11, max=71)),
+            Regex(r"1[a-zA-Z0-9]{25,34}"),
+            Regex(r"3[a-zA-Z0-9]{25,34}"),
+            Regex(r"bc1[a-zA-Z0-9]{11,71}"),
         ]
     )
     + alphanum_word_end
@@ -320,15 +319,13 @@ xmpp_address = alphanum_word_start + Combine(
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
-mac_address_16_bit_section = Combine(
-    (Word(hexnums, exact=2) + Or([Literal("-"), Literal(":")])) * 5 + Word(hexnums, exact=2)
-)
+mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + one_of("- :")) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + ".") * 2 + Word(hexnums, exact=4))
 mac_address_word_start = WordStart(wordChars=alphanums + ":-.")
 mac_address_word_end = WordEnd(wordChars=alphanums + ":-.")
 mac_address = (
-    mac_address_word_start + Or([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_end
+    mac_address_word_start + MatchFirst([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_end
 )
 
 # the structure of an ssdeep hash is: chunksize:chunk:double_chunk
@@ -355,7 +352,7 @@ user_agent = Combine(
 # https://github.com/fhightower/ioc-finder/issues/13
 file_ending = Word(alphas, max=5)
 windows_file_path = alphanum_word_start + Combine(
-    Word(alphanums, exact=1) + ":" + Word(printables.replace(".", "") + " ") + "." + file_ending
+    Char(alphanums) + ":" + Word(printables + " ", exclude_chars=".") + "." + file_ending
 )
 
 # we need to add '/' and '~' to the alphanum_word_start so that the grammar will match words starting with '/' and '~'
@@ -367,7 +364,7 @@ unix_file_path_wordstart.wordChars.add("/")
 unix_file_path_wordstart.wordChars.add("~")
 
 unix_file_path = unix_file_path_wordstart + Combine(
-    Or([Literal("~"), Literal("/")]) + Word(printables.replace(".", "") + " ") + "." + file_ending
+    one_of("~ /") + Word(printables + " ", exclude_chars=".") + "." + file_ending
 ).addCondition(lambda tokens: "//" not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
 
@@ -391,48 +388,47 @@ pre_attack_tactics_grammar = (
 pre_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in pre_attack_techniques]).set_parse_action(pyparsing_common.upcase_tokens)
+        one_of(pre_attack_techniques, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
 )
 
 enterprise_attack_mitigations_grammar = (
-    alphanum_word_start + Or([CaselessLiteral(i) for i in enterprise_attack_mitigations]) + alphanum_word_end
+    alphanum_word_start + one_of(enterprise_attack_mitigations, caseless=True) + alphanum_word_end
 )
 enterprise_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in enterprise_attack_tactics]).set_parse_action(pyparsing_common.upcase_tokens)
+    + one_of(enterprise_attack_tactics, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
 enterprise_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in enterprise_attack_techniques]).set_parse_action(pyparsing_common.upcase_tokens)
+        one_of(enterprise_attack_techniques, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
 )
 
 mobile_attack_mitigations_grammar = (
-    alphanum_word_start + Or([CaselessLiteral(i) for i in mobile_attack_mitigations]) + alphanum_word_end
+    alphanum_word_start + one_of(mobile_attack_mitigations, caseless=True) + alphanum_word_end
 )
 mobile_attack_tactics_grammar = (
     alphanum_word_start
-    + Or([CaselessLiteral(i) for i in mobile_attack_tactics]).set_parse_action(pyparsing_common.upcase_tokens)
+    + one_of(mobile_attack_tactics, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )
 mobile_attack_techniques_grammar = (
     alphanum_word_start
     + Combine(
-        Or([CaselessLiteral(i) for i in mobile_attack_techniques]).set_parse_action(pyparsing_common.upcase_tokens)
+        one_of(mobile_attack_techniques, caseless=True).set_parse_action(pyparsing_common.upcase_tokens)
         + Optional(attack_sub_technique)
     )
     + alphanum_word_end
 )
 
-tlp_colors_list = [CaselessLiteral("red"), CaselessLiteral("amber"), CaselessLiteral("green"), CaselessLiteral("white")]
-tlp_colors = Or(tlp_colors_list)
+tlp_colors = one_of("red amber green white", caseless=True)
 
 tlp_label = Combine(
     CaselessLiteral("tlp")
