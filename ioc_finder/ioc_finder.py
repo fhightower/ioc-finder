@@ -16,6 +16,9 @@ IndicatorDict = Dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
 IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
 
+# todo: do more analysis to find what value makes sense here...
+TEXT_SPLIT_LENGTH_MINIMUM = 100000
+
 DEFAULT_IOC_TYPES = [
     "asns",
     "attack_mitigations",
@@ -441,6 +444,13 @@ def cli_find_iocs(
     print(ioc_string)
 
 
+def _process_text(text: str, split_long_texts: bool = True) -> Iterator[str]:
+    if split_long_texts and len(text) >= TEXT_SPLIT_LENGTH_MINIMUM and "\n" in text:
+        yield from text.split("\n")
+    else:
+        yield text
+
+
 def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     text: str,
     *,
@@ -453,13 +463,16 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
     included_ioc_types: List[str] = DEFAULT_IOC_TYPES,
+    split_long_texts: bool = True,
 ) -> IndicatorData:
     """Find observables (a.k.a. indicators of compromise) in the given text."""
+    # todo: start here... consider splitting parsing logic into seperate function
+
     iocs = {}
 
-    text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
+    text = prepare_text(text)
 
     # urls
     if "urls" in included_ioc_types:
@@ -612,3 +625,4 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["file_paths"] = parse_file_paths(text)
 
     return iocs
+
