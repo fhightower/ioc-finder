@@ -34,4 +34,15 @@ URL_DATA = [
         {"parse_domain_from_url": False},
         id="Consecutive slashes handled properly",
     ),
+    param(
+        "www.example.com/abc,False,False",
+        {
+            "urls": [],
+            "urls_complete": ["www.example.com/abc,False,False"],
+            "domains": ["example.com"],
+        },
+        {},
+        id="Complete URLs parsed when urls are not",
+    ),
 ]
+
