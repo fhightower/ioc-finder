@@ -24,7 +24,7 @@ which are unliklely to be found in the wild
 
 ### Added
 
-- The `urls_complete` key (see the previous bullet point for more details)
+- The `urls_complete` key (see the "Changed" section above for more details)
 
 ## [7.3.0] - UNRELEASED
 
