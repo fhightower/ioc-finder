@@ -119,10 +119,11 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     return _deduplicate(clean_urls)
 
 
-def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> List:
+def parse_urls_complete(text: str) -> List:
     """."""
-    # todo: implement this...
-    pass
+    clean_urls = map(_clean_url, _listify(ioc_grammars.url_complete.searchString(text)))
+    # I deduplicate them again because the structure of the URL may have changed when it was cleaned
+    return _deduplicate(clean_urls)
 
 
 def _remove_url_domain_name(urls: List, text) -> str:
@@ -469,35 +470,32 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     original_text = text
 
     # urls
-    iocs["urls"] = []
     if "urls" in included_ioc_types:
         iocs["urls"] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
 
     # urls_complete
-    iocs["urls_complete"] = []
     if "urls_complete" in included_ioc_types:
-        iocs["urls_complete"] = parse_urls_complete(text, parse_urls_without_scheme=parse_urls_without_scheme)
+        iocs["urls_complete"] = parse_urls_complete(text)
 
     # todo: can some of this be cleaned up?
-    # todo: these "iocs["urls_complete"]" should be put inside of a conditional block or converted to `iocs.get("urls_complete", [])`... this removes the need for the default declarations of "urls_complete" and "url" above
     if not parse_domain_from_url and not parse_from_url_path:
-        text = _remove_items(iocs["urls"], text)
-        text = _remove_items(iocs["urls_complete"], text)
+        text = _remove_items(iocs.get("urls", []), text)
+        text = _remove_items(iocs.get("urls_complete", []), text)
     elif not parse_domain_from_url:
-        text = _percent_decode_url(iocs["urls"], text)
-        text = _remove_url_domain_name(iocs["urls"], text)
+        text = _percent_decode_url(iocs.get("urls", []), text)
+        text = _remove_url_domain_name(iocs.get("urls", []), text)
 
-        text = _percent_decode_url(iocs["urls_complete"], text)
-        text = _remove_url_domain_name(iocs["urls_complete"], text)
+        text = _percent_decode_url(iocs.get("urls_complete", []), text)
+        text = _remove_url_domain_name(iocs.get("urls_complete", []), text)
     elif not parse_from_url_path:
-        text = _percent_decode_url(iocs["urls"], text)
-        text = _remove_url_paths(iocs["urls"], text)
+        text = _percent_decode_url(iocs.get("urls", []), text)
+        text = _remove_url_paths(iocs.get("urls", []), text)
 
-        text = _percent_decode_url(iocs["urls_complete"], text)
-        text = _remove_url_paths(iocs["urls_complete"], text)
+        text = _percent_decode_url(iocs.get("urls_complete", []), text)
+        text = _remove_url_paths(iocs.get("urls_complete", []), text)
     else:
-        text = _percent_decode_url(iocs["urls"], text)
-        text = _percent_decode_url(iocs["urls_complete"], text)
+        text = _percent_decode_url(iocs.get("urls", []), text)
+        text = _percent_decode_url(iocs.get("urls_complete", []), text)
 
     # xmpp addresses
     if "xmpp_addresses" in included_ioc_types:
