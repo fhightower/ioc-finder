@@ -119,6 +119,7 @@ url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_addre
 url_path_word = Word(alphanums + "-._~!$&'()*+;=:%")
 url_path_word_complete = Word(alphanums + "-._~!$&'()*+,;=:%")
 url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
+url_path_complete = Combine(OneOrMore(MatchFirst([url_path_word_complete, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")
 url = alphanum_word_start + Combine(
@@ -132,7 +133,7 @@ url_complete = alphanum_word_start + Combine(
     url_scheme("url_scheme")
     + "://"
     + url_authority("url_authority")
-    + Optional(Combine("/" + Optional(url_path_word_complete)))("url_path")
+    + Optional(Combine("/" + Optional(url_path_complete)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
 scheme_less_url = alphanum_word_start + Or(
