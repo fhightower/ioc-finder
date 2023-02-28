@@ -88,7 +88,8 @@ def test_url_parsing():
 def test_issue_45_url_parsing():
     s = "http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p'6_%09/d%5c"
     results = find_iocs(s)
-    assert results["urls"] == [
+    assert results["urls"] == ["http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz"]
+    assert results["urls_complete"] == [
         "http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p'6_%09/d%5c"
     ]
 

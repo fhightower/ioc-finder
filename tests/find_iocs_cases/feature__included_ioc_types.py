@@ -8,7 +8,12 @@ from ioc_finder.ioc_finder import DEFAULT_IOC_TYPES
 
 IOC_EXAMPLES = {
     "domains": ["abc.py", "bar.com", "example.com", "foo.com", "swissjabber.de"],
-    "urls": ["https://example.com/test%20page/foo.com/bingo.php?q=bar.com"],
+    "urls": ["https://example.com/test%20page/foo.com/bingo.php?q=bar.com", "http://example.com/test"],
+    "urls_complete": [
+        "https://example.com/test%20page/foo.com/bingo.php?q=bar.com",
+        "http://example.com/test",
+        "http://example.com/test,foo,bar",
+    ],
     "xmpp_addresses": ["foo@swissjabber.de"],
     "email_addresses_complete": ["me@example.com"],
     "email_addresses": ["me@example.com"],

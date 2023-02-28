@@ -301,6 +301,14 @@ REGISTRY_DATA = [
                 "https://www.reuters.com/investigates/special-report/usa-spying-raven/",
                 "https://www.secureworks.com/blog/malware-lingers-with-bits",
             ],
+            "urls_complete": [
+                "https://citizenlab.ca/2016/05/stealth-falcon-appendices",
+                "https://citizenlab.ca/2016/05/stealth-falcon/",
+                "https://citizenlab.ca/about/",
+                "https://docs.microsoft.com/en-us/windows/win32/bits/background-intelligent-transfer-service-portal",
+                "https://www.reuters.com/investigates/special-report/usa-spying-raven/",
+                "https://www.secureworks.com/blog/malware-lingers-with-bits",
+            ],
             "attack_techniques": {
                 "enterprise": [
                     "T1106",

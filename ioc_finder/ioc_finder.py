@@ -477,7 +477,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     if "urls_complete" in included_ioc_types:
         iocs["urls_complete"] = parse_urls_complete(text)
 
-    # todo: can some of this be cleaned up?
+    # TODO: clean this section up
     if not parse_domain_from_url and not parse_from_url_path:
         text = _remove_items(iocs.get("urls", []), text)
         text = _remove_items(iocs.get("urls_complete", []), text)

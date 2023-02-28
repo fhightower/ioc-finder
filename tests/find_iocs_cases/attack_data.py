@@ -62,6 +62,7 @@ ATTACK_DATA = [
         {
             "attack_tactics": {"enterprise": ["TA0001"]},
             "urls": ["https://attack.mitre.org/tactics/TA0001/"],
+            "urls_complete": ["https://attack.mitre.org/tactics/TA0001/"],
             "domains": ["attack.mitre.org"],
         },
         {},
