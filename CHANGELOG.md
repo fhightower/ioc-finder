@@ -26,7 +26,7 @@ which are unliklely to be found in the wild
 
 - The `urls_complete` key (see the "Changed" section above for more details)
 
-## [7.3.0] - UNRELEASED
+## [7.3.0] - 2022.12.22
 
 ### Changed
 

@@ -73,4 +73,4 @@ __all__ = [
 ]
 
 __author__ = """Floyd Hightower"""
-__version__ = "7.2.4"
+__version__ = "7.3.0"
