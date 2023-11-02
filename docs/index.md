@@ -11,23 +11,39 @@ Welcome to the documentation for the `ioc-finder` library - a library to find di
 
 📢 *Announcement*: I'm looking for [sponsorship](https://github.com/sponsors/fhightower) for this project. I have a number of improvements and helpful features I'd like to add, but need some support to continue working on this project. If you use this project for work and/or find it useful, please consider [contributing](https://github.com/sponsors/fhightower) even a small amount. Thanks!
 
-## Overview (INTERACTIVE!)
+### Quick-Start
 
-Copy this example and paste it in the terminal below to get an idea of what this package does:
+Install ioc-finder:
+
+```shell
+pip install ioc-finder
+```
+
+Use it:
 
 ```python
 from ioc_finder import find_iocs
 
-text = "This is just an foobar.com https://example.org/test/bingo.php"
+text = ""
 
 iocs = find_iocs(text)
 iocs['domains']
 iocs['urls']
 ```
 
-<div id="terminal"></div>
+## Overview (INTERACTIVE!)
 
-This terminal uses [Pyodide](https://pyodide.org/en/stable/index.html) to provide a Python3.9 runtime in the browser using [WebAssembly](https://webassembly.org/). Enjoy!
+Enter some text with IOCs here and click "Parse IOCs" to see how ioc-finder parses IOCs. Click "Reload"
+
+<textarea id="iocText" placeholder="">Test 1, 2, 3 foobar.com https://example.org/test/bingo.php
+
+1.1.1.1    2.2.2.2222</textarea>
+<button class="md-button md-button--primary" id="parseButton" onclick="parseIOCs()" disabled=true>Parse IOCs!</button>
+<button class="md-button" onclick="reload()">Reload</button>
+<br>
+<pre id="output" style="white-space: pre-wrap;"></pre>
+
+The code above uses [Pyodide](https://pyodide.org/en/stable/index.html) to provide a Python3.9 runtime in the browser using [WebAssembly](https://webassembly.org/). Enjoy!
 
 ## Capabilities
 
