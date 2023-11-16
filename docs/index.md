@@ -38,8 +38,8 @@ Enter some text with IOCs here and click "Parse IOCs" to see how ioc-finder pars
 <textarea id="iocText" placeholder="">Test 1, 2, 3 foobar.com https://example.org/test/bingo.php
 
 1.1.1.1    2.2.2.2222</textarea>
-<button class="md-button md-button--primary" id="parseButton" onclick="parseIOCs()" disabled=true>Parse IOCs!</button>
-<button class="md-button" onclick="reload()">Reload</button>
+<button class="md-button md-button--primary" id="parseButton" onclick="parseIOCs()" disabled=true>&#x231B;</button>
+<button class="md-button" id="reloadButton" onclick="reload()">Reload</button>
 <br>
 <pre id="output" style="white-space: pre-wrap;"></pre>
 

@@ -15,6 +15,24 @@
     <script>
         "use strict";
         var pyodide = undefined;
+
+        function disableButton() {
+            console.log("disable");
+            const button = document.getElementById('parseButton');
+            if (button != null) {
+                console.log("found button");
+                button.disabled = true;
+                button.innerHTML = '&#x231B;';
+            }
+        }
+
+        function enableButton() {
+            console.log("enable");
+            const button = document.getElementById('parseButton');
+            button.disabled = false;
+            button.innerHTML = 'Parse IOCs!';
+        }
+
         async function main() {
             pyodide = await loadPyodide();
             await pyodide.loadPackage("micropip");
@@ -24,12 +42,15 @@
             await pyodide.runPython("from ioc_finder import find_iocs");
 
             pyodide.runPython("print('ioc-finder succesfully installed 🎉')");
-            document.getElementById('parseButton').disabled = false;
+            enableButton();
+            document.getElementById('reloadButton').disabled = false;
         }
+        disableButton();
         main();
 
         async function reload() {
-            document.getElementById('parseButton').disabled = true;
+            disableButton();
+            document.getElementById('reloadButton').disabled = true;
             document.getElementById('output').innerHTML = '';
             document.getElementById('iocText').focus();
             main();
