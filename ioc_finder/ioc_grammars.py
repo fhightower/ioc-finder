@@ -116,8 +116,10 @@ url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_addre
 # (of particular interest is "Appendix A.  Collected ABNF for URI")
 # Although the ":" character is not valid in url paths,
 # some urls are written with the ":" unencoded so we include it below
-url_path_word = Word(alphanums + "-._~!$&'()*+,;=:%")
+url_path_word = Word(alphanums + "-._~!$&'()*+;=:%")
+url_path_word_complete = Word(alphanums + "-._~!$&'()*+,;=:%")
 url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
+url_path_complete = Combine(OneOrMore(MatchFirst([url_path_word_complete, Literal("/")])))
 url_query = Word(printables, excludeChars="#\"']")
 url_fragment = Word(printables, excludeChars="?\"']")
 url = alphanum_word_start + Combine(
@@ -125,6 +127,13 @@ url = alphanum_word_start + Combine(
     + "://"
     + url_authority("url_authority")
     + Optional(Combine("/" + Optional(url_path)))("url_path")
+    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+)
+url_complete = alphanum_word_start + Combine(
+    url_scheme("url_scheme")
+    + "://"
+    + url_authority("url_authority")
+    + Optional(Combine("/" + Optional(url_path_complete)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
 scheme_less_url = alphanum_word_start + Or(

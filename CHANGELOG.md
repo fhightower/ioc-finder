@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [8.0.0] - UNRELEASED
+
+### Changed
+
+- The content formally returned in the `urls` key is now returned in the `urls_complete` key and the `urls` key now returns a subset of the `urls_complete` data - removing technically valid URLs
+which are unliklely to be found in the wild
+    - e.g. `https://example.com/abc,False,False` is a valid URL per the [RFC](https://www.rfc-editor.org/rfc/rfc3986#section-3.3), but it unlikely that this is *actually* a URL actively being used
+    - Given `https://example.com/abc,False,False` as input, `ioc_finder.find_iocs("https://example.com/abc,False,False")` will return:
+
+    ```python
+    {
+        ...
+        "urls": [],
+        "urls_complete": ["https://example.com/abc,False,False"],
+        ...
+    }
+    ```
+
+### Added
+
+- The `urls_complete` key (see the "Changed" section above for more details)
+
 ## [7.3.0] - 2022.12.22
 
 ### Changed
