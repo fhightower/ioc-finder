@@ -1,20 +1,20 @@
 {
     "machine_info": {
-        "node": "27a13e4be0d8",
+        "node": "6359d78a850a",
         "processor": "",
         "machine": "x86_64",
-        "python_compiler": "GCC 8.3.0",
+        "python_compiler": "GCC 14.2.0",
         "python_implementation": "CPython",
-        "python_implementation_version": "3.10.2",
-        "python_version": "3.10.2",
+        "python_implementation_version": "3.14.3",
+        "python_version": "3.14.3",
         "python_build": [
             "main",
-            "Mar  2 2022 03:58:56"
+            "Feb 24 2026 21:41:39"
         ],
         "release": "5.10.104-linuxkit",
         "system": "Linux",
         "cpu": {
-            "python_version": "3.10.2.final.0 (64 bit)",
+            "python_version": "3.14.3.final.0 (64 bit)",
             "cpuinfo_version": [
                 9,
                 0,
@@ -34,7 +34,7 @@
                 0
             ],
             "hz_actual": [
-                2198316000,
+                2198283000,
                 0
             ],
             "stepping": 4,
@@ -112,20 +112,20 @@
                 "xtpr"
             ],
             "l3_cache_size": 4194304,
-            "l2_cache_size": 262144,
-            "l1_data_cache_size": 32768,
-            "l1_instruction_cache_size": 32768,
+            "l2_cache_size": 524288,
+            "l1_data_cache_size": 65536,
+            "l1_instruction_cache_size": 65536,
             "l2_cache_line_size": 256,
             "l2_cache_associativity": 6
         }
     },
     "commit_info": {
-        "id": "3ec2e9bf011ed508b7994ac1dafc94d73d0f2269",
-        "time": "2022-07-08T04:22:31-04:00",
-        "author_time": "2022-07-08T04:22:31-04:00",
-        "dirty": true,
+        "id": "365776057bd5006712c2e850502fe3d4a64e6ab1",
+        "time": "2026-03-04T06:51:28-05:00",
+        "author_time": "2026-03-04T06:51:28-05:00",
+        "dirty": false,
         "project": "ioc-finder",
-        "branch": "main"
+        "branch": "python-upgrade"
     },
     "benchmarks": [
         {
@@ -144,22 +144,22 @@
                 "warmup": false
             },
             "stats": {
-                "min": 6.62307798400002,
-                "max": 11.762176740999962,
-                "mean": 7.822174038599973,
-                "stddev": 2.210649363715684,
+                "min": 8.40746517599996,
+                "max": 9.931324984999947,
+                "mean": 9.073079455000016,
+                "stddev": 0.7118874475206538,
                 "rounds": 5,
-                "median": 7.011211251999953,
-                "iqr": 1.5581442862500126,
-                "q1": 6.661986278499967,
-                "q3": 8.22013056474998,
-                "iqr_outliers": 1,
+                "median": 8.686339327000042,
+                "iqr": 1.255028826499995,
+                "q1": 8.54243477700004,
+                "q3": 9.797463603500034,
+                "iqr_outliers": 0,
                 "stddev_outliers": 1,
-                "outliers": "1;1",
-                "ld15iqr": 6.62307798400002,
-                "hd15iqr": 11.762176740999962,
-                "ops": 0.12784169657505878,
-                "total": 39.11087019299987,
+                "outliers": "1;0",
+                "ld15iqr": 8.40746517599996,
+                "hd15iqr": 9.931324984999947,
+                "ops": 0.11021616254544288,
+                "total": 45.36539727500008,
                 "iterations": 1
             }
         },
@@ -179,26 +179,26 @@
                 "warmup": false
             },
             "stats": {
-                "min": 0.5990572059999977,
-                "max": 0.6238025569999763,
-                "mean": 0.6069684945999825,
-                "stddev": 0.010547151800779047,
+                "min": 0.9310449590000189,
+                "max": 1.5596810150000238,
+                "mean": 1.1110060828000314,
+                "stddev": 0.2586722009110412,
                 "rounds": 5,
-                "median": 0.6011302180000939,
-                "iqr": 0.014412642249965302,
-                "q1": 0.5997208337499558,
-                "q3": 0.6141334759999211,
+                "median": 0.9978102200000194,
+                "iqr": 0.25802668199986556,
+                "q1": 0.9572627382501082,
+                "q3": 1.2152894202499738,
                 "iqr_outliers": 0,
                 "stddev_outliers": 1,
                 "outliers": "1;0",
-                "ld15iqr": 0.5990572059999977,
-                "hd15iqr": 0.6238025569999763,
-                "ops": 1.6475319705993006,
-                "total": 3.0348424729999124,
+                "ld15iqr": 0.9310449590000189,
+                "hd15iqr": 1.5596810150000238,
+                "ops": 0.9000850809742945,
+                "total": 5.555030414000157,
                 "iterations": 1
             }
         }
     ],
-    "datetime": "2022-11-03T09:41:08.251239",
-    "version": "3.4.1"
+    "datetime": "2026-03-05T13:17:23.536937+00:00",
+    "version": "5.2.3"
 }

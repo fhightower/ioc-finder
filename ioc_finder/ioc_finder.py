@@ -2,19 +2,18 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Callable, Dict, Iterable, List, Mapping, Union
+from collections.abc import Callable, Iterable, Mapping
 
 import click
 import ioc_fanger
-from d8s_strings import string_remove_from_end
 from pyparsing import ParseResults
 
 from ioc_finder import ioc_grammars
 
-IndicatorList = List[str]
-IndicatorDict = Dict[str, IndicatorList]
+IndicatorList = list[str]
+IndicatorDict = dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
-IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
+IndicatorData = Mapping[str, IndicatorList | IndicatorDict]
 
 DEFAULT_IOC_TYPES = [
     "asns",
@@ -49,17 +48,17 @@ DEFAULT_IOC_TYPES = [
 ]
 
 
-def _deduplicate(indicator_list: Iterable) -> List:
+def _deduplicate(indicator_list: Iterable) -> list:
     """Deduplicate the list of observables."""
     return list(set(indicator_list))
 
 
-def _listify(indicator_list: ParseResults) -> List:
+def _listify(indicator_list: ParseResults) -> list:
     """Convert the multi-dimensional list into a one-dimensional list with empty entries and duplicates removed."""
     return _deduplicate([indicator[0] for indicator in indicator_list if indicator[0]])
 
 
-def _remove_items(items: List[str], text: str) -> str:
+def _remove_items(items: list[str], text: str) -> str:
     """Remove each item from the text."""
     for item in items:
         text = text.replace(item, " ")
@@ -98,13 +97,13 @@ def _clean_url(url: str) -> str:
     url = url.rstrip('"').rstrip("'")
 
     # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
-    url = string_remove_from_end(url, "'/>")
-    url = string_remove_from_end(url, '"/>')
+    url = url.removesuffix("'/>")
+    url = url.removesuffix('"/>')
 
     return url
 
 
-def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
+def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
     if parse_urls_without_scheme:
         url_parse_results = ioc_grammars.scheme_less_url.searchString(text)
@@ -118,7 +117,7 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
     return _deduplicate(clean_urls)
 
 
-def _remove_url_domain_name(urls: List, text) -> str:
+def _remove_url_domain_name(urls: list, text: str) -> str:
     """Remove the domain name of each url from the text."""
     for url in urls:
         parsed_url = ioc_grammars.scheme_less_url.parseString(url)
@@ -126,7 +125,7 @@ def _remove_url_domain_name(urls: List, text) -> str:
     return text
 
 
-def _remove_url_paths(urls: List, text: str) -> str:
+def _remove_url_paths(urls: list, text: str) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
         parsed_url = ioc_grammars.scheme_less_url.parseString(url)
@@ -139,7 +138,7 @@ def _remove_url_paths(urls: List, text: str) -> str:
     return text
 
 
-def _percent_decode_url(urls: List, text: str) -> str:
+def _percent_decode_url(urls: list, text: str) -> str:
     for url in urls:
         text = text.replace(url, urlparse.unquote_plus(url))
     return text
@@ -163,20 +162,20 @@ def parse_ipv6_addresses(text):
     return _listify(addresses)
 
 
-def parse_complete_email_addresses(text: str) -> List:
+def parse_complete_email_addresses(text: str) -> list:
     """."""
     email_addresses = ioc_grammars.complete_email_address.searchString(text)
     return _listify(email_addresses)
 
 
-def parse_email_addresses(text: str) -> List:
+def parse_email_addresses(text: str) -> list:
     """."""
     email_addresses = ioc_grammars.email_address.searchString(text)
     return _listify(email_addresses)
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
-def parse_imphashes_(text: str) -> List:
+def parse_imphashes_(text: str) -> list:
     """."""
     full_imphash_instances = _listify(ioc_grammars.imphash.searchString(text.lower()))
 
@@ -189,7 +188,7 @@ def parse_imphashes_(text: str) -> List:
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
-def parse_authentihashes_(text: str) -> List:
+def parse_authentihashes_(text: str) -> list:
     """."""
     full_authentihash_instances = _listify(ioc_grammars.authentihash.searchString(text.lower()))
 
@@ -243,7 +242,7 @@ def parse_cves(text):
     return _listify(cves)
 
 
-def parse_ipv4_cidrs(text: str) -> List:
+def parse_ipv4_cidrs(text: str) -> list:
     """."""
     cidrs = ioc_grammars.ipv4_cidr.searchString(text)
     return _listify(cidrs)
@@ -294,13 +293,13 @@ def parse_monero_addresses(text):
     return _listify(monero_addresses)
 
 
-def parse_xmpp_addresses(text: str) -> List:
+def parse_xmpp_addresses(text: str) -> list:
     """."""
     xmpp_addresses = ioc_grammars.xmpp_address.searchString(text)
     return _listify(xmpp_addresses)
 
 
-def _remove_xmpp_local_part(xmpp_addresses: List, text: str) -> str:
+def _remove_xmpp_local_part(xmpp_addresses: list, text: str) -> str:
     """Remove the local part of each xmpp_address from the text."""
     for address in xmpp_addresses:
         text = text.replace(address.split("@")[0] + "@", " ")
@@ -452,9 +451,13 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-    included_ioc_types: List[str] = DEFAULT_IOC_TYPES,
+    included_ioc_types: Iterable[str] | None = None,
 ) -> IndicatorData:
     """Find observables (a.k.a. indicators of compromise) in the given text."""
+    if included_ioc_types is None:
+        included_ioc_types = DEFAULT_IOC_TYPES
+
+    included_ioc_types = set(included_ioc_types)
     iocs = {}
 
     text = prepare_text(text)

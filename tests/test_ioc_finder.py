@@ -1,3 +1,5 @@
+import pytest
+
 from ioc_finder import find_iocs
 
 
@@ -429,3 +431,9 @@ def test_monero_addresses():
         "498s2XeKWYSEhQHGxdMULWdrpaKvSkDsq4855mCuksNL6ez2dk4mMQm8epbr9xvn5LgLPzD5uL9EGeRqWUdEZha1HmZqcyh"
         in result["monero_addresses"]
     )
+
+
+def test_included_ioc_types_none_uses_defaults():
+    result = find_iocs("example.com", included_ioc_types=None)
+    assert "domains" in result
+    assert "example.com" in result["domains"]

@@ -1,0 +1,85 @@
+{
+    "machine_info": {
+        "python_implementation": "CPython",
+        "python_version": "3.14.2",
+        "system": "Darwin",
+        "machine": "x86_64"
+    },
+    "commit_info": {
+        "project": "ioc-finder"
+    },
+    "benchmarks": [
+        {
+            "group": null,
+            "name": "test_benchmarks",
+            "fullname": "ioc-finder/tests/benchmarks.py::test_benchmarks",
+            "params": null,
+            "param": null,
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 6.1091310160118155,
+                "max": 6.795193650992587,
+                "mean": 6.274858421599492,
+                "stddev": 0.2926169548016136,
+                "rounds": 5,
+                "median": 6.145347348996438,
+                "iqr": 0.22100444624084048,
+                "q1": 6.124270894753863,
+                "q3": 6.345275340994704,
+                "iqr_outliers": 1,
+                "stddev_outliers": 1,
+                "outliers": "1;1",
+                "ld15iqr": 6.1091310160118155,
+                "hd15iqr": 6.795193650992587,
+                "ops": 0.15936614546676817,
+                "total": 31.374292107997462,
+                "iterations": 1
+            }
+        },
+        {
+            "group": null,
+            "name": "test_parse_urls",
+            "fullname": "ioc-finder/tests/benchmarks.py::test_parse_urls",
+            "params": null,
+            "param": null,
+            "extra_info": {},
+            "options": {
+                "disable_gc": false,
+                "timer": "perf_counter",
+                "min_rounds": 5,
+                "max_time": 1.0,
+                "min_time": 5e-06,
+                "warmup": false
+            },
+            "stats": {
+                "min": 0.6286013729986735,
+                "max": 0.6878223899984732,
+                "mean": 0.6575252394075506,
+                "stddev": 0.025693680531590924,
+                "rounds": 5,
+                "median": 0.645065130025614,
+                "iqr": 0.042248292767908424,
+                "q1": 0.6407303129963111,
+                "q3": 0.6829786057642195,
+                "iqr_outliers": 0,
+                "stddev_outliers": 2,
+                "outliers": "2;0",
+                "ld15iqr": 0.6286013729986735,
+                "hd15iqr": 0.6878223899984732,
+                "ops": 1.5208541666035957,
+                "total": 3.2876261970377527,
+                "iterations": 1
+            }
+        }
+    ],
+    "datetime": "2026-03-05T12:20:54.781640+00:00",
+    "version": "5.2.3"
+}
