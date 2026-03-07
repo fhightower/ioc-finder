@@ -6,9 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
-### Changed
+## [8.0.0] - 2026.03.07
 
-- Updated formal support for Python 3.10 - 3.14
+### Added
+
+- Formal support for Python 3.10 - 3.14
+
+### Removed
+
+- Formal support for Python < 3.10
 
 ## [7.3.0] - 2022.12.22
 
