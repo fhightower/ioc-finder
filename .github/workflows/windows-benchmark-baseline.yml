@@ -56,7 +56,12 @@ jobs:
             throw "No benchmark JSON files found in $benchDir"
           }
 
-          Copy-Item -Path $latest.FullName -Destination (Join-Path $benchDir "0001_benchmark.json") -Force
+          $target = Join-Path $benchDir "0001_benchmark.json"
+          $latestPath = [System.IO.Path]::GetFullPath($latest.FullName)
+          $targetPath = [System.IO.Path]::GetFullPath($target)
+          if ($latestPath -ne $targetPath) {
+            Copy-Item -Path $latest.FullName -Destination $target -Force
+          }
 
       - name: Upload benchmark baseline artifact
         uses: actions/upload-artifact@v4
