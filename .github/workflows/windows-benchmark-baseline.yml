@@ -1,9 +1,6 @@
 name: Generate Windows Benchmark Baseline
 
 on:
-  push:
-    branches:
-      - python-upgrade
   workflow_dispatch:
     inputs:
       python_version:
