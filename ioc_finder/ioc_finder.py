@@ -142,7 +142,10 @@ def _remove_url_domain_name(urls: list, text: str) -> str:
     """Remove the domain name of each url from the text."""
     for url in urls:
         parsed_url = _parse_url(url)
-        text = text.replace(parsed_url.url_authority, " ")
+        url_authority = parsed_url.url_authority
+        if isinstance(url_authority, ParseResults):
+            url_authority = url_authority[0]
+        text = text.replace(url_authority, " ")
     return text
 
 
