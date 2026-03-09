@@ -48,4 +48,34 @@ URL_DATA = [
         {},
         id="Complete URLs parsed when urls are not",
     ),
+    param(
+        "example.com/abc,False,False",
+        {
+            "urls": ["example.com/abc"],
+            "urls_complete": ["example.com/abc,False,False"],
+            "domains": ["example.com"],
+        },
+        {},
+        id="Complete scheme-less URLs parsed when urls are not",
+    ),
+    param(
+        "example.com/abc,False,False foo.com",
+        {
+            "urls": ["example.com/abc"],
+            "urls_complete": ["example.com/abc,False,False"],
+            "domains": ["foo.com"],
+        },
+        {"parse_domain_from_url": False},
+        id="Complete scheme-less URLs support domain removal",
+    ),
+    param(
+        "http://userid:password@example.com:8080/",
+        {
+            "urls": ["password@example.com:8080/"],
+            "urls_complete": ["http://userid:password@example.com:8080/"],
+            "domains": ["example.com"],
+        },
+        {},
+        id="Complete URLs support userinfo in authority",
+    ),
 ]

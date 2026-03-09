@@ -63,6 +63,7 @@ DOMAIN_DATA = [
         "1.1.1.1/0 foobar.com/test/bingo.php",
         {
             "urls": ["foobar.com/test/bingo.php"],
+            "urls_complete": ["foobar.com/test/bingo.php"],
             "domains": ["foobar.com"],
             "ipv4_cidrs": ["1.1.1.1/0"],
             "ipv4s": ["1.1.1.1"],

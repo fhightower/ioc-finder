@@ -112,6 +112,12 @@ email_address = alphanum_word_start + Combine(
 url_scheme = one_of(schemes, caseless=True)
 port = Word(":", nums, min=2)
 url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
+url_userinfo_complete = Word(alphanums + "-._~!$&'()*+,;=:%")
+url_authority_complete = Combine(
+    Optional(url_userinfo_complete("url_userinfo") + "@")
+    + Or([domain_name, ipv4_address, ipv6_address])("url_host")
+    + Optional(port)("port")
+)
 # The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt...
 # (of particular interest is "Appendix A.  Collected ABNF for URI")
 # Although the ":" character is not valid in url paths,
@@ -132,7 +138,7 @@ url = alphanum_word_start + Combine(
 url_complete = alphanum_word_start + Combine(
     url_scheme("url_scheme")
     + "://"
-    + url_authority("url_authority")
+    + url_authority_complete("url_authority")
     + Optional(Combine("/" + Optional(url_path_complete)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
@@ -141,6 +147,17 @@ scheme_less_url = alphanum_word_start + Or(
         url,
         Combine(
             Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
+            + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+        ),
+    ]
+)
+scheme_less_url_complete = alphanum_word_start + Or(
+    [
+        url_complete,
+        Combine(
+            Combine(
+                url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path")
+            )
             + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
         ),
     ]

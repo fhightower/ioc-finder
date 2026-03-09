@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable, Mapping
 
 import click
 import ioc_fanger
-from pyparsing import ParseResults
+from pyparsing import ParseException, ParseResults
 
 from ioc_finder import ioc_grammars
 
@@ -118,17 +118,30 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     return _deduplicate(clean_urls)
 
 
-def parse_urls_complete(text: str) -> List:
+def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    clean_urls = map(_clean_url, _listify(ioc_grammars.url_complete.searchString(text)))
+    if parse_urls_without_scheme:
+        url_parse_results = ioc_grammars.scheme_less_url_complete.searchString(text)
+    else:
+        url_parse_results = ioc_grammars.url_complete.searchString(text)
+
+    clean_urls = map(_clean_url, _listify(url_parse_results))
     # I deduplicate them again because the structure of the URL may have changed when it was cleaned
     return _deduplicate(clean_urls)
+
+
+def _parse_url(url: str) -> ParseResults:
+    """Parse a URL using the narrower grammar first, then the complete grammar."""
+    try:
+        return ioc_grammars.scheme_less_url.parseString(url)
+    except ParseException:
+        return ioc_grammars.scheme_less_url_complete.parseString(url)
 
 
 def _remove_url_domain_name(urls: list, text: str) -> str:
     """Remove the domain name of each url from the text."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url.parseString(url)
+        parsed_url = _parse_url(url)
         text = text.replace(parsed_url.url_authority, " ")
     return text
 
@@ -136,13 +149,23 @@ def _remove_url_domain_name(urls: list, text: str) -> str:
 def _remove_url_paths(urls: list, text: str) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url.parseString(url)
+        parsed_url = _parse_url(url)
         url_path = urlparse.unquote_plus(parsed_url.url_path)
 
         is_cidr_range = parse_ipv4_cidrs(str(url))
         # if the 'url' has a URL path and is not a cidr range, remove the url_path
         if not is_cidr_range and len(url_path) > 1:
             text = text.replace(url_path, " ")
+    return text
+
+
+def _remove_url_userinfo(urls: list, text: str) -> str:
+    """Remove userinfo from each URL so it is not parsed as an email address."""
+    for url in urls:
+        parsed_url = ioc_grammars.scheme_less_url_complete.parseString(url)
+        userinfo = parsed_url.url_authority.get("url_userinfo")
+        if userinfo:
+            text = text.replace(f"{userinfo}@", " ")
     return text
 
 
@@ -502,7 +525,7 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
 
     # urls_complete
     if "urls_complete" in included_ioc_types:
-        iocs["urls_complete"] = parse_urls_complete(text)
+        iocs["urls_complete"] = parse_urls_complete(text, parse_urls_without_scheme=parse_urls_without_scheme)
 
     # TODO: clean this section up
     if not parse_domain_from_url and not parse_from_url_path:
@@ -540,6 +563,12 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
         text = _remove_xmpp_local_part(xmpp_addresses, text)
 
+    if (
+        "email_addresses_complete" in included_ioc_types
+        or "email_addresses" in included_ioc_types
+    ):
+        text = _remove_url_userinfo(iocs.get("urls_complete", []), text)
+
     # complete email addresses
     if "email_addresses_complete" in included_ioc_types:
         iocs["email_addresses_complete"] = parse_complete_email_addresses(text)
@@ -568,7 +597,8 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
 
     # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
     url_parsing_requires_cidr_removal = (
-        "urls" in included_ioc_types and parse_urls_without_scheme
+        ("urls" in included_ioc_types or "urls_complete" in included_ioc_types)
+        and parse_urls_without_scheme
     )
     ip_address_parsing_requires_cidr_removal = (
         "ipv4s" in included_ioc_types and not parse_address_from_cidr
@@ -577,8 +607,10 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
         if url_parsing_requires_cidr_removal:
             for cidr in cidr_ranges:
-                if cidr in iocs["urls"]:
+                if cidr in iocs.get("urls", []):
                     iocs["urls"].remove(cidr)
+                if cidr in iocs.get("urls_complete", []):
+                    iocs["urls_complete"].remove(cidr)
         if ip_address_parsing_requires_cidr_removal:
             text = _remove_items(cidr_ranges, text)
 
