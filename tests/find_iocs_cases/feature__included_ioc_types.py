@@ -1,6 +1,7 @@
 """These tests make sure the included_ioc_types parameter is working properly.
 
-Each test below passes a string with two IOC types into the find_iocs function, but only specifies one `included_ioc_types` argument to ensure it is handled properly."""
+Each test below passes a string with two IOC types into the find_iocs function, but only specifies one `included_ioc_types` argument to ensure it is handled properly.
+"""
 
 from pytest import param
 

@@ -2,19 +2,18 @@
 
 import json
 import urllib.parse as urlparse
-from typing import Callable, Dict, Iterable, List, Mapping, Union
+from collections.abc import Callable, Iterable, Mapping
 
 import click
 import ioc_fanger
-from d8s_strings import string_remove_from_end
 from pyparsing import ParseResults
 
 from ioc_finder import ioc_grammars
 
-IndicatorList = List[str]
-IndicatorDict = Dict[str, IndicatorList]
+IndicatorList = list[str]
+IndicatorDict = dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
-IndicatorData = Mapping[str, Union[IndicatorList, IndicatorDict]]
+IndicatorData = Mapping[str, IndicatorList | IndicatorDict]
 
 DEFAULT_IOC_TYPES = [
     "asns",
@@ -50,17 +49,17 @@ DEFAULT_IOC_TYPES = [
 ]
 
 
-def _deduplicate(indicator_list: Iterable) -> List:
+def _deduplicate(indicator_list: Iterable) -> list:
     """Deduplicate the list of observables."""
     return list(set(indicator_list))
 
 
-def _listify(indicator_list: ParseResults) -> List:
+def _listify(indicator_list: ParseResults) -> list:
     """Convert the multi-dimensional list into a one-dimensional list with empty entries and duplicates removed."""
     return _deduplicate([indicator[0] for indicator in indicator_list if indicator[0]])
 
 
-def _remove_items(items: List[str], text: str) -> str:
+def _remove_items(items: list[str], text: str) -> str:
     """Remove each item from the text."""
     for item in items:
         text = text.replace(item, " ")
@@ -99,13 +98,13 @@ def _clean_url(url: str) -> str:
     url = url.rstrip('"').rstrip("'")
 
     # remove `'/>` and `"/>` from the end of a URL (this character string occurs at the end of an HMTL tag with )
-    url = string_remove_from_end(url, "'/>")
-    url = string_remove_from_end(url, '"/>')
+    url = url.removesuffix("'/>")
+    url = url.removesuffix('"/>')
 
     return url
 
 
-def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> List:
+def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
     if parse_urls_without_scheme:
         url_parse_results = ioc_grammars.scheme_less_url.searchString(text)
@@ -126,7 +125,7 @@ def parse_urls_complete(text: str) -> List:
     return _deduplicate(clean_urls)
 
 
-def _remove_url_domain_name(urls: List, text) -> str:
+def _remove_url_domain_name(urls: list, text: str) -> str:
     """Remove the domain name of each url from the text."""
     for url in urls:
         parsed_url = ioc_grammars.scheme_less_url.parseString(url)
@@ -134,7 +133,7 @@ def _remove_url_domain_name(urls: List, text) -> str:
     return text
 
 
-def _remove_url_paths(urls: List, text: str) -> str:
+def _remove_url_paths(urls: list, text: str) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
         parsed_url = ioc_grammars.scheme_less_url.parseString(url)
@@ -147,7 +146,7 @@ def _remove_url_paths(urls: List, text: str) -> str:
     return text
 
 
-def _percent_decode_url(urls: List, text: str) -> str:
+def _percent_decode_url(urls: list, text: str) -> str:
     for url in urls:
         text = text.replace(url, urlparse.unquote_plus(url))
     return text
@@ -171,20 +170,20 @@ def parse_ipv6_addresses(text):
     return _listify(addresses)
 
 
-def parse_complete_email_addresses(text: str) -> List:
+def parse_complete_email_addresses(text: str) -> list:
     """."""
     email_addresses = ioc_grammars.complete_email_address.searchString(text)
     return _listify(email_addresses)
 
 
-def parse_email_addresses(text: str) -> List:
+def parse_email_addresses(text: str) -> list:
     """."""
     email_addresses = ioc_grammars.email_address.searchString(text)
     return _listify(email_addresses)
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
-def parse_imphashes_(text: str) -> List:
+def parse_imphashes_(text: str) -> list:
     """."""
     full_imphash_instances = _listify(ioc_grammars.imphash.searchString(text.lower()))
 
@@ -197,14 +196,18 @@ def parse_imphashes_(text: str) -> List:
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
-def parse_authentihashes_(text: str) -> List:
+def parse_authentihashes_(text: str) -> list:
     """."""
-    full_authentihash_instances = _listify(ioc_grammars.authentihash.searchString(text.lower()))
+    full_authentihash_instances = _listify(
+        ioc_grammars.authentihash.searchString(text.lower())
+    )
 
     authentihashes = []
 
     for authentihash in full_authentihash_instances:
-        authentihashes.append(ioc_grammars.authentihash.parseString(authentihash).hash[0])
+        authentihashes.append(
+            ioc_grammars.authentihash.parseString(authentihash).hash[0]
+        )
 
     return authentihashes
 
@@ -251,7 +254,7 @@ def parse_cves(text):
     return _listify(cves)
 
 
-def parse_ipv4_cidrs(text: str) -> List:
+def parse_ipv4_cidrs(text: str) -> list:
     """."""
     cidrs = ioc_grammars.ipv4_cidr.searchString(text)
     return _listify(cidrs)
@@ -270,7 +273,9 @@ def parse_registry_key_paths(text):
         # it will not parse a registry key path with a space in the final section (the section after the final '\')
         if " " in registry_key_path.split("\\")[-1]:
             last_section = registry_key_path.split("\\")[-1]
-            registry_key_path = registry_key_path.replace(last_section, last_section.split(" ")[0])
+            registry_key_path = registry_key_path.replace(
+                last_section, last_section.split(" ")[0]
+            )
             registry_key_paths.append(registry_key_path)
         else:
             registry_key_paths.append(registry_key_path)
@@ -302,13 +307,13 @@ def parse_monero_addresses(text):
     return _listify(monero_addresses)
 
 
-def parse_xmpp_addresses(text: str) -> List:
+def parse_xmpp_addresses(text: str) -> list:
     """."""
     xmpp_addresses = ioc_grammars.xmpp_address.searchString(text)
     return _listify(xmpp_addresses)
 
 
-def _remove_xmpp_local_part(xmpp_addresses: List, text: str) -> str:
+def _remove_xmpp_local_part(xmpp_addresses: list, text: str) -> str:
     """Remove the local part of each xmpp_address from the text."""
     for address in xmpp_addresses:
         text = text.replace(address.split("@")[0] + "@", " ")
@@ -390,9 +395,15 @@ def parse_tlp_labels(text):
 
 @click.command()
 @click.argument("text", required=False)
-@click.option("--no_url_domain_parsing", is_flag=True, help="Using this flag will not parse domain names from URLs")
 @click.option(
-    "--no_parse_from_url_path", is_flag=True, help="Using this flag will not parse observables from URL paths"
+    "--no_url_domain_parsing",
+    is_flag=True,
+    help="Using this flag will not parse domain names from URLs",
+)
+@click.option(
+    "--no_parse_from_url_path",
+    is_flag=True,
+    help="Using this flag will not parse observables from URL paths",
 )
 @click.option(
     "--no_email_addr_domain_parsing",
@@ -400,7 +411,9 @@ def parse_tlp_labels(text):
     help="Using this flag will not parse domain names from email addresses",
 )
 @click.option(
-    "--no_cidr_address_parsing", is_flag=True, help="Using this flag will not parse IP addresses from CIDR ranges"
+    "--no_cidr_address_parsing",
+    is_flag=True,
+    help="Using this flag will not parse IP addresses from CIDR ranges",
 )
 @click.option(
     "--no_xmpp_addr_domain_parsing",
@@ -413,8 +426,16 @@ def parse_tlp_labels(text):
     help="Using this flag will parse URLs with and without a scheme (default is True)",
     default=True,
 )
-@click.option("--no_import_hashes", is_flag=True, help="Using this flag will not parse import hashes")
-@click.option("--no_authentihashes", is_flag=True, help="Using this flag will not parse authentihashes")
+@click.option(
+    "--no_import_hashes",
+    is_flag=True,
+    help="Using this flag will not parse import hashes",
+)
+@click.option(
+    "--no_authentihashes",
+    is_flag=True,
+    help="Using this flag will not parse authentihashes",
+)
 def cli_find_iocs(
     text,
     no_url_domain_parsing,
@@ -460,9 +481,13 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     parse_urls_without_scheme: bool = True,
     parse_imphashes: bool = True,
     parse_authentihashes: bool = True,
-    included_ioc_types: List[str] = DEFAULT_IOC_TYPES,
+    included_ioc_types: Iterable[str] | None = None,
 ) -> IndicatorData:
     """Find observables (a.k.a. indicators of compromise) in the given text."""
+    if included_ioc_types is None:
+        included_ioc_types = DEFAULT_IOC_TYPES
+
+    included_ioc_types = set(included_ioc_types)
     iocs = {}
 
     text = prepare_text(text)
@@ -471,7 +496,9 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
 
     # urls
     if "urls" in included_ioc_types:
-        iocs["urls"] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
+        iocs["urls"] = parse_urls(
+            text, parse_urls_without_scheme=parse_urls_without_scheme
+        )
 
     # urls_complete
     if "urls_complete" in included_ioc_types:
@@ -506,7 +533,10 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         text = _remove_items(xmpp_addresses, text)
     # even if we want to parse domain names from the xmpp_address,
     # we don't want them also being caught as email addresses so we'll remove everything before the `@`
-    elif "email_addresses_complete" in included_ioc_types or "email_addresses" in included_ioc_types:
+    elif (
+        "email_addresses_complete" in included_ioc_types
+        or "email_addresses" in included_ioc_types
+    ):
         xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
         text = _remove_xmpp_local_part(xmpp_addresses, text)
 
@@ -517,8 +547,12 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["email_addresses"] = parse_email_addresses(text)
 
     if not parse_domain_from_email_address:
-        email_addresses_complete = _get_items(iocs, "email_addresses_complete", parse_complete_email_addresses, text)
-        email_addresses = _get_items(iocs, "email_addresses", parse_email_addresses, text)
+        email_addresses_complete = _get_items(
+            iocs, "email_addresses_complete", parse_complete_email_addresses, text
+        )
+        email_addresses = _get_items(
+            iocs, "email_addresses", parse_email_addresses, text
+        )
 
         text = _remove_items(email_addresses_complete, text)
         text = _remove_items(email_addresses, text)
@@ -533,8 +567,12 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
         iocs["ipv4_cidrs"] = parse_ipv4_cidrs(text)
 
     # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
-    url_parsing_requires_cidr_removal = "urls" in included_ioc_types and parse_urls_without_scheme
-    ip_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
+    url_parsing_requires_cidr_removal = (
+        "urls" in included_ioc_types and parse_urls_without_scheme
+    )
+    ip_address_parsing_requires_cidr_removal = (
+        "ipv4s" in included_ioc_types and not parse_address_from_cidr
+    )
     if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
         cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
         if url_parsing_requires_cidr_removal:
@@ -628,7 +666,13 @@ def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
     if "file_paths" in included_ioc_types:
         # if there are still url paths in the text, remove them so they don't get parsed as file names
         if parse_from_url_path:
-            urls = _get_items(iocs, "urls", parse_urls, text, parse_urls_without_scheme=parse_urls_without_scheme)
+            urls = _get_items(
+                iocs,
+                "urls",
+                parse_urls,
+                text,
+                parse_urls_without_scheme=parse_urls_without_scheme,
+            )
             text = _remove_url_paths(urls, text)
 
         iocs["file_paths"] = parse_file_paths(text)
