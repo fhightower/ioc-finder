@@ -155,9 +155,7 @@ scheme_less_url_complete = alphanum_word_start + Or(
     [
         url_complete,
         Combine(
-            Combine(
-                url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path")
-            )
+            Combine(url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path"))
             + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
         ),
     ]
