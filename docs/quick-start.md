@@ -4,11 +4,11 @@ The recommended means of installation is using [pip](https://pypi.python.org/pyp
 
 `pip install ioc-finder`
 
-Alternatively, you can install ioc-finder as follows:
+Alternatively, you can work with a local checkout as follows:
 
 ```shell
 git clone git@github.com:fhightower/ioc-finder.git && cd ioc-finder;
-python setup.py install --user;
+uv sync --locked --group dev
 ```
 
 ## Usage

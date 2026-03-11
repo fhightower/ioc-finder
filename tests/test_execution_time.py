@@ -1,5 +1,3 @@
-import time
-
 from ioc_finder import ioc_finder
 
 

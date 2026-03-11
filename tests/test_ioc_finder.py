@@ -1,5 +1,3 @@
-import pytest
-
 from ioc_finder import find_iocs
 
 

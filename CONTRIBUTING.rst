@@ -68,7 +68,7 @@ Ready to contribute? Here's how to set up `ioc_finder` for local development.
 
     $ mkvirtualenv ioc_finder
     $ cd ioc_finder/
-    $ python setup.py develop
+    $ uv sync --locked --group dev
 
 4. Create a branch for local development::
 
@@ -79,7 +79,7 @@ Ready to contribute? Here's how to set up `ioc_finder` for local development.
 5. When you're done making changes, check that your changes pass flake8 and the tests, including testing other Python versions with tox::
 
     $ flake8 ioc_finder tests
-    $ python setup.py test or py.test
+    $ uv run pytest
     $ tox
 
    To get flake8 and tox, just pip install them into your virtualenv.
@@ -111,4 +111,3 @@ Tips
 To run a subset of tests::
 
 $ py.test tests.test_ioc_finder
-

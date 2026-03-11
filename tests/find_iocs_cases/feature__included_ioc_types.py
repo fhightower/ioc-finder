@@ -41,7 +41,6 @@ IOC_EXAMPLES = {
         "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1) TLP"
     ],  # I don't like this parsing... I've ticketed this for improvement here: https://github.com/fhightower/ioc-finder/issues/227
     "tlp_labels": ["TLP:RED"],
-    "mac_addresses": ["AA-F2-C9-A6-B3-4F"],
     "file_paths": ["~/foo/bar/abc.py"],
     "attack_mitigations": {"enterprise": ["M1036", "M1015"]},
     "attack_tactics": {"pre_attack": ["TA0012"]},
