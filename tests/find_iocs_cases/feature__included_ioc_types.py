@@ -50,9 +50,10 @@ all_ioc_text = " ".join([val for sublist in IOC_EXAMPLES.values() for val in sub
 
 # this is a hack to be fixed in https://github.com/fhightower/ioc-finder/issues/224
 # imphashes and authentihashes require the hash to be prefixed with `imphash` and `authentihash` respectively, but when parsed, only the hash itself will be present
-all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["imphashes"][0], f'imphash {IOC_EXAMPLES["imphashes"][0]}')  # type: ignore
+all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["imphashes"][0], f"imphash {IOC_EXAMPLES['imphashes'][0]}")  # type: ignore
 all_ioc_text = all_ioc_text.replace(
-    IOC_EXAMPLES["authentihashes"][0], f'authentihash {IOC_EXAMPLES["authentihashes"][0]}'  # type: ignore
+    IOC_EXAMPLES["authentihashes"][0],
+    f"authentihash {IOC_EXAMPLES['authentihashes'][0]}",  # type: ignore
 )
 all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["user_agents"][0], IOC_EXAMPLES["user_agents"][0].rstrip(" TLP"))  # type: ignore
 # add the attack data
