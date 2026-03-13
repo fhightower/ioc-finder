@@ -80,6 +80,9 @@ def test_cli_without_domain_from_url_parsing():
     "urls": [
         "https://example.org/test/bingo.php"
     ],
+    "urls_complete": [
+        "https://example.org/test/bingo.php"
+    ],
     "user_agents": [],
     "xmpp_addresses": []
 }"""
