@@ -96,8 +96,8 @@ init: ## install the project and development requirements with uv
 	$(UV) sync --locked --group dev
 
 export-requirements: ## regenerate compatibility requirements files from pyproject.toml
-	$(UV) export --frozen --no-hashes --format requirements-txt --no-dev -o requirements.txt
-	$(UV) export --frozen --no-hashes --format requirements-txt --all-groups -o requirements_dev.txt
+	$(UV) export --frozen --no-hashes --no-emit-project --format requirements-txt --no-dev -o requirements.txt
+	$(UV) export --frozen --no-hashes --no-emit-project --format requirements-txt --all-groups -o requirements_dev.txt
 
 pypi: clean ## upload the code to pypi
 	$(UV) build

@@ -1,4 +1,4 @@
-FROM python:3.10.2-buster
+FROM python:3.14-slim-bookworm
 
 ENV UV_LINK_MODE=copy
 
