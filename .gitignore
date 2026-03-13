@@ -66,3 +66,5 @@ target/
 travis_pypi_setup.py
 Pipfile
 Pipfile.lock
+
+.DS_Store
