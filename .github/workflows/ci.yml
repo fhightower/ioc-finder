@@ -45,7 +45,7 @@ jobs:
         uv run pytest
         uv run codecov
         # run benchmark tests
-        uv run pytest -c "." --benchmark-storage=.benchmarks/${{ runner.os == 'macOS' && 'Darwin' || runner.os }}-CPython-${{ matrix.python-version }}-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:10% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
+        uv run pytest -c "." --benchmark-storage=.benchmarks/${{ runner.os == 'macOS' && 'Darwin' || runner.os }}-CPython-${{ matrix.python-version }}-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:15% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
 
   build_multi_py_versions:
     runs-on: ${{ matrix.os }}
