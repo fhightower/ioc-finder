@@ -15,6 +15,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 
 - Formal support for Python < 3.10
+- `setup.py`, `setup.cfg`, and `mypy.ini` (configuration consolidated into `pyproject.toml`)
+
+### Changed
+
+- Migrated from pip/setuptools to uv for dependency management and packaging
+- Switched build backend from setuptools to hatchling
+- Replaced flake8, black, isort, and pylint with ruff for linting and formatting
+- Switched PyPI publishing to trusted publishing (OIDC) — no more username/password secrets
+- Updated Dockerfile base image from `python:3.10.2-buster` to `python:3.14-slim-bookworm`
+- Updated CI, Docker, Makefile, and docs to use uv throughout
+- Relaxed benchmark regression threshold from 10% to 15% to reduce flaky CI failures
 
 ## [7.3.0] - 2022.12.22
 
