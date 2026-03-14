@@ -1,10 +1,11 @@
 """Using hypothesis (https://hypothesis.readthedocs.io/en/latest/index.html) to test the finder."""
 
-from hypothesis import given, settings
-from hypothesis.provisional import domains, urls
-from hypothesis.strategies._internal.ipaddress import ip_addresses
+import pytest  # noqa: F401
+from hypothesis import given, settings  # noqa: F401
+from hypothesis.provisional import domains, urls  # noqa: F401
+from hypothesis.strategies._internal.ipaddress import ip_addresses  # noqa: F401
 
-from ioc_finder import find_iocs
+from ioc_finder import find_iocs  # noqa: F401
 
 # @given(urls())
 # @settings(deadline=None)

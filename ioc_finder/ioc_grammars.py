@@ -312,10 +312,7 @@ google_analytics_tracker_id = (
     + Combine(
         # we use `Or([Literal("ua-")...` instead of something like `CaselessLiteral("ua-")` b/c...
         # we only want to parse "ua" when it is all upper or lowercased (not "uA" or other, similar variations)
-        one_of("ua- UA-")
-        + Word(nums, min=6)("account_number")
-        + "-"
-        + Word(nums)("property_number")
+        one_of("ua- UA-") + Word(nums, min=6)("account_number") + "-" + Word(nums)("property_number")
     ).set_parse_action(pyparsing_common.upcase_tokens)
     + alphanum_word_end
 )

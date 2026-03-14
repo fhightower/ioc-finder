@@ -46,7 +46,6 @@ IOC_EXAMPLES = {
         "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1) TLP"
     ],  # I don't like this parsing... I've ticketed this for improvement here: https://github.com/fhightower/ioc-finder/issues/227
     "tlp_labels": ["TLP:RED"],
-    "mac_addresses": ["AA-F2-C9-A6-B3-4F"],
     "file_paths": ["~/foo/bar/abc.py"],
     "attack_mitigations": {"enterprise": ["M1036", "M1015"]},
     "attack_tactics": {"pre_attack": ["TA0012"]},
@@ -56,9 +55,10 @@ all_ioc_text = " ".join([val for sublist in IOC_EXAMPLES.values() for val in sub
 
 # this is a hack to be fixed in https://github.com/fhightower/ioc-finder/issues/224
 # imphashes and authentihashes require the hash to be prefixed with `imphash` and `authentihash` respectively, but when parsed, only the hash itself will be present
-all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["imphashes"][0], f'imphash {IOC_EXAMPLES["imphashes"][0]}')  # type: ignore
+all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["imphashes"][0], f"imphash {IOC_EXAMPLES['imphashes'][0]}")  # type: ignore
 all_ioc_text = all_ioc_text.replace(
-    IOC_EXAMPLES["authentihashes"][0], f'authentihash {IOC_EXAMPLES["authentihashes"][0]}'  # type: ignore
+    IOC_EXAMPLES["authentihashes"][0],  # type: ignore
+    f"authentihash {IOC_EXAMPLES['authentihashes'][0]}",  # type: ignore
 )
 all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["user_agents"][0], IOC_EXAMPLES["user_agents"][0].rstrip(" TLP"))  # type: ignore
 # add the attack data

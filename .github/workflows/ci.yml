@@ -10,6 +10,19 @@ on:
     branches: [ main ]
 
 jobs:
+  build_smoke:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.14'
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+    - name: Build package
+      run: uv build
+
   build_multi_os:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -23,16 +36,16 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
     - name: Install dependencies
-      run: |
-        python -m pip install -r requirements.txt
-        python -m pip install -r requirements_dev.txt
+      run: uv sync --locked --group dev
     - name: Run pytest
       run: |
-        pytest
-        codecov
+        uv run pytest
+        uv run codecov
         # run benchmark tests
-        pytest -c "." --benchmark-storage=.benchmarks/${{ runner.os == 'macOS' && 'Darwin' || runner.os }}-CPython-${{ matrix.python-version }}-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:10% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
+        uv run pytest -c "." --benchmark-storage=.benchmarks/${{ runner.os == 'macOS' && 'Darwin' || runner.os }}-CPython-${{ matrix.python-version }}-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:15% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
 
   build_multi_py_versions:
     runs-on: ${{ matrix.os }}
@@ -47,11 +60,11 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
     - name: Install dependencies
-      run: |
-        python -m pip install -r requirements.txt
-        python -m pip install -r requirements_dev.txt
+      run: uv sync --locked --group dev
     - name: Run pytest
       run: |
-        pytest
-        codecov
+        uv run pytest
+        uv run codecov

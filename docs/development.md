@@ -10,6 +10,14 @@ If you want to test, lint, or explore ioc-finder, make sure you have [docker][do
 
 Then you can use the `test`, `lint`, and `dev` docker compose services listed below!
 
+For local development without Docker, install [uv](https://docs.astral.sh/uv/) and run:
+
+```shell
+uv sync --locked --group dev
+```
+
+`pyproject.toml` is the source of truth for dependencies. The checked-in `requirements.txt` and `requirements_dev.txt` files are compatibility exports generated from the lockfile via `make export-requirements`.
+
 ## Test ioc-finder 🧪
 
 To test ioc-finder, run the following command from the root directory of the project:
@@ -19,6 +27,12 @@ docker-compose run --rm test
 ```
 
 Typically, this command will run [pytest][pytest-link] on the project's test suite. To view the details of what this command does, take a look at the `test` service in the project's `docker-compose.yml` file.
+
+If you are running tests locally without Docker, use:
+
+```shell
+uv run pytest
+```
 
 ### Understanding our Testing Framework
 
@@ -59,6 +73,13 @@ docker-compose run --rm lint
 
 Typically, this command will run a number of linters on the project's code with the goal of improving code qality and catching bugs before they are released (you can read more about the benefits of linting [here][linting-intro]). To view the details of what this command does, take a look at the `lint` service in the project's `docker-compose.yml` file.
 
+If you are running lint locally without Docker, use:
+
+```shell
+uv run ruff check ioc_finder tests
+uv run mypy ioc_finder tests
+```
+
 ## Explore ioc-finder 🔭
 
 To explore ioc-finder, you can drop into a "dev" environment which is an [IPython][ipython] shell with the project and all its requirements loaded. To do this, run the following command from the root directory of the project:
@@ -68,6 +89,8 @@ docker-compose run --rm dev
 ```
 
 To see what this command does, take a look at the `dev` service in the project's `docker-compose.yml` file.
+
+For a local shell without Docker, use `uv run ipython`.
 
 ## Run Docs Locally 📖
 
@@ -89,4 +112,3 @@ If you have any follow-up questions, don't hesitate to ask! It takes practice to
 [docker]: https://www.docker.com/get-started
 [linting-intro]: https://dbader.org/blog/python-code-linting
 [ipython]: https://ipython.org/
-

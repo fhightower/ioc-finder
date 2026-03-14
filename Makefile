@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help
+.PHONY: clean clean-test clean-pyc clean-build docs help init install lint test test-all coverage dist pypi export-requirements
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -26,6 +26,8 @@ BROWSER := python -c "$$BROWSER_PYSCRIPT"
 help:
 	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
+UV := uv
+
 clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
 
@@ -47,21 +49,22 @@ clean-test: ## remove test and coverage artifacts
 	rm -f .coverage
 	rm -fr htmlcov/
 
-lint: ## check style with flake8
-	flake8 ioc_finder tests
+lint: ## check style with ruff and mypy
+	$(UV) run ruff check ioc_finder tests
+	$(UV) run mypy ioc_finder tests
 
 test: ## run tests quickly with the default Python
-	py.test
+	$(UV) run pytest
 	
 
 test-all: ## run tests on every Python version with tox
-	tox
+	$(UV) run pytest
 
 coverage: ## check code coverage quickly with the default Python
-	coverage run --source ioc_finder -m pytest
+	$(UV) run coverage run --source ioc_finder -m pytest
 	
-		coverage report -m
-		coverage html
+		$(UV) run coverage report -m
+		$(UV) run coverage html
 		$(BROWSER) htmlcov/index.html
 
 docs: ## generate Sphinx HTML documentation, including API docs
@@ -76,26 +79,26 @@ servedocs: docs ## compile the docs watching for changes
 	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
 release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
+	$(UV) build
+	$(UV) publish
 
 dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
+	$(UV) build
 	ls -l dist
 
 install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+	$(UV) sync --locked --group dev
 
 upstream: ## set the upstream for the repository
 	git remote set-upstream https://github.com/fhightower/ioc-finder.git
 
-init: ## install the development requirements with pip (related to python2.x)
-	pip install -r requirements_dev.txt
+init: ## install the project and development requirements with uv
+	$(UV) sync --locked --group dev
 
-init3: ## install the development requirements with pip3 (related to python3.x)
-	pip3 install -r requirements_dev.txt
+export-requirements: ## regenerate compatibility requirements files from pyproject.toml
+	$(UV) export --frozen --no-hashes --no-emit-project --format requirements-txt --no-dev -o requirements.txt
+	$(UV) export --frozen --no-hashes --no-emit-project --format requirements-txt --all-groups -o requirements_dev.txt
 
 pypi: clean ## upload the code to pypi
-	python3 setup.py sdist bdist_wheel
-	python3 -m twine upload dist/*
+	$(UV) build
+	$(UV) publish

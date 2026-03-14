@@ -1,9 +1,11 @@
-FROM python:3.10.2-buster
+FROM python:3.14-slim-bookworm
 
-ENV PIP_NO_CACHE_DIR "true"
+ENV UV_LINK_MODE=copy
 
-COPY ./requirements*.txt /code/
+COPY --from=ghcr.io/astral-sh/uv:0.9.28 /uv /uvx /bin/
 
 WORKDIR /code
 
-RUN pip install -r requirements.txt -r requirements_dev.txt
+COPY . /code
+
+RUN uv sync --locked --group dev

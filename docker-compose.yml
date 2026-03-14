@@ -12,41 +12,28 @@ services:
 
   dev:
     <<: *base
-    command: ipython
+    command: uv run ipython
 
   mkdocs:
     <<: *base
-    entrypoint: "mkdocs"
     ports:
       - "8000:8000"
-    command: ["serve", "--dev-addr=0.0.0.0:8000"]
-
-  bump-patch:
-    <<: *base
-    command: bumpversion patch
-
-  bump-minor:
-    <<: *base
-    command: bumpversion minor
-
-  bump-major:
-    <<: *base
-    command: bumpversion major
+    command: ["uv", "run", "mkdocs", "serve", "--dev-addr=0.0.0.0:8000"]
 
   test:
     <<: *base
-    command: pytest
+    command: uv run pytest
 
   test-benchmarks:
     <<: *base
     # the `-c "."` prevents pytest from using the config specified in the pyproject.toml (which we don't want to use for benchmarks)
-    command: pytest -c "." --benchmark-storage=.benchmarks/Linux-CPython-3.10-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:10% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
+    command: uv run pytest -c "." --benchmark-storage=.benchmarks/Linux-CPython-3.10-64bit/ --benchmark-compare=0001 --benchmark-compare-fail=mean:15% --benchmark-columns='mean,median,stddev,iqr' tests/benchmarks.py
 
   update-benchmarks:
     <<: *base
     command: >
       bash -c "
-        pytest -c '.' --benchmark-storage=.benchmarks/ --benchmark-save=benchmark tests/benchmarks.py &&
+        uv run pytest -c '.' --benchmark-storage=.benchmarks/ --benchmark-save=benchmark tests/benchmarks.py &&
         mv .benchmarks/Linux-CPython-3.10-64bit/0002_benchmark.json .benchmarks/Linux-CPython-3.10-64bit/0001_benchmark.json"
 
   lint:

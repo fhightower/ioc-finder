@@ -1,15 +1,106 @@
-[tool.black]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ioc_finder"
+version = "7.3.0"
+description = "Python package for finding and parsing indicators of compromise from text."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GNU Lesser General Public License v3" }
+authors = [{ name = "Floyd Hightower" }]
+keywords = [
+    "iocs",
+    "indicators of compromise",
+    "parsing",
+    "finding",
+    "searching",
+    "threat intelligence",
+    "malware",
+    "threat hunting",
+    "observables",
+    "domains",
+    "domain names",
+    "asns",
+    "cidr",
+    "cidr ranges",
+    "ips",
+    "ip addresses",
+    "urls",
+    "email addresses",
+    "md5",
+    "sha1",
+    "sha256",
+    "google ads",
+    "cve",
+    "file paths",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "click>=7.1.2,<9.0",
+    "ioc-fanger>=4.2.1,<4.3",
+    "pyparsing>=3.0,<=3.1.1",
+]
+
+[project.scripts]
+ioc-finder = "ioc_finder.ioc_finder:cli_find_iocs"
+
+[project.urls]
+Changelog = "https://github.com/fhightower/ioc-finder/blob/main/CHANGELOG.md"
+Documentation = "https://hightower.space/ioc-finder/"
+Source = "https://github.com/fhightower/ioc-finder"
+Issues = "https://github.com/fhightower/ioc-finder/issues"
+Sponsor = "https://github.com/sponsors/fhightower"
+
+[dependency-groups]
+dev = [
+    "codecov>=2.1.11,<3.0",
+    "d8s-file-system>=0.10.0,<1.0",
+    "d8s-lists>=0.8.0,<1.0",
+    "hypothesis>=6.14.1,<7.0",
+    "ipython>=8.18.0,<10.0",
+    "mkdocs-material>=8.0.1,<10.0",
+    "mypy>=1.8.0,<2.0",
+    "pytest>=8.0.0,<9.0",
+    "pytest-benchmark>=4.0.0,<6.0",
+    "pytest-cov>=4.1.0,<7.0",
+    "pytest-xdist>=3.5.0,<4.0",
+    "requests>=2.25.1,<3.0",
+    "ruff>=0.11.0,<0.12.0",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["venv", ".venv"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["ioc_finder"]
+
+[tool.ruff]
 line-length = 120
+target-version = "py310"
 
-[tool.isort]
-line_length = 120
-include_trailing_comma = true
+[tool.mypy]
+ignore_missing_imports = true
 
-[tool.pylint."MESSAGES CONTROL"]
-max-line-length = 120
-disable = "C0114, R1705, C0103"
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+"ioc_finder/__init__.py" = ["F401"]
+"tests/*" = ["E501"]
 
 [tool.pytest.ini_options]
 addopts = "-n auto -vv --cov=. --cov-report term-missing --cov-fail-under 100"
 python_files = "tests/test_*.py"
-

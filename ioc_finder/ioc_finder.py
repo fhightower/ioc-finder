@@ -490,7 +490,7 @@ def cli_find_iocs(
     print(ioc_string)
 
 
-def find_iocs(  # noqa: CCR001 pylint: disable=R0912,R0915
+def find_iocs(
     text: str,
     *,
     parse_domain_from_url: bool = True,
