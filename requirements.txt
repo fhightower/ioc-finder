@@ -8,5 +8,5 @@ colorama==0.4.6 ; sys_platform == 'win32'
     # via click
 ioc-fanger==4.2.1
     # via ioc-finder
-pyparsing==3.1.1
+pyparsing==3.3.2
     # via ioc-finder

@@ -142,7 +142,7 @@ pygments==2.19.2
     #   pytest
 pymdown-extensions==10.21
     # via mkdocs-material
-pyparsing==3.1.1
+pyparsing==3.3.2
     # via ioc-finder
 pytest==8.4.2
     # via
