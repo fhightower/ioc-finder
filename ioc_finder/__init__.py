@@ -71,6 +71,3 @@ __all__ = [
     "parse_xmpp_addresses",
     "prepare_text",
 ]
-
-__author__ = """Floyd Hightower"""
-__version__ = "7.3.0"
