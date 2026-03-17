@@ -465,7 +465,7 @@ wheels = [
 
 [[package]]
 name = "ioc-finder"
-version = "7.3.0"
+version = "8.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "click" },
