@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block libs %}
+    {{ super() }}
+
+    <style>
+        #iocText {
+            width: 100%;
+            height: 7rem;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.23.2/full/pyodide.js"></script>
+
+    <script>
+        "use strict";
+        var pyodide = undefined;
+
+        function disableButton() {
+            console.log("disable");
+            const button = document.getElementById('parseButton');
+            if (button != null) {
+                console.log("found button");
+                button.disabled = true;
+                button.innerHTML = '&#x231B;';
+            }
+        }
+
+        function enableButton() {
+            console.log("enable");
+            const button = document.getElementById('parseButton');
+            button.disabled = false;
+            button.innerHTML = 'Parse IOCs!';
+        }
+
+        async function main() {
+            pyodide = await loadPyodide();
+            await pyodide.loadPackage("micropip");
+            pyodide.runPython("import json");
+            await pyodide.runPython("import micropip");
+            await pyodide.runPython("micropip.install('ioc-finder')");
+            await pyodide.runPython("from ioc_finder import find_iocs");
+
+            pyodide.runPython("print('ioc-finder succesfully installed 🎉')");
+            enableButton();
+            document.getElementById('reloadButton').disabled = false;
+        }
+        disableButton();
+        main();
+
+        async function reload() {
+            disableButton();
+            document.getElementById('reloadButton').disabled = true;
+            document.getElementById('output').innerHTML = '';
+            document.getElementById('iocText').focus();
+            main();
+        }
+
+        async function parseIOCs() {
+            const input = document.getElementById('iocText').value.trim();
+            const r = await pyodide.runPython(`json.dumps(find_iocs("""${input}"""), indent=4, sort_keys=True)`);
+            document.getElementById('output').innerHTML = r;
+        }
+      </script>
+{% endblock %}
