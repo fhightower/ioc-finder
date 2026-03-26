@@ -90,6 +90,7 @@ The code above uses [Pyodide](https://pyodide.org/en/stable/index.html) to provi
     - When parsing **registry key paths**, this library will NOT properly parse a registry key path where the last section contains a space. For example, `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced on` will be parsed as `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced` (the space in the final section is removed).
     - The items listed above (in the "Capabilities" section) that are postceded by "(*beta*)" are not very robust and may still have major issues. Any feedback or issues related to these items are much appreciated.
     - When parsing **markdown**, if there is a domain name that is surrounded by underscores (which would make the domain name italic in some flavours of markdown - e.g. `_google.com_`), the domain will be parsed *including* the leading underscore (e.g. `_google.com_` would be parsed as `_google.com`).
+    - The **bitcoin address** grammar may also match file hashes that happen to resemble bitcoin addresses. Specifically, MD5 hashes (32 hex characters) starting with `1` or `3` can match the P2PKH/P2SH address patterns, and MD5/SHA1/SHA256 hashes starting with `bc1` can match the Bech32 address pattern. These values will appear in both the hash results and the `bitcoin_addresses` results. See [#226](https://github.com/fhightower/ioc-finder/issues/226).
 
 ## Feedback
 
