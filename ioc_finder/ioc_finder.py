@@ -503,7 +503,32 @@ def find_iocs(
     parse_authentihashes: bool = True,
     included_ioc_types: Iterable[str] | None = None,
 ) -> IndicatorData:
-    """Find observables (a.k.a. indicators of compromise) in the given text."""
+    """Find observables (a.k.a. indicators of compromise) in the given text.
+
+    Args:
+        text: The text to parse for indicators.
+        parse_domain_from_url: Whether to parse domain names from URLs. Only applicable
+            when ``"domains"`` is in ``included_ioc_types``.
+        parse_from_url_path: Whether to parse observables from URL paths. Only applicable
+            when IOC types that could appear in a URL path (e.g. ``"domains"``, hash types)
+            are in ``included_ioc_types``.
+        parse_domain_from_email_address: Whether to parse domain names from email addresses.
+            Only applicable when ``"domains"`` is in ``included_ioc_types``.
+        parse_address_from_cidr: Whether to parse IP addresses from CIDR ranges. Only
+            applicable when ``"ipv4s"`` is in ``included_ioc_types``.
+        parse_domain_name_from_xmpp_address: Whether to parse domain names from XMPP
+            addresses. Only applicable when ``"domains"`` is in ``included_ioc_types``.
+        parse_urls_without_scheme: Whether to parse URLs without a scheme. Only applicable
+            when ``"urls"`` or ``"urls_complete"`` is in ``included_ioc_types``.
+        parse_imphashes: Whether to parse import hashes. Only applicable when
+            ``"imphashes"`` is in ``included_ioc_types``.
+        parse_authentihashes: Whether to parse authentihashes. Only applicable when
+            ``"authentihashes"`` is in ``included_ioc_types``.
+        included_ioc_types: Collection of IOC type names to parse. If ``None``, all
+            default types are parsed. See ``DEFAULT_IOC_TYPES`` for valid values.
+            When specified, the boolean options above only take effect if their
+            corresponding IOC type is included.
+    """
     if included_ioc_types is None:
         included_ioc_types = DEFAULT_IOC_TYPES
 

@@ -79,11 +79,13 @@ The code above uses [Pyodide](https://pyodide.org/en/stable/index.html) to provi
 
     This library also provides options to:
 
-    - Parse domain name from a URL
-    - Parse domain name from an email address
-    - Parse IP address from a CIDR range
-    - Parse URLs without a scheme (e.g. without `https://`)
-    - Parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx)
+    - Parse domain name from a URL (only applicable when `"domains"` is in `included_ioc_types`)
+    - Parse domain name from an email address (only applicable when `"domains"` is in `included_ioc_types`)
+    - Parse domain name from an XMPP address (only applicable when `"domains"` is in `included_ioc_types`)
+    - Parse IP address from a CIDR range (only applicable when `"ipv4s"` is in `included_ioc_types`)
+    - Parse URLs without a scheme (e.g. without `https://`) (only applicable when `"urls"` or `"urls_complete"` is in `included_ioc_types`)
+    - Parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx) (only applicable when `"imphashes"` / `"authentihashes"` is in `included_ioc_types`)
+    - Limit parsing to specific IOC types using `included_ioc_types` (see [Options](quick-start.md#options) for details)
 
 ??? info "Known Limitations"
 
