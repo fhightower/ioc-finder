@@ -633,7 +633,12 @@ def find_iocs(
     if "md5s" in included_ioc_types:
         iocs["md5s"] = parse_md5s(text)
     if "ssdeeps" in included_ioc_types:
-        iocs["ssdeeps"] = parse_ssdeeps(text)
+        # remove ipv6 addresses so they are not parsed as ssdeep hashes
+        # (see https://github.com/fhightower/ioc-finder/issues/228)
+        ssdeep_text = text
+        ipv6s = _get_items(iocs, "ipv6s", parse_ipv6_addresses, text)
+        ssdeep_text = _remove_items(ipv6s, ssdeep_text)
+        iocs["ssdeeps"] = parse_ssdeeps(ssdeep_text)
 
     # misc
     if "asns" in included_ioc_types:
