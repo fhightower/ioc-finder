@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Documentation
+
+- Documented known limitation where bitcoin address grammar may match file hashes (MD5s starting with `1`/`3`, and MD5/SHA1/SHA256 hashes starting with `bc1`) ([#226](https://github.com/fhightower/ioc-finder/issues/226))
+
 ## [8.0.1] - 2026.03.14
 
 ### Changed

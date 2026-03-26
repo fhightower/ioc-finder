@@ -319,6 +319,10 @@ google_analytics_tracker_id = (
 
 # see https://en.bitcoin.it/wiki/Address
 # (and https://github.com/bitcoin/bips/blob/master/bip-0173.mediawiki#segwit-address-format for Bech32 addresses)
+# NOTE: This grammar may match file hashes that happen to look like bitcoin addresses.
+# Specifically, MD5 hashes (32 hex chars) starting with '1' or '3' can match the P2PKH/P2SH patterns,
+# and MD5/SHA1/SHA256 hashes starting with 'bc1' can match the Bech32 pattern.
+# See https://github.com/fhightower/ioc-finder/issues/226
 bitcoin_address = (
     alphanum_word_start
     + MatchFirst(
