@@ -496,7 +496,7 @@ dev = [
 requires-dist = [
     { name = "click", specifier = ">=7.1.2,<9.0" },
     { name = "ioc-fanger", specifier = ">=4.2.1,<4.3" },
-    { name = "pyparsing", specifier = ">=3.0,<=3.1.1" },
+    { name = "pyparsing", specifier = ">=3.1,<4.0" },
 ]
 
 [package.metadata.requires-dev]
