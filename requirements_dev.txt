@@ -150,7 +150,7 @@ pytest==9.0.2
     #   pytest-cov
     #   pytest-xdist
 pytest-benchmark==5.2.3
-pytest-cov==6.3.0
+pytest-cov==7.1.0
 pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
     # via ghp-import
