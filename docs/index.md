@@ -79,17 +79,20 @@ The code above uses [Pyodide](https://pyodide.org/en/stable/index.html) to provi
 
     This library also provides options to:
 
-    - Parse domain name from a URL
-    - Parse domain name from an email address
-    - Parse IP address from a CIDR range
-    - Parse URLs without a scheme (e.g. without `https://`)
-    - Parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx)
+    - Parse domain name from a URL (only applicable when `"domains"` is in `included_ioc_types`)
+    - Parse domain name from an email address (only applicable when `"domains"` is in `included_ioc_types`)
+    - Parse domain name from an XMPP address (only applicable when `"domains"` is in `included_ioc_types`)
+    - Parse IP address from a CIDR range (only applicable when `"ipv4s"` is in `included_ioc_types`)
+    - Parse URLs without a scheme (e.g. without `https://`) (only applicable when `"urls"` or `"urls_complete"` is in `included_ioc_types`)
+    - Parse [import hashes](https://www.fireeye.com/blog/threat-research/2014/01/tracking-malware-import-hashing.html) and [authentihashes](http://msdn.microsoft.com/en-us/library/windows/hardware/gg463180.aspx) (only applicable when `"imphashes"` / `"authentihashes"` is in `included_ioc_types`)
+    - Limit parsing to specific IOC types using `included_ioc_types` (see [Options](quick-start.md#options) for details)
 
 ??? info "Known Limitations"
 
     - When parsing **registry key paths**, this library will NOT properly parse a registry key path where the last section contains a space. For example, `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced on` will be parsed as `<HKCU>\software\microsoft\windows\currentversion\explorer\advanced` (the space in the final section is removed).
     - The items listed above (in the "Capabilities" section) that are postceded by "(*beta*)" are not very robust and may still have major issues. Any feedback or issues related to these items are much appreciated.
     - When parsing **markdown**, if there is a domain name that is surrounded by underscores (which would make the domain name italic in some flavours of markdown - e.g. `_google.com_`), the domain will be parsed *including* the leading underscore (e.g. `_google.com_` would be parsed as `_google.com`).
+    - The **bitcoin address** grammar may also match file hashes that happen to resemble bitcoin addresses. Specifically, MD5 hashes (32 hex characters) starting with `1` or `3` can match the P2PKH/P2SH address patterns, and MD5/SHA1/SHA256 hashes starting with `bc1` can match the Bech32 address pattern. These values will appear in both the hash results and the `bitcoin_addresses` results. See [#226](https://github.com/fhightower/ioc-finder/issues/226).
 
 ## Feedback
 

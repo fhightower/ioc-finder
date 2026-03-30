@@ -537,6 +537,42 @@ def test_ssdeep_not_parsed_from_ipv6():
     assert "2001:0db8:0000:0000:0000:ff00:0042:8329" in iocs["ipv6s"]
 
 
+def test_bitcoin_grammar_may_match_hashes_issue_226():
+    """Bitcoin grammar can match hashes that look like bitcoin addresses.
+
+    See https://github.com/fhightower/ioc-finder/issues/226
+    """
+    # MD5 starting with '1' matches P2PKH bitcoin pattern
+    md5_starting_with_1 = "1adf28a71089acdbab5038f58044c0ab"
+    iocs = find_iocs(md5_starting_with_1)
+    assert md5_starting_with_1 in iocs["md5s"]
+    assert md5_starting_with_1 in iocs["bitcoin_addresses"]
+
+    # MD5 starting with '3' matches P2SH bitcoin pattern
+    md5_starting_with_3 = "3adf28a71089acdbab5038f58044c0ab"
+    iocs = find_iocs(md5_starting_with_3)
+    assert md5_starting_with_3 in iocs["md5s"]
+    assert md5_starting_with_3 in iocs["bitcoin_addresses"]
+
+    # MD5 starting with 'bc1' matches Bech32 bitcoin pattern
+    md5_starting_with_bc1 = "bc1f28a71089acdbab5038f58044c0ab"
+    iocs = find_iocs(md5_starting_with_bc1)
+    assert md5_starting_with_bc1 in iocs["md5s"]
+    assert md5_starting_with_bc1 in iocs["bitcoin_addresses"]
+
+    # SHA1 starting with 'bc1' matches Bech32 bitcoin pattern
+    sha1_starting_with_bc1 = "bc1f28a71089acdbab5038f58044c0abcdef1234"
+    iocs = find_iocs(sha1_starting_with_bc1)
+    assert sha1_starting_with_bc1 in iocs["sha1s"]
+    assert sha1_starting_with_bc1 in iocs["bitcoin_addresses"]
+
+    # SHA256 starting with 'bc1' matches Bech32 bitcoin pattern
+    sha256_starting_with_bc1 = "bc1f28a71089acdbab5038f58044c0abcdef12345678901234567890abcdef12"
+    iocs = find_iocs(sha256_starting_with_bc1)
+    assert sha256_starting_with_bc1 in iocs["sha256s"]
+    assert sha256_starting_with_bc1 in iocs["bitcoin_addresses"]
+
+
 def test_certificate_serial_number_issue_96():
     # see https://github.com/fhightower/ioc-finder/issues/96
     s = """SolarWinds.Orion.Core.BusinessLayer.dll is signed by SolarWinds, using the certificate with serial number 0f:e9:73:75:20:22:a6:06:ad:f2:a3:6e:34:5d:c0:ed. The file was signed on March 24, 2020."""
