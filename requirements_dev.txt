@@ -52,7 +52,7 @@ executing==2.2.1
     # via stack-data
 ghp-import==2.1.0
     # via mkdocs
-hypothesis==6.151.9
+hypothesis==6.151.10
     # via
     #   d8s-dicts
     #   d8s-hypothesis
