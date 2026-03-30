@@ -78,7 +78,7 @@ dev = [
     "pytest-cov>=7.0,<8.0",
     "pytest-xdist>=3.5.0,<4.0",
     "requests>=2.25.1,<3.0",
-    "ruff>=0.11.0,<0.12.0",
+    "ruff>=0.11.0,<0.16.0",
 ]
 
 [tool.hatch.build.targets.sdist]
