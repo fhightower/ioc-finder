@@ -529,6 +529,14 @@ def test_ssdeep_parsing():
     assert iocs["ssdeeps"] == []
 
 
+def test_ssdeep_not_parsed_from_ipv6():
+    # https://github.com/fhightower/ioc-finder/issues/228
+    s = "2001:0db8:0000:0000:0000:ff00:0042:8329"
+    iocs = find_iocs(s)
+    assert iocs["ssdeeps"] == []
+    assert "2001:0db8:0000:0000:0000:ff00:0042:8329" in iocs["ipv6s"]
+
+
 def test_bitcoin_grammar_may_match_hashes_issue_226():
     """Bitcoin grammar can match hashes that look like bitcoin addresses.
 

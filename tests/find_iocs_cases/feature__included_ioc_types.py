@@ -29,9 +29,7 @@ IOC_EXAMPLES = {
     "md5s": ["a" * 32],
     "ssdeeps": [
         "12288:QYV6MorX7qzuC3QHO9FQVHPF51jgcSj2EtPo/V7I6R+Lqaw8i6hG0:vBXu9HGaVHh4Po/VU6RkqaQ6F",
-        "0000:0000:ff00",
-        "2001:0db8:0000",
-    ],  # I don't like that the components of an ipv6 can be parsed as an ssdeep... I've ticketed this here: https://github.com/fhightower/ioc-finder/issues/228
+    ],
     "asns": ["ASN123"],
     "cves": ["CVE-2022-1234"],
     "registry_key_paths": [r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows"],
