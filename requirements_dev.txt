@@ -25,7 +25,7 @@ colorama==0.4.6
     #   mkdocs
     #   mkdocs-material
     #   pytest
-coverage==7.13.4
+coverage==7.13.5
     # via
     #   codecov
     #   pytest-cov
@@ -52,7 +52,7 @@ executing==2.2.1
     # via stack-data
 ghp-import==2.1.0
     # via mkdocs
-hypothesis==6.151.9
+hypothesis==6.151.10
     # via
     #   d8s-dicts
     #   d8s-hypothesis
@@ -94,7 +94,7 @@ mkdocs==1.6.1
     # via mkdocs-material
 mkdocs-get-deps==0.2.1
     # via mkdocs
-mkdocs-material==9.7.6
+mkdocs-material==9.7.4
 mkdocs-material-extensions==1.3.1
     # via mkdocs-material
 more-itertools==10.8.0
@@ -134,15 +134,15 @@ pure-eval==0.2.3
     # via stack-data
 py-cpuinfo==9.0.0
     # via pytest-benchmark
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   ipython
     #   ipython-pygments-lexers
     #   mkdocs-material
     #   pytest
-pymdown-extensions==10.21
+pymdown-extensions==10.21.2
     # via mkdocs-material
-pyparsing==3.1.1
+pyparsing==3.3.2
     # via ioc-finder
 pytest==9.0.2
     # via
@@ -166,7 +166,7 @@ requests==2.33.0
     # via
     #   codecov
     #   mkdocs-material
-ruff==0.11.13
+ruff==0.15.8
 six==1.17.0
     # via python-dateutil
 sortedcontainers==2.4.0
