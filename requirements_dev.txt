@@ -101,7 +101,7 @@ more-itertools==10.8.0
     # via
     #   d8s-dicts
     #   d8s-lists
-mypy==1.19.1
+mypy==1.20.0
 mypy-extensions==1.1.0
     # via mypy
 packaging==26.0
