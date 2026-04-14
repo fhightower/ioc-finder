@@ -144,7 +144,7 @@ pymdown-extensions==10.21.2
     # via mkdocs-material
 pyparsing==3.3.2
     # via ioc-finder
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   pytest-benchmark
     #   pytest-cov
