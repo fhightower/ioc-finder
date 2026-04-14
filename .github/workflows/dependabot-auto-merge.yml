@@ -1,0 +1,55 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.event_name == 'pull_request_target' && github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@v2
+
+      - name: Ensure label exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh label create auto-merge-candidate --color ededed --description "Dependabot dev-dep PR eligible for auto-merge after soak" --force --repo "$GITHUB_REPOSITORY"
+
+      - name: Label dev-dependency PRs
+        if: steps.meta.outputs.dependency-type == 'direct:development' && (steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr edit "$PR_URL" --add-label auto-merge-candidate
+
+  soak-and-merge:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    env:
+      SOAK_DAYS: 5
+    steps:
+      - name: Enable auto-merge on soaked PRs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cutoff=$(date -u -d "${SOAK_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ)
+          gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --author "app/dependabot" \
+            --label auto-merge-candidate \
+            --state open \
+            --json number,createdAt,autoMergeRequest \
+            --jq ".[] | select(.autoMergeRequest == null) | select(.createdAt < \"$cutoff\") | .number" \
+          | while read -r pr; do
+              echo "Enabling auto-merge on PR #$pr"
+              gh pr merge "$pr" --auto --squash --repo "$GITHUB_REPOSITORY"
+            done
