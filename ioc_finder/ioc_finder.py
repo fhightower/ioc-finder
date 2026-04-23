@@ -9,9 +9,9 @@ import click
 import ioc_fanger
 from pyparsing import ParseException, ParseResults
 
-_DEPRECATED_KWARG_SENTINEL = object()
-
 from ioc_finder import ioc_grammars
+
+_DEPRECATED_KWARG_SENTINEL = object()
 
 IndicatorList = list[str]
 IndicatorDict = dict[str, IndicatorList]
@@ -452,14 +452,12 @@ def parse_tlp_labels(text):
 @click.option(
     "--no_import_hashes",
     is_flag=True,
-    help="[DEPRECATED] Using this flag will not parse import hashes. This flag will "
-    "be removed in a future release.",
+    help="[DEPRECATED] Using this flag will not parse import hashes. This flag will be removed in a future release.",
 )
 @click.option(
     "--no_authentihashes",
     is_flag=True,
-    help="[DEPRECATED] Using this flag will not parse authentihashes. This flag will "
-    "be removed in a future release.",
+    help="[DEPRECATED] Using this flag will not parse authentihashes. This flag will be removed in a future release.",
 )
 def cli_find_iocs(
     text,
@@ -483,15 +481,13 @@ def cli_find_iocs(
     included_ioc_types = list(DEFAULT_IOC_TYPES)
     if no_import_hashes:
         click.echo(
-            "Warning: --no_import_hashes is deprecated and will be removed in a "
-            "future release.",
+            "Warning: --no_import_hashes is deprecated and will be removed in a future release.",
             err=True,
         )
         included_ioc_types.remove("imphashes")
     if no_authentihashes:
         click.echo(
-            "Warning: --no_authentihashes is deprecated and will be removed in a "
-            "future release.",
+            "Warning: --no_authentihashes is deprecated and will be removed in a future release.",
             err=True,
         )
         included_ioc_types.remove("authentihashes")
@@ -556,7 +552,7 @@ def find_iocs(
     else:
         warnings.warn(
             "The `parse_imphashes` argument is deprecated and will be removed in a "
-            "future release. To disable imphash parsing, omit \"imphashes\" from "
+            'future release. To disable imphash parsing, omit "imphashes" from '
             "`included_ioc_types` instead.",
             DeprecationWarning,
             stacklevel=2,
@@ -566,7 +562,7 @@ def find_iocs(
     else:
         warnings.warn(
             "The `parse_authentihashes` argument is deprecated and will be removed in "
-            "a future release. To disable authentihash parsing, omit \"authentihashes\" "
+            'a future release. To disable authentihash parsing, omit "authentihashes" '
             "from `included_ioc_types` instead.",
             DeprecationWarning,
             stacklevel=2,
