@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [8.0.2] - 2026.04.23
+
 ### Deprecated
 
 - The `parse_imphashes` and `parse_authentihashes` keyword arguments to `find_iocs()`, and the corresponding `--no_import_hashes` / `--no_authentihashes` CLI flags, are now deprecated in favor of omitting `"imphashes"` / `"authentihashes"` from `included_ioc_types`. Passing these arguments emits a `DeprecationWarning` (CLI flags print a notice to stderr). They will be removed in a future release. ([#225](https://github.com/fhightower/ioc-finder/issues/225))
