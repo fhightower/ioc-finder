@@ -117,10 +117,27 @@ def test_cli_disabling_import_hash_parsing():
     runner = CliRunner()
     result = runner.invoke(ioc_finder.cli_find_iocs, ["imphash 18ddf28a71089acdbab5038f58044c0a", "--no_import_hashes"])
     assert result.exit_code == 0
-    json_results = json.loads(result.output.strip())
+    json_results = json.loads(result.stdout.strip())
     # even if we don't parse imphashes, they are still removed so they aren't parsed as md5s
     assert json_results["md5s"] == []
     assert not json_results.get("imphashes")
+    assert "--no_import_hashes is deprecated" in result.stderr
+
+
+def test_cli_disabling_authentihash_parsing():
+    runner = CliRunner()
+    result = runner.invoke(
+        ioc_finder.cli_find_iocs,
+        [
+            "authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4",
+            "--no_authentihashes",
+        ],
+    )
+    assert result.exit_code == 0
+    json_results = json.loads(result.stdout.strip())
+    assert json_results["sha256s"] == []
+    assert not json_results.get("authentihashes")
+    assert "--no_authentihashes is deprecated" in result.stderr
 
     result = runner.invoke(ioc_finder.cli_find_iocs, ["imphash 18ddf28a71089acdbab5038f58044c0a"])
     assert result.exit_code == 0
