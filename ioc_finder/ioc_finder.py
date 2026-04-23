@@ -2,11 +2,14 @@
 
 import json
 import urllib.parse as urlparse
+import warnings
 from collections.abc import Callable, Iterable, Mapping
 
 import click
 import ioc_fanger
 from pyparsing import ParseException, ParseResults
+
+_DEPRECATED_KWARG_SENTINEL = object()
 
 from ioc_finder import ioc_grammars
 
@@ -449,12 +452,14 @@ def parse_tlp_labels(text):
 @click.option(
     "--no_import_hashes",
     is_flag=True,
-    help="Using this flag will not parse import hashes",
+    help="[DEPRECATED] Using this flag will not parse import hashes. This flag will "
+    "be removed in a future release.",
 )
 @click.option(
     "--no_authentihashes",
     is_flag=True,
-    help="Using this flag will not parse authentihashes",
+    help="[DEPRECATED] Using this flag will not parse authentihashes. This flag will "
+    "be removed in a future release.",
 )
 def cli_find_iocs(
     text,
@@ -475,6 +480,22 @@ def cli_find_iocs(
         text = "\n".join(stdin_text)
         # text = '\n'.join([line for line in stdin_text])
 
+    included_ioc_types = list(DEFAULT_IOC_TYPES)
+    if no_import_hashes:
+        click.echo(
+            "Warning: --no_import_hashes is deprecated and will be removed in a "
+            "future release.",
+            err=True,
+        )
+        included_ioc_types.remove("imphashes")
+    if no_authentihashes:
+        click.echo(
+            "Warning: --no_authentihashes is deprecated and will be removed in a "
+            "future release.",
+            err=True,
+        )
+        included_ioc_types.remove("authentihashes")
+
     iocs = find_iocs(
         text,
         parse_domain_from_url=not no_url_domain_parsing,
@@ -483,8 +504,7 @@ def cli_find_iocs(
         parse_address_from_cidr=not no_cidr_address_parsing,
         parse_domain_name_from_xmpp_address=not no_xmpp_addr_domain_parsing,
         parse_urls_without_scheme=parse_urls_without_scheme,
-        parse_imphashes=not no_import_hashes,
-        parse_authentihashes=not no_authentihashes,
+        included_ioc_types=included_ioc_types,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
@@ -499,8 +519,8 @@ def find_iocs(
     parse_address_from_cidr: bool = True,
     parse_domain_name_from_xmpp_address: bool = True,
     parse_urls_without_scheme: bool = True,
-    parse_imphashes: bool = True,
-    parse_authentihashes: bool = True,
+    parse_imphashes: bool = _DEPRECATED_KWARG_SENTINEL,  # type: ignore[assignment]
+    parse_authentihashes: bool = _DEPRECATED_KWARG_SENTINEL,  # type: ignore[assignment]
     included_ioc_types: Iterable[str] | None = None,
 ) -> IndicatorData:
     """Find observables (a.k.a. indicators of compromise) in the given text.
@@ -520,15 +540,38 @@ def find_iocs(
             addresses. Only applicable when ``"domains"`` is in ``included_ioc_types``.
         parse_urls_without_scheme: Whether to parse URLs without a scheme. Only applicable
             when ``"urls"`` or ``"urls_complete"`` is in ``included_ioc_types``.
-        parse_imphashes: Whether to parse import hashes. Only applicable when
-            ``"imphashes"`` is in ``included_ioc_types``.
-        parse_authentihashes: Whether to parse authentihashes. Only applicable when
-            ``"authentihashes"`` is in ``included_ioc_types``.
+        parse_imphashes: Deprecated. Whether to parse import hashes. To disable
+            imphash parsing, omit ``"imphashes"`` from ``included_ioc_types`` instead.
+            This argument will be removed in a future release.
+        parse_authentihashes: Deprecated. Whether to parse authentihashes. To disable
+            authentihash parsing, omit ``"authentihashes"`` from ``included_ioc_types``
+            instead. This argument will be removed in a future release.
         included_ioc_types: Collection of IOC type names to parse. If ``None``, all
             default types are parsed. See ``DEFAULT_IOC_TYPES`` for valid values.
             When specified, the boolean options above only take effect if their
             corresponding IOC type is included.
     """
+    if parse_imphashes is _DEPRECATED_KWARG_SENTINEL:
+        parse_imphashes = True
+    else:
+        warnings.warn(
+            "The `parse_imphashes` argument is deprecated and will be removed in a "
+            "future release. To disable imphash parsing, omit \"imphashes\" from "
+            "`included_ioc_types` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+    if parse_authentihashes is _DEPRECATED_KWARG_SENTINEL:
+        parse_authentihashes = True
+    else:
+        warnings.warn(
+            "The `parse_authentihashes` argument is deprecated and will be removed in "
+            "a future release. To disable authentihash parsing, omit \"authentihashes\" "
+            "from `included_ioc_types` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     if included_ioc_types is None:
         included_ioc_types = DEFAULT_IOC_TYPES
 
