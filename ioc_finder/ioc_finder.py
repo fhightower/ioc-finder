@@ -1,6 +1,7 @@
 """Python package for finding observables in text."""
 
 import json
+import re
 import urllib.parse as urlparse
 import warnings
 from collections.abc import Callable, Iterable, Mapping
@@ -10,6 +11,21 @@ import ioc_fanger
 from pyparsing import ParseException, ParseResults
 
 from ioc_finder import ioc_grammars
+
+# A dotted run of label-like chars — cheap regex used to locate candidate domain
+# spans so the pyparsing grammar only runs where a domain could plausibly exist,
+# rather than at every offset of the input. The char classes here are kept in
+# sync with ioc_grammars.label (ASCII-only); if IDN support is ever added, both
+# this regex and the grammar need to change together.
+_DOMAIN_CANDIDATE_RE = re.compile(
+    # Boundaries mirror ioc_grammars.alphanum_word_start / alphanum_word_end,
+    # which only treat ASCII alphanumerics as word chars — so a domain may
+    # start right after '-' or '_' (e.g. "(-example.com)", "abc.-def.com").
+    r"(?<![A-Za-z0-9])"
+    r"[A-Za-z0-9_][A-Za-z0-9_-]*"
+    r"(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)+"
+    r"(?![A-Za-z0-9])"
+)
 
 _DEPRECATED_KWARG_SENTINEL = object()
 
@@ -183,8 +199,20 @@ def _percent_decode_url(urls: list, text: str) -> str:
 
 def parse_domain_names(text):
     """."""
-    domains = ioc_grammars.domain_name.searchString(text.lower())
-    return _listify(domains)
+    # Unlike the other parse_* helpers in this module, domain parsing is the
+    # hot spot: the ~1,500-entry TLD alternation inside ioc_grammars.domain_name
+    # makes running searchString at every offset expensive, so we pre-filter
+    # with a cheap regex and only hand candidate spans to pyparsing.
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in _DOMAIN_CANDIDATE_RE.finditer(text):
+        span = m.group(0)
+        for tokens, _start, _end in ioc_grammars.domain_name.scanString(span):
+            d = tokens[0]
+            if d and d not in seen:
+                seen.add(d)
+                out.append(d)
+    return out
 
 
 def parse_ipv4_addresses(text):
