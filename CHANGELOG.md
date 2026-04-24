@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [8.1.0] - 2026.04.24
+
+### Changed
+
+- The domain parser has been speed up with a regex pre-filter to identify possible candidate domains before using the grammar ([#335](https://github.com/fhightower/ioc-finder/pull/335))
+
 ## [8.0.2] - 2026.04.23
 
 ### Deprecated
