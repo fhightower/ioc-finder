@@ -487,64 +487,19 @@ def test_google_casing_deduplication():
     assert iocs["google_analytics_tracker_ids"] == ["UA-000000-1"]
 
 
-def test_not_parsing_imphash():
-    s = "imphash 18ddf28a71089acdbab5038f58044c0a"
-    with pytest.warns(DeprecationWarning, match="parse_imphashes"):
-        iocs = find_iocs(s, parse_imphashes=False)
-    assert "imphashes" not in iocs
-    # even if we aren't parsing imphashes, they will still be removed and, thus, not parsed as md5s
-    assert iocs["md5s"] == []
-
-
-def test_not_parsing_authentihash():
-    s = "authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"
-    with pytest.warns(DeprecationWarning, match="parse_authentihashes"):
-        iocs = find_iocs(s, parse_authentihashes=False)
-    assert "authentihashes" not in iocs
-    # even if we aren't parsing authentihashes, they will still be removed and, thus, not parsed as sha256s
-    assert iocs["sha256s"] == []
-
-
-def test_parse_imphashes_kwarg_is_deprecated():
-    with pytest.warns(DeprecationWarning, match=r"parse_imphashes.*deprecated"):
-        find_iocs("", parse_imphashes=True)
-
-
-def test_parse_authentihashes_kwarg_is_deprecated():
-    with pytest.warns(DeprecationWarning, match=r"parse_authentihashes.*deprecated"):
-        find_iocs("", parse_authentihashes=True)
-
-
-def _ioc_finder_deprecations(warning_list):
-    return [
-        w
-        for w in warning_list
-        if issubclass(w.category, DeprecationWarning)
-        and ("parse_imphashes" in str(w.message) or "parse_authentihashes" in str(w.message))
-    ]
-
-
-def test_no_deprecation_warning_when_kwargs_omitted(recwarn):
-    find_iocs("imphash 18ddf28a71089acdbab5038f58044c0a")
-    assert _ioc_finder_deprecations(recwarn.list) == []
-
-
-def test_included_ioc_types_replaces_parse_imphashes(recwarn):
-    """Omitting 'imphashes' from included_ioc_types should disable imphash parsing
-    without emitting our DeprecationWarning."""
+def test_excluding_imphashes_from_included_ioc_types():
+    """Omitting 'imphashes' from included_ioc_types disables imphash parsing."""
     s = "imphash 18ddf28a71089acdbab5038f58044c0a"
     types_without_imphashes = [t for t in DEFAULT_IOC_TYPES if t != "imphashes"]
     iocs = find_iocs(s, included_ioc_types=types_without_imphashes)
     assert "imphashes" not in iocs
-    assert _ioc_finder_deprecations(recwarn.list) == []
 
 
-def test_included_ioc_types_replaces_parse_authentihashes(recwarn):
+def test_excluding_authentihashes_from_included_ioc_types():
     s = "authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"
     types_without_authentihashes = [t for t in DEFAULT_IOC_TYPES if t != "authentihashes"]
     iocs = find_iocs(s, included_ioc_types=types_without_authentihashes)
     assert "authentihashes" not in iocs
-    assert _ioc_finder_deprecations(recwarn.list) == []
 
 
 def test_mac_address_parsing():
