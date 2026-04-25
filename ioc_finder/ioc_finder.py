@@ -236,9 +236,9 @@ def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) ->
 def _parse_url(url: str) -> ParseResults:
     """Parse a URL using the narrower grammar first, then the complete grammar."""
     try:
-        return ioc_grammars.scheme_less_url.parseString(url)
+        return ioc_grammars.scheme_less_url.parse_string(url)
     except ParseException:
-        return ioc_grammars.scheme_less_url_complete.parseString(url)
+        return ioc_grammars.scheme_less_url_complete.parse_string(url)
 
 
 def _remove_url_domain_name(urls: list, text: str) -> str:
@@ -268,7 +268,7 @@ def _remove_url_paths(urls: list, text: str) -> str:
 def _remove_url_userinfo(urls: list, text: str) -> str:
     """Remove userinfo from each URL so it is not parsed as an email address."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url_complete.parseString(url)
+        parsed_url = ioc_grammars.scheme_less_url_complete.parse_string(url)
         userinfo = parsed_url.url_authority.get("url_userinfo")
         if userinfo:
             text = text.replace(f"{userinfo}@", " ")
@@ -288,18 +288,18 @@ def parse_domain_names(text):
 
 def parse_ipv4_addresses(text):
     """."""
-    addresses = ioc_grammars.ipv4_address.searchString(text)
+    addresses = ioc_grammars.ipv4_address.search_string(text)
     return _listify(addresses)
 
 
 def _scan_candidates(text, candidate_re, grammar):
-    """Run `grammar.scanString` only on the spans matched by `candidate_re`,
+    """Run `grammar.scan_string` only on the spans matched by `candidate_re`,
     deduplicating tokens[0] across spans. Used by hotspot helpers where the
     pyparsing grammar would otherwise be tried at every offset of the input."""
     seen: set[str] = set()
     out: list[str] = []
     for m in candidate_re.finditer(text):
-        for tokens, _start, _end in grammar.scanString(m.group(0)):
+        for tokens, _start, _end in grammar.scan_string(m.group(0)):
             value = tokens[0]
             if value and value not in seen:
                 seen.add(value)
@@ -327,7 +327,7 @@ def parse_imphashes_(text: str) -> list:
     """."""
     full_imphash_instances = _scan_candidates(text.lower(), _IMPHASH_CANDIDATE_RE, ioc_grammars.imphash)
 
-    return [ioc_grammars.imphash.parseString(imphash).hash[0] for imphash in full_imphash_instances]
+    return [ioc_grammars.imphash.parse_string(imphash).hash[0] for imphash in full_imphash_instances]
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
@@ -335,60 +335,60 @@ def parse_authentihashes_(text: str) -> list:
     """."""
     full_authentihash_instances = _scan_candidates(text.lower(), _AUTHENTIHASH_CANDIDATE_RE, ioc_grammars.authentihash)
 
-    return [ioc_grammars.authentihash.parseString(a).hash[0] for a in full_authentihash_instances]
+    return [ioc_grammars.authentihash.parse_string(a).hash[0] for a in full_authentihash_instances]
 
 
 def parse_md5s(text):
     """."""
-    md5s = ioc_grammars.md5.searchString(text)
+    md5s = ioc_grammars.md5.search_string(text)
     return _listify(md5s)
 
 
 def parse_sha1s(text):
     """."""
-    sha1s = ioc_grammars.sha1.searchString(text)
+    sha1s = ioc_grammars.sha1.search_string(text)
     return _listify(sha1s)
 
 
 def parse_sha256s(text):
     """."""
-    sha256s = ioc_grammars.sha256.searchString(text)
+    sha256s = ioc_grammars.sha256.search_string(text)
     return _listify(sha256s)
 
 
 def parse_sha512s(text):
     """."""
-    sha512s = ioc_grammars.sha512.searchString(text)
+    sha512s = ioc_grammars.sha512.search_string(text)
     return _listify(sha512s)
 
 
 def parse_ssdeeps(text):
     """."""
-    ssdeeps = ioc_grammars.ssdeep.searchString(text)
+    ssdeeps = ioc_grammars.ssdeep.search_string(text)
     return _listify(ssdeeps)
 
 
 def parse_asns(text):
     """."""
-    asns = ioc_grammars.asn.searchString(text)
+    asns = ioc_grammars.asn.search_string(text)
     return _listify(asns)
 
 
 def parse_cves(text):
     """."""
-    cves = ioc_grammars.cve.searchString(text)
+    cves = ioc_grammars.cve.search_string(text)
     return _listify(cves)
 
 
 def parse_ipv4_cidrs(text: str) -> list:
     """."""
-    cidrs = ioc_grammars.ipv4_cidr.searchString(text)
+    cidrs = ioc_grammars.ipv4_cidr.search_string(text)
     return _listify(cidrs)
 
 
 def parse_registry_key_paths(text):
     """."""
-    parsed_registry_key_paths = ioc_grammars.registry_key_path.searchString(text)
+    parsed_registry_key_paths = ioc_grammars.registry_key_path.search_string(text)
     full_parsed_registry_key_paths = _listify(parsed_registry_key_paths)
 
     registry_key_paths = []
@@ -409,31 +409,31 @@ def parse_registry_key_paths(text):
 
 def parse_google_adsense_ids(text):
     """."""
-    adsense_publisher_ids = ioc_grammars.google_adsense_publisher_id.searchString(text)
+    adsense_publisher_ids = ioc_grammars.google_adsense_publisher_id.search_string(text)
     return _listify(adsense_publisher_ids)
 
 
 def parse_google_analytics_ids(text):
     """."""
-    analytics_tracker_ids = ioc_grammars.google_analytics_tracker_id.searchString(text)
+    analytics_tracker_ids = ioc_grammars.google_analytics_tracker_id.search_string(text)
     return _listify(analytics_tracker_ids)
 
 
 def parse_bitcoin_addresses(text):
     """."""
-    bitcoin_addresses = ioc_grammars.bitcoin_address.searchString(text)
+    bitcoin_addresses = ioc_grammars.bitcoin_address.search_string(text)
     return _listify(bitcoin_addresses)
 
 
 def parse_monero_addresses(text):
     """."""
-    monero_addresses = ioc_grammars.monero_address.searchString(text)
+    monero_addresses = ioc_grammars.monero_address.search_string(text)
     return _listify(monero_addresses)
 
 
 def parse_xmpp_addresses(text: str) -> list:
     """."""
-    xmpp_addresses = ioc_grammars.xmpp_address.searchString(text)
+    xmpp_addresses = ioc_grammars.xmpp_address.search_string(text)
     return _listify(xmpp_addresses)
 
 
@@ -466,7 +466,7 @@ def parse_user_agents(text):
     out: list[str] = []
     for i, start in enumerate(starts):
         end = starts[i + 1] if i + 1 < len(starts) else len(text)
-        for tokens, _s, _e in ioc_grammars.user_agent.scanString(text[start:end]):
+        for tokens, _s, _e in ioc_grammars.user_agent.scan_string(text[start:end]):
             value = tokens[0]
             if value and value not in seen:
                 seen.add(value)
@@ -521,7 +521,7 @@ def parse_mobile_attack_techniques(text):
 
 def parse_tlp_labels(text):
     """."""
-    tlp_labels = ioc_grammars.tlp_label.searchString(text)
+    tlp_labels = ioc_grammars.tlp_label.search_string(text)
     return _listify(tlp_labels)
 
 

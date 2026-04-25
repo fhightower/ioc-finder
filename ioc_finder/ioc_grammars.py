@@ -41,11 +41,11 @@ from ioc_finder.data import (
     tlds,
 )
 
-alphanum_word_start = WordStart(wordChars=alphanums)
-alphanum_word_end = WordEnd(wordChars=alphanums)
+alphanum_word_start = WordStart(word_chars=alphanums)
+alphanum_word_end = WordEnd(word_chars=alphanums)
 
 # the label definition ignores the fact that labels should not end in an hyphen
-label = Word(initChars=alphanums + "_", bodyChars=alphanums + "-_", max=63)
+label = Word(init_chars=alphanums + "_", body_chars=alphanums + "-_", max=63)
 domain_tld = one_of(tlds, caseless=True)
 domain_name = (
     alphanum_word_start
@@ -56,9 +56,9 @@ domain_name = (
 ).set_parse_action(pyparsing_common.downcase_tokens)
 
 ipv4_section = (
-    Word(nums, asKeyword=True, max=3)
+    Word(nums, as_keyword=True, max=3)
     .set_parse_action(lambda x: str(int(x[0])))
-    .addCondition(lambda tokens: int(tokens[0]) < 256)
+    .add_condition(lambda tokens: int(tokens[0]) < 256)
 )
 # basically, the grammar below says: start any words that start with a '.' or a number;
 # I want to match words that start with a '.' because this will fail later in the grammar...
@@ -71,19 +71,19 @@ ipv4_address = (
     + alphanum_word_end
 )
 
-ipv6_word_start = WordStart(wordChars=alphanums + ":")
-ipv6_word_end = WordEnd(wordChars=alphanums + ":")
+ipv6_word_start = WordStart(word_chars=alphanums + ":")
+ipv6_word_end = WordEnd(word_chars=alphanums + ":")
 
 hexadectet = Word(hexnums, min=1, max=4)
 ipv6_address_full = ipv6_word_start + Combine((hexadectet + ":") * 7 + hexadectet)
 
 # the condition on the end of this grammar is designed to make sure that any shortened ipv6 addresses have '::' in them
-ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(":"), Word(":")])) + hexadectet).addCondition(
+ipv6_address_shortened = Combine(OneOrMore(Or([hexadectet + Word(":"), Word(":")])) + hexadectet).add_condition(
     lambda tokens: tokens[0].count("::") > 0
 )
 
 ipv6_address = (
-    Or([ipv6_address_full, ipv6_address_shortened]).addCondition(lambda tokens: tokens[0].count(":") > 1)
+    Or([ipv6_address_full, ipv6_address_shortened]).add_condition(lambda tokens: tokens[0].count(":") > 1)
     + ipv6_word_end
 )
 
@@ -102,7 +102,7 @@ complete_email_address = Combine(
     + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
 )
 
-email_local_part = Word(alphanums, bodyChars=alphanums + "+-_.").set_parse_action(pyparsing_common.downcase_tokens)
+email_local_part = Word(alphanums, body_chars=alphanums + "+-_.").set_parse_action(pyparsing_common.downcase_tokens)
 email_address = alphanum_word_start + Combine(
     email_local_part("email_address_local_part")
     + "@"
@@ -126,8 +126,8 @@ url_path_word = Word(alphanums + "-._~!$&'()*+;=:%")
 url_path_word_complete = Word(alphanums + "-._~!$&'()*+,;=:%")
 url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
 url_path_complete = Combine(OneOrMore(MatchFirst([url_path_word_complete, Literal("/")])))
-url_query = Word(printables, excludeChars="#\"']")
-url_fragment = Word(printables, excludeChars="?\"']")
+url_query = Word(printables, exclude_chars="#\"']")
+url_fragment = Word(printables, exclude_chars="?\"']")
 url = alphanum_word_start + Combine(
     url_scheme("url_scheme")
     + "://"
@@ -163,7 +163,7 @@ scheme_less_url_complete = alphanum_word_start + Or(
 
 # this allows for matching file hashes preceeded with an 'x' or 'X'...
 # see https://github.com/fhightower/ioc-finder/issues/41
-file_hash_word_start = WordStart(wordChars=alphanums.replace("x", "").replace("X", ""))
+file_hash_word_start = WordStart(word_chars=alphanums.replace("x", "").replace("X", ""))
 md5 = (
     file_hash_word_start
     + Word(hexnums, exact=32).set_parse_action(pyparsing_common.downcase_tokens)
@@ -171,9 +171,9 @@ md5 = (
 )
 imphash = Combine(
     Or([CaselessLiteral("imphash"), CaselessLiteral("import hash")])
-    + Optional(Word(printables, excludeChars=alphanums))
+    + Optional(Word(printables, exclude_chars=alphanums))
     + md5("hash"),
-    joinString=" ",
+    join_string=" ",
     adjacent=False,
 )
 sha1 = (
@@ -187,8 +187,8 @@ sha256 = (
     + alphanum_word_end
 )
 authentihash = Combine(
-    CaselessLiteral("authentihash") + Optional(Word(printables, excludeChars=alphanums)) + sha256("hash"),
-    joinString=" ",
+    CaselessLiteral("authentihash") + Optional(Word(printables, exclude_chars=alphanums)) + sha256("hash"),
+    join_string=" ",
     adjacent=False,
 )
 sha512 = (
@@ -279,12 +279,12 @@ registry_key_subpath_section = Combine(
         Optional(Word(".", max=1))
         # the registry key path section can contain any alphanum text (including spaces) as long as the text is not
         # one of the registry key path root keys and as long as there are not multiple, consecutive spaces
-        + Word(alphanums + " ").addCondition(
+        + Word(alphanums + " ").add_condition(
             lambda tokens: tokens[0].strip() not in root_key_list and not hasMultipleConsecutiveSpaces(tokens[0])
         )
     )
     + Optional(Word(">"))
-).addCondition(lambda tokens: hasBothOrNeitherAngleBrackets(tokens[0]))
+).add_condition(lambda tokens: hasBothOrNeitherAngleBrackets(tokens[0]))
 registry_key_subpath = OneOrMore(registry_key_subpath_section)
 registry_key_path = (
     alphanum_word_start
@@ -340,15 +340,15 @@ monero_address = alphanum_word_start + Regex("4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}")
 # see https://github.com/fhightower/ioc-finder/issues/18
 xmpp_address = alphanum_word_start + Combine(
     email_local_part("email_address_local_part") + "@" + domain_name("jabber_address_domain")
-).addCondition(lambda tokens: "jabber" in tokens[0].split("@")[-1] or "xmpp" in tokens[0].split("@")[-1])
+).add_condition(lambda tokens: "jabber" in tokens[0].split("@")[-1] or "xmpp" in tokens[0].split("@")[-1])
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx
 mac_address_16_bit_section = Combine((Word(hexnums, exact=2) + one_of("- :")) * 5 + Word(hexnums, exact=2))
 # handles xxxx.xxxx.xxxx
 mac_address_32_bit_section = Combine((Word(hexnums, exact=4) + ".") * 2 + Word(hexnums, exact=4))
-mac_address_word_start = WordStart(wordChars=alphanums + ":-.")
-mac_address_word_end = WordEnd(wordChars=alphanums + ":-.")
+mac_address_word_start = WordStart(word_chars=alphanums + ":-.")
+mac_address_word_end = WordEnd(word_chars=alphanums + ":-.")
 mac_address = (
     mac_address_word_start + MatchFirst([mac_address_16_bit_section, mac_address_32_bit_section]) + mac_address_word_end
 )
@@ -358,19 +358,19 @@ mac_address = (
 # (the chunk) is at least as big if not bigger than the third section (the double_chunk)
 ssdeep = alphanum_word_start + Combine(
     Word(nums) + ":" + Word(alphanums + "/+", min=3) + ":" + Word(alphanums + "/+", min=3)
-).addCondition(lambda tokens: len(tokens[0].split(":")[1]) >= len(tokens[0].split(":")[2]))
+).add_condition(lambda tokens: len(tokens[0].split(":")[1]) >= len(tokens[0].split(":")[2]))
 
 user_agent_platform_version = Regex(r"[0-9]+(\.[0-9]*)*")
 user_agent_start = Combine(Regex(r"[Mm]ozilla/") + user_agent_platform_version)
 user_agent_details = Regex(r"\(.+?\)")
 user_agent_platform = Combine(
     alphanum_word_start
-    + Regex(r"[a-zA-Z]{2,}/?").addCondition(lambda tokens: tokens[0].lower().strip("/") != "mozilla")
+    + Regex(r"[a-zA-Z]{2,}/?").add_condition(lambda tokens: tokens[0].lower().strip("/") != "mozilla")
     + Optional(user_agent_platform_version)
 )
 user_agent = Combine(
     user_agent_start + user_agent_details + ZeroOrMore(user_agent_platform + Optional(user_agent_details)),
-    joinString=" ",
+    join_string=" ",
     adjacent=False,
 )
 
@@ -390,7 +390,7 @@ unix_file_path_wordstart.wordChars.add("~")
 
 unix_file_path = unix_file_path_wordstart + Combine(
     one_of("~ /") + Word(printables + " ", exclude_chars=".") + "." + file_ending
-).addCondition(lambda tokens: "//" not in tokens[0])
+).add_condition(lambda tokens: "//" not in tokens[0])
 file_path = Or([windows_file_path, unix_file_path]) + alphanum_word_end
 
 # be aware that the phone_number grammar assumes that the text being sent to it has been reversed
