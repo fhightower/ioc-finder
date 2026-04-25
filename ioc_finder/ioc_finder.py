@@ -1,6 +1,7 @@
 """Python package for finding observables in text."""
 
 import json
+import re
 import urllib.parse as urlparse
 import warnings
 from collections.abc import Callable, Iterable, Mapping
@@ -10,6 +11,19 @@ import ioc_fanger
 from pyparsing import ParseException, ParseResults
 
 from ioc_finder import ioc_grammars
+
+# Cheap regexes used to locate ATT&CK-ID-shaped candidate spans so the
+# pyparsing grammars (which carry alternations of hundreds of literal IDs)
+# only run where a match could plausibly occur rather than at every offset.
+# The leading lookbehind mirrors ioc_grammars.alphanum_word_start, which only
+# treats ASCII alphanumerics as word chars. Trailing char classes greedily
+# consume any remaining alphanumerics (and dots, for techniques with
+# sub-technique suffixes) so the grammar is handed the full token and can
+# apply its own word-end check — e.g. "T1156.0012" must reach the grammar
+# intact so it can be correctly rejected rather than truncated to "T1156".
+_ATTACK_MITIGATION_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])M\d{4}[A-Za-z0-9]*", re.IGNORECASE)
+_ATTACK_TACTIC_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])TA\d{4}[A-Za-z0-9]*", re.IGNORECASE)
+_ATTACK_TECHNIQUE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])T\d{4}[A-Za-z0-9.]*", re.IGNORECASE)
 
 _DEPRECATED_KWARG_SENTINEL = object()
 
@@ -362,52 +376,74 @@ def parse_file_paths(text):
     return _listify(file_paths)
 
 
+def _scan_attack_candidates(text, candidate_re, grammar):
+    # Pre-filtering with a cheap regex avoids running the large one_of(...)
+    # alternation inside the grammar at every offset of the text.
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in candidate_re.finditer(text):
+        for tokens, _start, _end in grammar.scanString(m.group(0)):
+            value = tokens[0]
+            if value and value not in seen:
+                seen.add(value)
+                out.append(value)
+    return out
+
+
 def parse_pre_attack_tactics(text):
     """."""
-    data = ioc_grammars.pre_attack_tactics_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar
+    )
 
 
 def parse_pre_attack_techniques(text):
     """."""
-    data = ioc_grammars.pre_attack_techniques_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.pre_attack_techniques_grammar
+    )
 
 
 def parse_enterprise_attack_mitigations(text):
     """."""
-    data = ioc_grammars.enterprise_attack_mitigations_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.enterprise_attack_mitigations_grammar
+    )
 
 
 def parse_enterprise_attack_tactics(text):
     """."""
-    data = ioc_grammars.enterprise_attack_tactics_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.enterprise_attack_tactics_grammar
+    )
 
 
 def parse_enterprise_attack_techniques(text):
     """."""
-    data = ioc_grammars.enterprise_attack_techniques_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.enterprise_attack_techniques_grammar
+    )
 
 
 def parse_mobile_attack_mitigations(text):
     """."""
-    data = ioc_grammars.mobile_attack_mitigations_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.mobile_attack_mitigations_grammar
+    )
 
 
 def parse_mobile_attack_tactics(text):
     """."""
-    data = ioc_grammars.mobile_attack_tactics_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.mobile_attack_tactics_grammar
+    )
 
 
 def parse_mobile_attack_techniques(text):
     """."""
-    data = ioc_grammars.mobile_attack_techniques_grammar.searchString(text)
-    return _listify(data)
+    return _scan_attack_candidates(
+        text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.mobile_attack_techniques_grammar
+    )
 
 
 def parse_tlp_labels(text):

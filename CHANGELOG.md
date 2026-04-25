@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- The enterprise/mobile/pre-attack mitigation, tactic, and technique parsers now use a regex pre-filter to identify candidate ATT&CK-ID spans before running the grammar, significantly improving performance on large inputs ([#238](https://github.com/fhightower/ioc-finder/issues/238))
+
 ## [8.0.2] - 2026.04.23
 
 ### Deprecated

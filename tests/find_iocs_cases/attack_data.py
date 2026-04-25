@@ -70,4 +70,12 @@ ATTACK_DATA = [
     ),
     param("T1546.004", {"attack_techniques": {"enterprise": ["T1546.004"]}}, {}, id="attack_pattern_15"),
     param("T1156.0012", {}, {}, id="attack_pattern_16"),
+    param("T1156.001", {"attack_techniques": {"enterprise": ["T1156.001"]}}, {}, id="attack_pattern_17"),
+    param("foo T1156.0012 bar", {}, {}, id="attack_pattern_18"),
+    param(
+        "foo T1156.001 bar T1156.0012 baz",
+        {"attack_techniques": {"enterprise": ["T1156.001"]}},
+        {},
+        id="attack_pattern_19",
+    ),
 ]
