@@ -11,6 +11,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Extended the regex pre-filter approach (introduced for the domain and ATT&CK parsers) to the remaining hot-path parsers. `parse_complete_email_addresses`, `parse_email_addresses`, `parse_ipv6_addresses`, `parse_imphashes_`, `parse_authentihashes_`, `parse_urls`, `parse_urls_complete`, `parse_mac_addresses`, `parse_user_agents`, and `parse_file_paths` now use cheap candidate regexes to narrow where the pyparsing grammar runs, dropping benchmark mean from ~7.1s to ~2.4s on the long benchmark article. The `parse_domain_names` and ATT&CK helpers were folded onto the same shared `_scan_candidates` helper (no behavior change).
 - Added `scripts/find_hotspots.py` to reproduce per-grammar timings and a cProfile drill-down for future tuning.
 
+### Removed
+
+- **Breaking:** Removed the deprecated `parse_imphashes` and `parse_authentihashes` keyword arguments from `find_iocs()`, along with the `--no_import_hashes` and `--no_authentihashes` CLI flags. To disable parsing of these hash types, omit `"imphashes"` / `"authentihashes"` from `included_ioc_types` instead. ([#333](https://github.com/fhightower/ioc-finder/issues/333))
+
 ## [8.1.0] - 2026.04.25
 
 ### Changed
