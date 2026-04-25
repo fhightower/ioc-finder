@@ -2,8 +2,13 @@
 
 import pytest
 
-from ioc_finder import find_iocs
-from ioc_finder.ioc_finder import DEFAULT_IOC_TYPES
+from ioc_finder import find_iocs as _find_iocs
+from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES
+
+
+def find_iocs(*args, **kwargs):
+    kwargs.setdefault("included_ioc_types", SUPPORTED_IOC_TYPES)
+    return _find_iocs(*args, **kwargs)
 
 
 @pytest.fixture
@@ -33,7 +38,7 @@ def test_url_with_underscore_in_subdomain():
 
 
 def test_ioc_finder(text_a):
-    iocs = find_iocs(text_a)
+    iocs = find_iocs(text_a, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert len(iocs["domains"]) == 3
     assert "example.com" in iocs["domains"]
     assert "example.org" in iocs["domains"]
@@ -88,7 +93,7 @@ def test_url_parsing():
 
 def test_issue_45_url_parsing():
     s = "http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p'6_%09/d%5c"
-    results = find_iocs(s)
+    results = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert results["urls"] == ["http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz"]
     assert results["urls_complete"] == [
         "http://wmfolcs3.pn.4y.nv.kr2x1dt.net/gz+/(y%40%26//%3c7aew%5cqv%0a/%0bcz,r/r%5c%7b/7re//6%3e/f%23%7ce0p'6_%09/d%5c"
@@ -114,24 +119,24 @@ def test_schemeless_url_parsing():
 
 def test_address_email_address():
     s = ">test@[192.168.2.1]<"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == ["test@[192.168.2.1]"]
     assert iocs["email_addresses"] == ["test@[192.168.2.1]"]
     assert iocs["ipv4s"] == ["192.168.2.1"]
 
     s = "bad@[192.168.7.3]"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["ipv4s"] == ["192.168.7.3"]
     assert iocs["email_addresses_complete"] == ["bad@[192.168.7.3]"]
     assert iocs["email_addresses"] == ["bad@[192.168.7.3]"]
 
     s = "bad@[192.168.7.3]aaaaa"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == ["bad@[192.168.7.3]"]
     assert iocs["email_addresses"] == ["bad@[192.168.7.3]"]
 
     s = "jsmith@[IPv6:2001:db8::1]"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == ["jsmith@[IPv6:2001:db8::1]"]
     assert iocs["email_addresses"] == ["jsmith@[IPv6:2001:db8::1]"]
     assert iocs["ipv6s"] == ["2001:db8::1"]
@@ -256,29 +261,29 @@ def test_domain_parsing():
 
 def test_email_address_parsing():
     s = 'my email is: foo"bar@gmail.com'
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == ['foo"bar@gmail.com']
     assert iocs["email_addresses"] == ["bar@gmail.com"]
 
     s = "Abc\\@def@example.com"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     print(iocs["email_addresses_complete"])
     print(iocs["email_addresses"])
     assert iocs["email_addresses_complete"] == ["Abc\\@def@example.com"]
     assert iocs["email_addresses"] == ["def@example.com"]
 
     s = 'foobar@gmail.com"'
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == ["foobar@gmail.com"]
     assert iocs["email_addresses"] == ["foobar@gmail.com"]
 
     s = "foobar@gmail.comahhhhhhhh"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == []
     assert iocs["email_addresses"] == []
 
     s = '"foobar@gmail.com'
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["email_addresses_complete"] == ['"foobar@gmail.com']
     assert iocs["email_addresses"] == ["foobar@gmail.com"]
 
@@ -451,67 +456,67 @@ def test_deduplication_of_indicators_with_different_cases():
 
 def test_google_adsense_publisher_ids():
     s = "PUB-1234567891234567"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_adsense_publisher_ids"] == ["pub-1234567891234567"]
 
     s = "pUb-1234567891234567"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_adsense_publisher_ids"] == []
 
     s = "PUB-1234567891234567"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_adsense_publisher_ids"] == ["pub-1234567891234567"]
 
 
 def test_google_analyitics_tracker_ids():
     s = "ua-000000-1"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_analytics_tracker_ids"] == ["UA-000000-1"]
 
     s = "uA-000000-1"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_analytics_tracker_ids"] == []
 
     s = "UA-000000-1"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_analytics_tracker_ids"] == ["UA-000000-1"]
 
 
 def test_google_casing_deduplication():
     s = "pub-1234567891234567 PUB-1234567891234567 pUb-1234567891234567"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_adsense_publisher_ids"] == ["pub-1234567891234567"]
 
     s = "UA-000000-1 ua-000000-1"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["google_analytics_tracker_ids"] == ["UA-000000-1"]
 
 
 def test_excluding_imphashes_from_included_ioc_types():
     """Omitting 'imphashes' from included_ioc_types disables imphash parsing."""
     s = "imphash 18ddf28a71089acdbab5038f58044c0a"
-    types_without_imphashes = [t for t in DEFAULT_IOC_TYPES if t != "imphashes"]
+    types_without_imphashes = [t for t in SUPPORTED_IOC_TYPES if t != "imphashes"]
     iocs = find_iocs(s, included_ioc_types=types_without_imphashes)
     assert "imphashes" not in iocs
 
 
 def test_excluding_authentihashes_from_included_ioc_types():
     s = "authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"
-    types_without_authentihashes = [t for t in DEFAULT_IOC_TYPES if t != "authentihashes"]
+    types_without_authentihashes = [t for t in SUPPORTED_IOC_TYPES if t != "authentihashes"]
     iocs = find_iocs(s, included_ioc_types=types_without_authentihashes)
     assert "authentihashes" not in iocs
 
 
 def test_mac_address_parsing():
     s = "2019.02.15"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["mac_addresses"] == []
 
 
 def test_unix_file_paths__not_detect_url():
     # https://github.com/fhightower/ioc-finder/issues/42
     s = "https://twitter.com/"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["file_paths"] == []
 
 
@@ -525,14 +530,14 @@ def test_ipv6_parsing():
 def test_ssdeep_parsing():
     # https://github.com/fhightower/ioc-finder/issues/36
     s = "11:04:10 -0500"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["ssdeeps"] == []
 
 
 def test_ssdeep_not_parsed_from_ipv6():
     # https://github.com/fhightower/ioc-finder/issues/228
     s = "2001:0db8:0000:0000:0000:ff00:0042:8329"
-    iocs = find_iocs(s)
+    iocs = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert iocs["ssdeeps"] == []
     assert "2001:0db8:0000:0000:0000:ff00:0042:8329" in iocs["ipv6s"]
 
@@ -544,31 +549,31 @@ def test_bitcoin_grammar_may_match_hashes_issue_226():
     """
     # MD5 starting with '1' matches P2PKH bitcoin pattern
     md5_starting_with_1 = "1adf28a71089acdbab5038f58044c0ab"
-    iocs = find_iocs(md5_starting_with_1)
+    iocs = find_iocs(md5_starting_with_1, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert md5_starting_with_1 in iocs["md5s"]
     assert md5_starting_with_1 in iocs["bitcoin_addresses"]
 
     # MD5 starting with '3' matches P2SH bitcoin pattern
     md5_starting_with_3 = "3adf28a71089acdbab5038f58044c0ab"
-    iocs = find_iocs(md5_starting_with_3)
+    iocs = find_iocs(md5_starting_with_3, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert md5_starting_with_3 in iocs["md5s"]
     assert md5_starting_with_3 in iocs["bitcoin_addresses"]
 
     # MD5 starting with 'bc1' matches Bech32 bitcoin pattern
     md5_starting_with_bc1 = "bc1f28a71089acdbab5038f58044c0ab"
-    iocs = find_iocs(md5_starting_with_bc1)
+    iocs = find_iocs(md5_starting_with_bc1, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert md5_starting_with_bc1 in iocs["md5s"]
     assert md5_starting_with_bc1 in iocs["bitcoin_addresses"]
 
     # SHA1 starting with 'bc1' matches Bech32 bitcoin pattern
     sha1_starting_with_bc1 = "bc1f28a71089acdbab5038f58044c0abcdef1234"
-    iocs = find_iocs(sha1_starting_with_bc1)
+    iocs = find_iocs(sha1_starting_with_bc1, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert sha1_starting_with_bc1 in iocs["sha1s"]
     assert sha1_starting_with_bc1 in iocs["bitcoin_addresses"]
 
     # SHA256 starting with 'bc1' matches Bech32 bitcoin pattern
     sha256_starting_with_bc1 = "bc1f28a71089acdbab5038f58044c0abcdef12345678901234567890abcdef12"
-    iocs = find_iocs(sha256_starting_with_bc1)
+    iocs = find_iocs(sha256_starting_with_bc1, included_ioc_types=SUPPORTED_IOC_TYPES)
     assert sha256_starting_with_bc1 in iocs["sha256s"]
     assert sha256_starting_with_bc1 in iocs["bitcoin_addresses"]
 
@@ -576,7 +581,7 @@ def test_bitcoin_grammar_may_match_hashes_issue_226():
 def test_certificate_serial_number_issue_96():
     # see https://github.com/fhightower/ioc-finder/issues/96
     s = """SolarWinds.Orion.Core.BusinessLayer.dll is signed by SolarWinds, using the certificate with serial number 0f:e9:73:75:20:22:a6:06:ad:f2:a3:6e:34:5d:c0:ed. The file was signed on March 24, 2020."""
-    observables = find_iocs(s)
+    observables = find_iocs(s, included_ioc_types=SUPPORTED_IOC_TYPES)
     print(observables)
     assert observables["ipv6s"] == []
     assert observables["mac_addresses"] == []
