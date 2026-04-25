@@ -2,7 +2,14 @@
 
 from d8s_lists import iterables_have_same_items
 
-from ioc_finder import find_iocs
+from ioc_finder import find_iocs as _find_iocs
+from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES
+
+
+def find_iocs(*args, **kwargs):
+    kwargs.setdefault("included_ioc_types", SUPPORTED_IOC_TYPES)
+    return _find_iocs(*args, **kwargs)
+
 
 # VALID_URLS = [
 #     'http://foo.com/blah_blah',

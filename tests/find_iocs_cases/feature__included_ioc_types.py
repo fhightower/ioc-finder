@@ -5,7 +5,7 @@ Each test below passes a string with two IOC types into the find_iocs function, 
 
 from pytest import param
 
-from ioc_finder.ioc_finder import DEFAULT_IOC_TYPES
+from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES
 
 IOC_EXAMPLES = {
     "domains": ["abc.py", "bar.com", "example.com", "foo.com", "swissjabber.de"],
@@ -67,7 +67,7 @@ all_ioc_text = all_ioc_text + " " + " ".join(IOC_EXAMPLES["attack_techniques"]["
 
 individual_included_ioc_types_tests = []
 
-for type_ in DEFAULT_IOC_TYPES:
+for type_ in SUPPORTED_IOC_TYPES:
     individual_included_ioc_types_tests.append(
         param(
             all_ioc_text,

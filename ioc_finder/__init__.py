@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 from .ioc_finder import (
+    DEFAULT_IOC_TYPES,
+    SUPPORTED_IOC_TYPES,
     find_iocs,
     parse_asns,
     parse_authentihashes_,
@@ -37,6 +39,8 @@ from .ioc_finder import (
 )
 
 __all__ = [
+    "DEFAULT_IOC_TYPES",
+    "SUPPORTED_IOC_TYPES",
     "find_iocs",
     "parse_asns",
     "parse_authentihashes_",

@@ -2,8 +2,13 @@
 
 import pytest
 
-from ioc_finder import find_iocs
-from ioc_finder.ioc_finder import DEFAULT_IOC_TYPES
+from ioc_finder import find_iocs as _find_iocs
+from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES
+
+
+def find_iocs(*args, **kwargs):
+    kwargs.setdefault("included_ioc_types", SUPPORTED_IOC_TYPES)
+    return _find_iocs(*args, **kwargs)
 
 
 @pytest.fixture
@@ -490,14 +495,14 @@ def test_google_casing_deduplication():
 def test_excluding_imphashes_from_included_ioc_types():
     """Omitting 'imphashes' from included_ioc_types disables imphash parsing."""
     s = "imphash 18ddf28a71089acdbab5038f58044c0a"
-    types_without_imphashes = [t for t in DEFAULT_IOC_TYPES if t != "imphashes"]
+    types_without_imphashes = [t for t in SUPPORTED_IOC_TYPES if t != "imphashes"]
     iocs = find_iocs(s, included_ioc_types=types_without_imphashes)
     assert "imphashes" not in iocs
 
 
 def test_excluding_authentihashes_from_included_ioc_types():
     s = "authentihash 3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"
-    types_without_authentihashes = [t for t in DEFAULT_IOC_TYPES if t != "authentihashes"]
+    types_without_authentihashes = [t for t in SUPPORTED_IOC_TYPES if t != "authentihashes"]
     iocs = find_iocs(s, included_ioc_types=types_without_authentihashes)
     assert "authentihashes" not in iocs
 

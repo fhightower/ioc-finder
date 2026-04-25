@@ -126,7 +126,7 @@ IndicatorDict = dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
 IndicatorData = Mapping[str, IndicatorList | IndicatorDict]
 
-DEFAULT_IOC_TYPES = [
+SUPPORTED_IOC_TYPES = [
     "asns",
     "attack_mitigations",
     "attack_tactics",
@@ -157,6 +157,18 @@ DEFAULT_IOC_TYPES = [
     "urls_complete",
     "user_agents",
     "xmpp_addresses",
+]
+
+DEFAULT_IOC_TYPES = [
+    "cves",
+    "domains",
+    "email_addresses",
+    "ipv4s",
+    "ipv6s",
+    "md5s",
+    "sha1s",
+    "sha256s",
+    "urls",
 ]
 
 
@@ -555,6 +567,12 @@ def parse_tlp_labels(text):
     help="Using this flag will parse URLs with and without a scheme (default is True)",
     default=True,
 )
+@click.option(
+    "--all",
+    "parse_all",
+    is_flag=True,
+    help="Parse every supported indicator type instead of the common defaults.",
+)
 def cli_find_iocs(
     text,
     no_url_domain_parsing,
@@ -563,6 +581,7 @@ def cli_find_iocs(
     no_cidr_address_parsing,
     no_xmpp_addr_domain_parsing,
     parse_urls_without_scheme,
+    parse_all,
 ):
     """CLI interface for parsing observables."""
     stdin_text = click.get_text_stream("stdin")
@@ -572,6 +591,7 @@ def cli_find_iocs(
         text = "\n".join(stdin_text)
         # text = '\n'.join([line for line in stdin_text])
 
+    included_ioc_types = list(SUPPORTED_IOC_TYPES if parse_all else DEFAULT_IOC_TYPES)
     iocs = find_iocs(
         text,
         parse_domain_from_url=not no_url_domain_parsing,
@@ -580,6 +600,7 @@ def cli_find_iocs(
         parse_address_from_cidr=not no_cidr_address_parsing,
         parse_domain_name_from_xmpp_address=not no_xmpp_addr_domain_parsing,
         parse_urls_without_scheme=parse_urls_without_scheme,
+        included_ioc_types=included_ioc_types,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
     print(ioc_string)
@@ -613,9 +634,10 @@ def find_iocs(
             addresses. Only applicable when ``"domains"`` is in ``included_ioc_types``.
         parse_urls_without_scheme: Whether to parse URLs without a scheme. Only applicable
             when ``"urls"`` or ``"urls_complete"`` is in ``included_ioc_types``.
-        included_ioc_types: Collection of IOC type names to parse. If ``None``, all
-            default types are parsed. See ``DEFAULT_IOC_TYPES`` for valid values.
-            When specified, the boolean options above only take effect if their
+        included_ioc_types: Collection of IOC type names to parse. If ``None``,
+            the common default types are parsed (see ``DEFAULT_IOC_TYPES``). For
+            the full list of parseable types, see ``SUPPORTED_IOC_TYPES``. When
+            specified, the boolean options above only take effect if their
             corresponding IOC type is included.
     """
     if included_ioc_types is None:
