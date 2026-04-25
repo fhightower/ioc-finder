@@ -10,6 +10,7 @@ def find_iocs(*args, **kwargs):
     kwargs.setdefault("included_ioc_types", SUPPORTED_IOC_TYPES)
     return _find_iocs(*args, **kwargs)
 
+
 # VALID_URLS = [
 #     'http://foo.com/blah_blah',
 #     'http://foo.com/blah_blah/',

@@ -31,7 +31,7 @@ def test_cli_without_domain_from_url_parsing():
     runner = CliRunner()
     result = runner.invoke(
         ioc_finder.cli_find_iocs,
-        ["This is just an example.com https://example.org/test/bingo.php", "--no_url_domain_parsing"],
+        ["This is just an example.com https://example.org/test/bingo.php", "--no_url_domain_parsing", "--all"],
     )
     assert result.exit_code == 0
     print(result.output.strip())
@@ -115,7 +115,7 @@ def test_cli_disabling_parsing_urls_without_scheme():
 
 def test_cli_parses_imphashes_by_default():
     runner = CliRunner()
-    result = runner.invoke(ioc_finder.cli_find_iocs, ["imphash 18ddf28a71089acdbab5038f58044c0a"])
+    result = runner.invoke(ioc_finder.cli_find_iocs, ["imphash 18ddf28a71089acdbab5038f58044c0a", "--all"])
     assert result.exit_code == 0
     json_results = json.loads(result.output.strip())
     assert json_results["imphashes"] == ["18ddf28a71089acdbab5038f58044c0a"]

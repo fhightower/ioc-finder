@@ -5,12 +5,12 @@ import pytest
 from ioc_finder import find_iocs as _find_iocs
 from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES, IndicatorDict, IndicatorList
 
+from .find_iocs_cases import ALL_TESTS
+
 
 def find_iocs(*args, **kwargs):
     kwargs.setdefault("included_ioc_types", SUPPORTED_IOC_TYPES)
     return _find_iocs(*args, **kwargs)
-
-from .find_iocs_cases import ALL_TESTS
 
 
 @pytest.mark.parametrize("text, results, args", ALL_TESTS)
