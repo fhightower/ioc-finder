@@ -40,6 +40,88 @@ _DOMAIN_CANDIDATE_RE = re.compile(
     r"(?![A-Za-z0-9])"
 )
 
+# Cheap candidate-span regexes used to anchor the more expensive pyparsing
+# grammars on plausible matches, mirroring the _DOMAIN_CANDIDATE_RE pattern.
+# Each is intentionally a superset of what its grammar accepts — pyparsing
+# applies the precise rules; the regex only narrows where pyparsing runs.
+
+# Local-part character class for complete_email_local_part (alphanums + the
+# special chars listed in ioc_grammars + '"' for quoted locals + '()' for
+# email comments). The leading "\\@|" alternative mirrors the grammar's
+# CaselessLiteral("\\@") branch so a backslash-escaped at-sign inside a local
+# part doesn't terminate the candidate prematurely (see "Abc\@def@example.com"
+# in test_edge_cases). The tail accepts a domain-shaped run or a bracketed
+# IP literal ("[192.168.0.1]", "[IPv6:...]").
+_EMAIL_CANDIDATE_RE = re.compile(
+    r"(?:\\@|[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.\"()\\])+"
+    r"@"
+    r"(?:\[[^\]\s]{1,80}\]|[A-Za-z0-9.\-]+)"
+)
+
+# IPv6 candidates: runs of hex+colon. Boundaries mirror ipv6_word_start /
+# ipv6_word_end (alphanums + ':' as word chars). The grammar enforces the
+# full structure (>=2 colons, valid hexadectet count, '::' shortening rules).
+_IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])[0-9A-Fa-f:]{2,}(?![A-Za-z0-9:])")
+
+# imphash / authentihash candidates: the literal keyword (case-insensitive),
+# any run of non-alphanumeric separator chars (matching the grammar's
+# Optional(Word(printables, excludeChars=alphanums))), then the hash.
+# The trailing lookahead mirrors the grammar's alphanum_word_end so we don't
+# slice a 32/64-char window out of a longer hex run.
+_IMPHASH_CANDIDATE_RE = re.compile(r"(?:imphash|import hash)[^a-z0-9]*[a-f0-9]{32}(?![a-f0-9])")
+_AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![a-f0-9])")
+
+# URL candidates: a non-whitespace run that contains either '://' (scheme
+# present) or '.<tld>/' (scheme-less URL with a path). The candidate is
+# intentionally generous on both ends — the URL grammar and _clean_url
+# trim the actual boundaries, so trailing punctuation like ')' or ',' must
+# stay in the span. Any non-whitespace char is allowed in the surrounding
+# context because the grammar handles unmatched quotes/parens itself and
+# _clean_url strips them after the fact.
+_URL_CANDIDATE_RE = re.compile(
+    r"\S*"
+    r"(?:://|\.[A-Za-z][A-Za-z0-9-]*/)"
+    r"\S*"
+)
+
+# MAC candidates: the three notations the grammar accepts —
+# `xx[:-]xx[:-]xx[:-]xx[:-]xx[:-]xx` (mixed colon/dash separators allowed)
+# and `xxxx.xxxx.xxxx`. Boundaries mirror mac_address_word_start /
+# mac_address_word_end (wordChars = alphanums + ":-.").
+_MAC_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9:.\-])"
+    r"(?:"
+    r"[0-9A-Fa-f]{2}(?:[:\-][0-9A-Fa-f]{2}){5}"
+    r"|"
+    r"[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}\.[0-9A-Fa-f]{4}"
+    r")"
+    r"(?![A-Za-z0-9:.\-])"
+)
+
+# User-agent candidates: the grammar requires the string to start with
+# `[Mm]ozilla/<version>`. We anchor on that prefix and take the run up to
+# the next Mozilla start (or end of input) so the grammar can split a line
+# containing two concatenated user agents into two matches.
+_USER_AGENT_START_RE = re.compile(r"[Mm]ozilla/\d")
+
+# File-path candidates: the file_path grammar accepts either a Windows path
+# (drive letter + ':' + dotless body + '.' + 1–5 letter extension) or a Unix
+# path (starting '~' or '/', same body+extension shape, with a "//" not in
+# tokens[0] post-condition the grammar enforces). The body uses
+# Word(printables + ' ', exclude_chars='.') — printable chars including
+# spaces but no dots — so the regex mirrors that with `[^\s.]+(?:\s[^\s.]+)*`,
+# matching dotless tokens that may be separated by single whitespace runs
+# (the file_path_1 test case has "AppData \Local" — a space inside a path).
+_FILE_PATH_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?:"
+    r"[A-Za-z0-9]:[^\s.]+(?:\s[^\s.]+)*\.[A-Za-z]{1,5}"
+    r"|"
+    r"[~/][^\s.]+(?:\s[^\s.]+)*\.[A-Za-z]{1,5}"
+    r")"
+    r"(?![A-Za-z0-9])"
+)
+
 _DEPRECATED_KWARG_SENTINEL = object()
 
 IndicatorList = list[str]
@@ -138,28 +220,17 @@ def _clean_url(url: str) -> str:
 
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    if parse_urls_without_scheme:
-        url_parse_results = ioc_grammars.scheme_less_url.searchString(text)
-    else:
-        url_parse_results = ioc_grammars.url.searchString(text)
-    urls = _listify(url_parse_results)
-
-    clean_urls = map(_clean_url, urls)
-
-    # I deduplicate them again because the structure of the URL may have changed when it was cleaned
-    return _deduplicate(clean_urls)
+    grammar = ioc_grammars.scheme_less_url if parse_urls_without_scheme else ioc_grammars.url
+    raw_urls = _scan_candidates(text, _URL_CANDIDATE_RE, grammar)
+    # Cleaning may collapse two raw matches to the same string, so dedupe again.
+    return _deduplicate(map(_clean_url, raw_urls))
 
 
 def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    if parse_urls_without_scheme:
-        url_parse_results = ioc_grammars.scheme_less_url_complete.searchString(text)
-    else:
-        url_parse_results = ioc_grammars.url_complete.searchString(text)
-
-    clean_urls = map(_clean_url, _listify(url_parse_results))
-    # I deduplicate them again because the structure of the URL may have changed when it was cleaned
-    return _deduplicate(clean_urls)
+    grammar = ioc_grammars.scheme_less_url_complete if parse_urls_without_scheme else ioc_grammars.url_complete
+    raw_urls = _scan_candidates(text, _URL_CANDIDATE_RE, grammar)
+    return _deduplicate(map(_clean_url, raw_urls))
 
 
 def _parse_url(url: str) -> ParseResults:
@@ -212,20 +283,7 @@ def _percent_decode_url(urls: list, text: str) -> str:
 
 def parse_domain_names(text):
     """."""
-    # Unlike the other parse_* helpers in this module, domain parsing is the
-    # hot spot: the ~1,500-entry TLD alternation inside ioc_grammars.domain_name
-    # makes running searchString at every offset expensive, so we pre-filter
-    # with a cheap regex and only hand candidate spans to pyparsing.
-    seen: set[str] = set()
-    out: list[str] = []
-    for m in _DOMAIN_CANDIDATE_RE.finditer(text):
-        span = m.group(0)
-        for tokens, _start, _end in ioc_grammars.domain_name.scanString(span):
-            d = tokens[0]
-            if d and d not in seen:
-                seen.add(d)
-                out.append(d)
-    return out
+    return _scan_candidates(text, _DOMAIN_CANDIDATE_RE, ioc_grammars.domain_name)
 
 
 def parse_ipv4_addresses(text):
@@ -234,48 +292,52 @@ def parse_ipv4_addresses(text):
     return _listify(addresses)
 
 
+def _scan_candidates(text, candidate_re, grammar):
+    """Run `grammar.scanString` only on the spans matched by `candidate_re`,
+    deduplicating tokens[0] across spans. Used by hotspot helpers where the
+    pyparsing grammar would otherwise be tried at every offset of the input."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in candidate_re.finditer(text):
+        for tokens, _start, _end in grammar.scanString(m.group(0)):
+            value = tokens[0]
+            if value and value not in seen:
+                seen.add(value)
+                out.append(value)
+    return out
+
+
 def parse_ipv6_addresses(text):
     """."""
-    addresses = ioc_grammars.ipv6_address.searchString(text)
-    return _listify(addresses)
+    return _scan_candidates(text, _IPV6_CANDIDATE_RE, ioc_grammars.ipv6_address)
 
 
 def parse_complete_email_addresses(text: str) -> list:
     """."""
-    email_addresses = ioc_grammars.complete_email_address.searchString(text)
-    return _listify(email_addresses)
+    return _scan_candidates(text, _EMAIL_CANDIDATE_RE, ioc_grammars.complete_email_address)
 
 
 def parse_email_addresses(text: str) -> list:
     """."""
-    email_addresses = ioc_grammars.email_address.searchString(text)
-    return _listify(email_addresses)
+    return _scan_candidates(text, _EMAIL_CANDIDATE_RE, ioc_grammars.email_address)
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
 def parse_imphashes_(text: str) -> list:
     """."""
-    full_imphash_instances = _listify(ioc_grammars.imphash.searchString(text.lower()))
+    full_imphash_instances = _scan_candidates(text.lower(), _IMPHASH_CANDIDATE_RE, ioc_grammars.imphash)
 
-    imphashes = []
-
-    for imphash in full_imphash_instances:
-        imphashes.append(ioc_grammars.imphash.parseString(imphash).hash[0])
-
-    return imphashes
+    return [ioc_grammars.imphash.parseString(imphash).hash[0] for imphash in full_imphash_instances]
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
 def parse_authentihashes_(text: str) -> list:
     """."""
-    full_authentihash_instances = _listify(ioc_grammars.authentihash.searchString(text.lower()))
+    full_authentihash_instances = _scan_candidates(
+        text.lower(), _AUTHENTIHASH_CANDIDATE_RE, ioc_grammars.authentihash
+    )
 
-    authentihashes = []
-
-    for authentihash in full_authentihash_instances:
-        authentihashes.append(ioc_grammars.authentihash.parseString(authentihash).hash[0])
-
-    return authentihashes
+    return [ioc_grammars.authentihash.parseString(a).hash[0] for a in full_authentihash_instances]
 
 
 def parse_md5s(text):
@@ -387,29 +449,26 @@ def _remove_xmpp_local_part(xmpp_addresses: list, text: str) -> str:
 
 def parse_mac_addresses(text):
     """."""
-    mac_addresses = ioc_grammars.mac_address.searchString(text)
-    return _listify(mac_addresses)
+    return _scan_candidates(text, _MAC_CANDIDATE_RE, ioc_grammars.mac_address)
 
 
 def parse_user_agents(text):
     """."""
-    user_agents = ioc_grammars.user_agent.searchString(text)
-    return _listify(user_agents)
-
-
-def parse_file_paths(text):
-    """."""
-    file_paths = ioc_grammars.file_path.searchString(text)
-    return _listify(file_paths)
-
-
-def _scan_attack_candidates(text, candidate_re, grammar):
-    # Pre-filtering with a cheap regex avoids running the large one_of(...)
-    # alternation inside the grammar at every offset of the text.
+    # User-agent strings can contain almost any printable char, so we can't
+    # build a candidate regex that captures the whole UA up front. Instead,
+    # find each `[Mm]ozilla/<digit>` start and run the grammar on the slice
+    # from that start to the next start (or end of text). That keeps two
+    # concatenated UAs on the same line as separate spans, which the grammar
+    # otherwise has trouble splitting because Combine(...adjacent=False) will
+    # happily merge them.
+    starts = [m.start() for m in _USER_AGENT_START_RE.finditer(text)]
+    if not starts:
+        return []
     seen: set[str] = set()
     out: list[str] = []
-    for m in candidate_re.finditer(text):
-        for tokens, _start, _end in grammar.scanString(m.group(0)):
+    for i, start in enumerate(starts):
+        end = starts[i + 1] if i + 1 < len(starts) else len(text)
+        for tokens, _s, _e in ioc_grammars.user_agent.scanString(text[start:end]):
             value = tokens[0]
             if value and value not in seen:
                 seen.add(value)
@@ -417,50 +476,55 @@ def _scan_attack_candidates(text, candidate_re, grammar):
     return out
 
 
+def parse_file_paths(text):
+    """."""
+    return _scan_candidates(text, _FILE_PATH_CANDIDATE_RE, ioc_grammars.file_path)
+
+
 def parse_pre_attack_tactics(text):
     """."""
-    return _scan_attack_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar)
+    return _scan_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar)
 
 
 def parse_pre_attack_techniques(text):
     """."""
-    return _scan_attack_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.pre_attack_techniques_grammar)
+    return _scan_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.pre_attack_techniques_grammar)
 
 
 def parse_enterprise_attack_mitigations(text):
     """."""
-    return _scan_attack_candidates(
+    return _scan_candidates(
         text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.enterprise_attack_mitigations_grammar
     )
 
 
 def parse_enterprise_attack_tactics(text):
     """."""
-    return _scan_attack_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.enterprise_attack_tactics_grammar)
+    return _scan_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.enterprise_attack_tactics_grammar)
 
 
 def parse_enterprise_attack_techniques(text):
     """."""
-    return _scan_attack_candidates(
+    return _scan_candidates(
         text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.enterprise_attack_techniques_grammar
     )
 
 
 def parse_mobile_attack_mitigations(text):
     """."""
-    return _scan_attack_candidates(
+    return _scan_candidates(
         text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.mobile_attack_mitigations_grammar
     )
 
 
 def parse_mobile_attack_tactics(text):
     """."""
-    return _scan_attack_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.mobile_attack_tactics_grammar)
+    return _scan_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.mobile_attack_tactics_grammar)
 
 
 def parse_mobile_attack_techniques(text):
     """."""
-    return _scan_attack_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.mobile_attack_techniques_grammar)
+    return _scan_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.mobile_attack_techniques_grammar)
 
 
 def parse_tlp_labels(text):
