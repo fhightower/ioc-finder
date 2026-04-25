@@ -392,16 +392,12 @@ def _scan_attack_candidates(text, candidate_re, grammar):
 
 def parse_pre_attack_tactics(text):
     """."""
-    return _scan_attack_candidates(
-        text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar
-    )
+    return _scan_attack_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar)
 
 
 def parse_pre_attack_techniques(text):
     """."""
-    return _scan_attack_candidates(
-        text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.pre_attack_techniques_grammar
-    )
+    return _scan_attack_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.pre_attack_techniques_grammar)
 
 
 def parse_enterprise_attack_mitigations(text):
@@ -413,9 +409,7 @@ def parse_enterprise_attack_mitigations(text):
 
 def parse_enterprise_attack_tactics(text):
     """."""
-    return _scan_attack_candidates(
-        text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.enterprise_attack_tactics_grammar
-    )
+    return _scan_attack_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.enterprise_attack_tactics_grammar)
 
 
 def parse_enterprise_attack_techniques(text):
@@ -434,16 +428,12 @@ def parse_mobile_attack_mitigations(text):
 
 def parse_mobile_attack_tactics(text):
     """."""
-    return _scan_attack_candidates(
-        text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.mobile_attack_tactics_grammar
-    )
+    return _scan_attack_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.mobile_attack_tactics_grammar)
 
 
 def parse_mobile_attack_techniques(text):
     """."""
-    return _scan_attack_candidates(
-        text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.mobile_attack_techniques_grammar
-    )
+    return _scan_attack_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.mobile_attack_techniques_grammar)
 
 
 def parse_tlp_labels(text):
