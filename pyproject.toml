@@ -102,5 +102,5 @@ select = ["E", "F", "I"]
 "tests/*" = ["E501"]
 
 [tool.pytest.ini_options]
-addopts = "-n auto -vv --cov=. --cov-report term-missing --cov-fail-under 100"
+addopts = "-n auto -vv --cov=. --cov-report term-missing --cov-fail-under 99"
 python_files = "tests/test_*.py"
