@@ -6,10 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.0.0] - 2026.04.25
+
 ### Changed
 
 - Extended the regex pre-filter approach (introduced for the domain and ATT&CK parsers) to the remaining hot-path parsers. `parse_complete_email_addresses`, `parse_email_addresses`, `parse_ipv6_addresses`, `parse_imphashes_`, `parse_authentihashes_`, `parse_urls`, `parse_urls_complete`, `parse_mac_addresses`, `parse_user_agents`, and `parse_file_paths` now use cheap candidate regexes to narrow where the pyparsing grammar runs, dropping benchmark mean from ~7.1s to ~2.4s on the long benchmark article. The `parse_domain_names` and ATT&CK helpers were folded onto the same shared `_scan_candidates` helper (no behavior change).
 - Added `scripts/find_hotspots.py` to reproduce per-grammar timings and a cProfile drill-down for future tuning.
+- **Breaking:** `DEFAULT_IOC_TYPES` has been reduced from 30 entries to 9 common indicator types (`domains`, `urls`, `ipv4s`, `ipv6s`, `email_addresses`, `md5s`, `sha1s`, `sha256s`, `cves`) to speed up parsing in the typical case. Callers that relied on default-parsing of obscure types (e.g. `bitcoin_addresses`, `attack_techniques`, `imphashes`, `urls_complete`, etc.) must now pass `included_ioc_types=SUPPORTED_IOC_TYPES` (or an explicit subset) to get them. The CLI parses the common defaults by default; pass `--all` to parse every supported type. ([#340](https://github.com/fhightower/ioc-finder/pull/340))
+
+### Added
+
+- New `SUPPORTED_IOC_TYPES` constant exposing the full list of parseable IOC types. Both `DEFAULT_IOC_TYPES` and `SUPPORTED_IOC_TYPES` are now exported from the `ioc_finder` package. ([#340](https://github.com/fhightower/ioc-finder/pull/340))
+- New `--all` CLI flag to parse every supported indicator type instead of the common defaults. ([#340](https://github.com/fhightower/ioc-finder/pull/340))
 
 ### Removed
 
