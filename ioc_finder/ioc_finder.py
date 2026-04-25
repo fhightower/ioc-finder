@@ -333,9 +333,7 @@ def parse_imphashes_(text: str) -> list:
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
 def parse_authentihashes_(text: str) -> list:
     """."""
-    full_authentihash_instances = _scan_candidates(
-        text.lower(), _AUTHENTIHASH_CANDIDATE_RE, ioc_grammars.authentihash
-    )
+    full_authentihash_instances = _scan_candidates(text.lower(), _AUTHENTIHASH_CANDIDATE_RE, ioc_grammars.authentihash)
 
     return [ioc_grammars.authentihash.parseString(a).hash[0] for a in full_authentihash_instances]
 
@@ -493,9 +491,7 @@ def parse_pre_attack_techniques(text):
 
 def parse_enterprise_attack_mitigations(text):
     """."""
-    return _scan_candidates(
-        text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.enterprise_attack_mitigations_grammar
-    )
+    return _scan_candidates(text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.enterprise_attack_mitigations_grammar)
 
 
 def parse_enterprise_attack_tactics(text):
@@ -505,16 +501,12 @@ def parse_enterprise_attack_tactics(text):
 
 def parse_enterprise_attack_techniques(text):
     """."""
-    return _scan_candidates(
-        text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.enterprise_attack_techniques_grammar
-    )
+    return _scan_candidates(text, _ATTACK_TECHNIQUE_CANDIDATE_RE, ioc_grammars.enterprise_attack_techniques_grammar)
 
 
 def parse_mobile_attack_mitigations(text):
     """."""
-    return _scan_candidates(
-        text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.mobile_attack_mitigations_grammar
-    )
+    return _scan_candidates(text, _ATTACK_MITIGATION_CANDIDATE_RE, ioc_grammars.mobile_attack_mitigations_grammar)
 
 
 def parse_mobile_attack_tactics(text):

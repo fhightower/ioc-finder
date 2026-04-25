@@ -33,9 +33,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 from ioc_finder import find_iocs
 from ioc_finder import ioc_finder as I
 
-LONG_TEXT = Path(
-    os.path.join(os.path.dirname(__file__), "..", "tests", "data", "long-article-1.txt")
-).read_text(encoding="utf8")
+LONG_TEXT = Path(os.path.join(os.path.dirname(__file__), "..", "tests", "data", "long-article-1.txt")).read_text(
+    encoding="utf8"
+)
 SHORT_TEXT = (
     "abc.py bar.com example.com foo@example.com 1.1.1.1 "
     "2001:0db8:0000:0000:0000:ff00:0042:8329 "
@@ -114,15 +114,13 @@ def cprofile_top(text_short: str, text_long: str, n: int = 25) -> str:
 def main() -> None:
     print(f"Long article length: {len(LONG_TEXT)} chars\n")
 
-    print("== Per-grammar timings on long article (mean of "
-          f"{REPEATS} runs, sorted slowest first) ==")
+    print(f"== Per-grammar timings on long article (mean of {REPEATS} runs, sorted slowest first) ==")
     rows = per_grammar_timings(LONG_TEXT)
     width = max(len(label) for label, _ in rows)
     for label, ms in rows:
         print(f"  {label:<{width}}  {ms:7.1f} ms")
 
-    print("\n== cProfile cumulative top entries for find_iocs(short) + "
-          "find_iocs(long) ==")
+    print("\n== cProfile cumulative top entries for find_iocs(short) + find_iocs(long) ==")
     print(cprofile_top(SHORT_TEXT, LONG_TEXT))
 
 
