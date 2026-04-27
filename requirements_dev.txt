@@ -166,7 +166,7 @@ requests==2.33.0
     # via
     #   codecov
     #   mkdocs-material
-ruff==0.15.8
+ruff==0.15.12
 six==1.17.0
     # via python-dateutil
 sortedcontainers==2.4.0
