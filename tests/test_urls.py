@@ -119,6 +119,40 @@ def test_cidr_ranges_not_found_as_urls():
     assert result["urls"] == ["foobar.com/test/bingo.php"]
 
 
+def test_cidr_ranges_not_found_as_urls__issue_260():
+    """See https://github.com/fhightower/ioc-finder/issues/260."""
+    cidrs = [
+        "85.93.4.0/25",
+        "85.93.39.32/27",
+        "85.93.4.192/27",
+        "85.93.40.0/21",
+        "85.93.0.116/31",
+        "85.93.39.16/28",
+        "85.93.3.224/27",
+        "85.93.4.236/31",
+        "85.93.39.128/25",
+        "85.93.48.0/24",
+        "85.93.49.128/28",
+        "85.93.49.0/25",
+        "85.93.4.128/26",
+        "85.93.0.112/30",
+        "85.93.39.64/26",
+        "85.93.0.96/28",
+        "85.93.39.8/29",
+        "85.93.49.144/31",
+        "85.93.0.2/31",
+        "85.93.4.232/30",
+        "85.93.0.92/30",
+        "85.93.4.224/29",
+    ]
+    text = " ".join(cidrs)
+
+    result = find_iocs(text)
+    assert result["urls"] == []
+    assert result["urls_complete"] == []
+    assert iterables_have_same_items(result["ipv4_cidrs"], cidrs)
+
+
 def test_parse_domain_from_url_not_removing_entire_url():
     """See https://github.com/fhightower/ioc-finder/issues/90."""
     # default behaviour
