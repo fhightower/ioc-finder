@@ -4,6 +4,7 @@ import json
 import re
 import urllib.parse as urlparse
 from collections.abc import Callable, Iterable, Mapping
+from string import hexdigits
 
 import click
 import ioc_fanger
@@ -343,15 +344,19 @@ def _scan_candidates(text, candidate_re, grammar):
     return out
 
 
-_IPV6_HEXNUMS = frozenset("0123456789abcdefABCDEF")
+_IPV6_HEXNUMS = frozenset(hexdigits)
 
 
 def _is_valid_ipv6(s: str) -> bool:
-    """Mirror ioc_grammars.ipv6_address structural validation in pure Python.
+    """Approximate ioc_grammars.ipv6_address structural validation in pure Python.
     The grammar does no transformation (no parse actions on hexadectet / Combine),
-    so replacing the pyparsing call with this validator is behavior-preserving.
-    The candidate regex already enforces ipv6_word_start/end, so boundary checks
-    aren't repeated here."""
+    so the output shape matches; the candidate regex already enforces
+    ipv6_word_start/end, so boundary checks aren't repeated here.
+
+    Diverges from the old grammar by accepting the unspecified address `::` and
+    trailing-`::` forms like `1::` (which the grammar's ipv6_address_shortened
+    rejected because it required a trailing hexadectet). Both are valid IPv6,
+    so this is a deliberate fix rather than a regression."""
     if s.count(":") < 2:
         return False
     halves = s.split("::")
@@ -378,13 +383,24 @@ def _is_valid_ipv6(s: str) -> bool:
 
 def parse_ipv6_addresses(text):
     """."""
+    # Asymmetry with the other parse_* helpers: this validates candidates
+    # in pure Python via _is_valid_ipv6 instead of routing them through
+    # _scan_candidates + a pyparsing grammar. The grammar applies no parse
+    # actions to ipv6_address, so skipping it preserves the output shape.
+    return _scan_validated(text, _IPV6_CANDIDATE_RE, _is_valid_ipv6)
+
+
+def _scan_validated(text, candidate_re, validator):
+    """Like _scan_candidates, but uses a pure-Python validator on the matched
+    span instead of running a pyparsing grammar. Used where the grammar adds
+    no transformation and a hand-written check is faster."""
     seen: set[str] = set()
     out: list[str] = []
-    for m in _IPV6_CANDIDATE_RE.finditer(text):
+    for m in candidate_re.finditer(text):
         span = m.group(0)
         if span in seen:
             continue
-        if _is_valid_ipv6(span):
+        if validator(span):
             seen.add(span)
             out.append(span)
     return out
