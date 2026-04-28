@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.1.0] - 2026.04.28
+
+### Added
+
+- Added regex pre-filter for all default indicator types to speed parsing of defaults.
+
 ## [9.0.0] - 2026.04.25
 
 ### Changed
