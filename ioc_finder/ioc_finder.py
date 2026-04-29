@@ -4,6 +4,7 @@ import json
 import re
 import urllib.parse as urlparse
 from collections.abc import Callable, Iterable, Mapping
+from string import hexdigits
 
 import click
 import ioc_fanger
@@ -57,10 +58,38 @@ _EMAIL_CANDIDATE_RE = re.compile(
     r"(?:\[[^\]\s]{1,80}\]|[A-Za-z0-9.\-]+)"
 )
 
-# IPv6 candidates: runs of hex+colon. Boundaries mirror ipv6_word_start /
-# ipv6_word_end (alphanums + ':' as word chars). The grammar enforces the
-# full structure (>=2 colons, valid hexadectet count, '::' shortening rules).
-_IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])[0-9A-Fa-f:]{2,}(?![A-Za-z0-9:])")
+# IPv6 candidates: hex+colon runs that contain at least two colons. Boundaries
+# mirror ipv6_word_start / ipv6_word_end (alphanums + ':' as word chars). Every
+# valid IPv6 has >=2 colons (full form has 7; shortened requires '::'), so this
+# excludes plain hex blobs (md5/sha1/sha256, hex bytes) that previously got fed
+# to the grammar only to fail there. The grammar still validates the full
+# structure, valid hexadectet count, and '::' shortening rules.
+_IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*(?![A-Za-z0-9:])")
+
+# IPv4 candidates: four 1–3 digit groups separated by dots. The lookbehind
+# mirrors alphanum_word_start + WordStart("." + nums) — neither alphanumeric
+# nor '.' may precede. The trailing `(?!\.\S)` mirrors NotAny(r"\.\S") so a
+# fifth dotted segment ("1.2.3.4.5") is excluded; the grammar's per-octet
+# `<256` check still runs and rejects e.g. "999.1.1.1".
+_IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![A-Za-z0-9])(?!\.\S)")
+
+# Hash candidates: a hex run of exactly 32/40/64 chars. The leading lookbehind
+# mirrors file_hash_word_start (word_chars = alphanums minus 'x'/'X'), so a
+# leading 'x'/'X' prefix is allowed (issue #41). The trailing lookahead mirrors
+# alphanum_word_end so a longer hex run isn't sliced into a shorter hash —
+# e.g. a 64-char run won't surface as an MD5 candidate.
+_MD5_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{32}(?![A-Za-z0-9])")
+_SHA1_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{40}(?![A-Za-z0-9])")
+_SHA256_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{64}(?![A-Za-z0-9])")
+
+# CVE candidates: "CVE" + dash/space separators + 4-digit year (1xxx/2xxx) + dashes
+# + 4-or-more digit id. Mirrors `year = Word("12") + Word(nums, exact=3)` and the
+# trailing `Word(nums, min=4)` + alphanum_word_end. Case-insensitive to match
+# CaselessLiteral("cve").
+_CVE_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9])cve[- ]+[12]\d{3}-+\d{4,}(?![A-Za-z0-9])",
+    re.IGNORECASE,
+)
 
 # imphash / authentihash candidates: the literal keyword (case-insensitive),
 # any run of non-alphanumeric separator chars (matching the grammar's
@@ -297,8 +326,7 @@ def parse_domain_names(text):
 
 def parse_ipv4_addresses(text):
     """."""
-    addresses = ioc_grammars.ipv4_address.search_string(text)
-    return _listify(addresses)
+    return _scan_candidates(text, _IPV4_CANDIDATE_RE, ioc_grammars.ipv4_address)
 
 
 def _scan_candidates(text, candidate_re, grammar):
@@ -316,9 +344,66 @@ def _scan_candidates(text, candidate_re, grammar):
     return out
 
 
+_IPV6_HEXNUMS = frozenset(hexdigits)
+
+
+def _is_valid_ipv6(s: str) -> bool:
+    """Approximate ioc_grammars.ipv6_address structural validation in pure Python.
+    The grammar does no transformation (no parse actions on hexadectet / Combine),
+    so the output shape matches; the candidate regex already enforces
+    ipv6_word_start/end, so boundary checks aren't repeated here.
+
+    Diverges from the old grammar by accepting the unspecified address `::` and
+    trailing-`::` forms like `1::` (which the grammar's ipv6_address_shortened
+    rejected because it required a trailing hexadectet). Both are valid IPv6,
+    so this is a deliberate fix rather than a regression."""
+    if s.count(":") < 2:
+        return False
+    halves = s.split("::")
+    if len(halves) > 2:
+        return False
+    if len(halves) == 2:
+        left, right = halves
+        left_groups = left.split(":") if left else []
+        right_groups = right.split(":") if right else []
+        groups = left_groups + right_groups
+        if len(groups) > 7:
+            return False
+    else:
+        groups = s.split(":")
+        if len(groups) != 8:
+            return False
+    for g in groups:
+        if not (1 <= len(g) <= 4):
+            return False
+        if not all(c in _IPV6_HEXNUMS for c in g):
+            return False
+    return True
+
+
 def parse_ipv6_addresses(text):
     """."""
-    return _scan_candidates(text, _IPV6_CANDIDATE_RE, ioc_grammars.ipv6_address)
+    # Asymmetry with the other parse_* helpers: this validates candidates
+    # in pure Python via _is_valid_ipv6 instead of routing them through
+    # _scan_candidates + a pyparsing grammar. The grammar applies no parse
+    # actions to ipv6_address, so skipping it preserves the output shape.
+    return _scan_validated(text, _IPV6_CANDIDATE_RE, _is_valid_ipv6)
+
+
+def _scan_validated(text, candidate_re, validator):
+    """Like _scan_candidates, but uses a pure-Python validator on the matched
+    span instead of running a pyparsing grammar. Used where the grammar adds
+    no transformation and a hand-written check is faster."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in candidate_re.finditer(text):
+        span = m.group(0)
+        if span in seen:
+            continue
+        if validator(span):
+            seen.add(span)
+            out.append(span)
+    return out
 
 
 def parse_complete_email_addresses(text: str) -> list:
@@ -349,20 +434,17 @@ def parse_authentihashes_(text: str) -> list:
 
 def parse_md5s(text):
     """."""
-    md5s = ioc_grammars.md5.search_string(text)
-    return _listify(md5s)
+    return _scan_candidates(text, _MD5_CANDIDATE_RE, ioc_grammars.md5)
 
 
 def parse_sha1s(text):
     """."""
-    sha1s = ioc_grammars.sha1.search_string(text)
-    return _listify(sha1s)
+    return _scan_candidates(text, _SHA1_CANDIDATE_RE, ioc_grammars.sha1)
 
 
 def parse_sha256s(text):
     """."""
-    sha256s = ioc_grammars.sha256.search_string(text)
-    return _listify(sha256s)
+    return _scan_candidates(text, _SHA256_CANDIDATE_RE, ioc_grammars.sha256)
 
 
 def parse_sha512s(text):
@@ -385,8 +467,7 @@ def parse_asns(text):
 
 def parse_cves(text):
     """."""
-    cves = ioc_grammars.cve.search_string(text)
-    return _listify(cves)
+    return _scan_candidates(text, _CVE_CANDIDATE_RE, ioc_grammars.cve)
 
 
 def parse_ipv4_cidrs(text: str) -> list:
