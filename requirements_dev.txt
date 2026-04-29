@@ -56,7 +56,7 @@ hypothesis==6.151.12
     # via
     #   d8s-dicts
     #   d8s-hypothesis
-idna==3.11
+idna==3.13
     # via requests
 iniconfig==2.3.0
     # via pytest
