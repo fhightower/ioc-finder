@@ -10,7 +10,7 @@ backrefs==6.2
     # via mkdocs-material
 certifi==2026.2.25
     # via requests
-charset-normalizer==3.4.5
+charset-normalizer==3.4.7
     # via requests
 click==8.3.2
     # via
