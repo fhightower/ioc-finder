@@ -118,7 +118,7 @@ pathspec==1.0.4
     #   mypy
 pexpect==4.9.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
     # via ipython
-platformdirs==4.9.4
+platformdirs==4.9.6
     # via mkdocs-get-deps
 pluggy==1.6.0
     # via
