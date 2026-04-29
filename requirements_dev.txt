@@ -63,7 +63,7 @@ iniconfig==2.3.0
 ioc-fanger==4.2.1
     # via ioc-finder
 ipython==8.38.0 ; python_full_version < '3.11'
-ipython==9.10.0 ; python_full_version == '3.11.*'
+ipython==8.39.0 ; python_full_version == '3.11.*'
 ipython==9.11.0 ; python_full_version >= '3.12'
 ipython-pygments-lexers==1.1.1 ; python_full_version >= '3.11'
     # via ipython
