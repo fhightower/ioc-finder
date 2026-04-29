@@ -104,7 +104,7 @@ more-itertools==11.0.1
 mypy==1.20.0
 mypy-extensions==1.1.0
     # via mypy
-packaging==26.0
+packaging==26.2
     # via
     #   mkdocs
     #   pytest
