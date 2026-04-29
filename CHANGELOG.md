@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.1.1] - 2026.04.29
+
+### Fixed
+
+- `parse_imphashes_` and `parse_authentihashes_` no longer return the same hash multiple times when the input labels it with different separators (e.g. `imphash: <h>`, `imphash <h>`, `imphash - <h>`). The deduplication now runs on the extracted hash itself rather than the full keyword+separator+hash match string. ([#213](https://github.com/fhightower/ioc-finder/issues/213))
+
 ## [9.1.0] - 2026.04.28
 
 ### Added
