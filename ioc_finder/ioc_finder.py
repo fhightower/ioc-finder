@@ -336,7 +336,7 @@ def parse_imphashes_(text: str) -> list:
     """."""
     full_imphash_instances = _scan_candidates(text.lower(), _IMPHASH_CANDIDATE_RE, ioc_grammars.imphash)
 
-    return [ioc_grammars.imphash.parse_string(imphash).hash[0] for imphash in full_imphash_instances]
+    return _deduplicate(ioc_grammars.imphash.parse_string(imphash).hash[0] for imphash in full_imphash_instances)
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
@@ -344,7 +344,7 @@ def parse_authentihashes_(text: str) -> list:
     """."""
     full_authentihash_instances = _scan_candidates(text.lower(), _AUTHENTIHASH_CANDIDATE_RE, ioc_grammars.authentihash)
 
-    return [ioc_grammars.authentihash.parse_string(a).hash[0] for a in full_authentihash_instances]
+    return _deduplicate(ioc_grammars.authentihash.parse_string(a).hash[0] for a in full_authentihash_instances)
 
 
 def parse_md5s(text):
