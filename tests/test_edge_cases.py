@@ -527,6 +527,36 @@ def test_ipv6_parsing():
     assert iocs["ipv6s"] == []
 
 
+def test_ipv6_validator_branches():
+    """Cover _is_valid_ipv6 rejection branches that the candidate regex can't reach."""
+    from ioc_finder.ioc_finder import _is_valid_ipv6
+
+    # fewer than two colons (candidate regex enforces >=2, so only reachable directly)
+    assert _is_valid_ipv6("a:b") is False
+    # group containing a non-hex char (candidate regex only emits hex, so only reachable directly)
+    assert _is_valid_ipv6("xyz::1") is False
+
+
+def test_ipv6_invalid_shapes_rejected():
+    """Inputs that pass the candidate regex but fail structural validation."""
+    # more than one '::'
+    assert find_iocs("1::2::3")["ipv6s"] == []
+    # too many groups around a '::'
+    assert find_iocs("1:2:3:4:5:6::7:8")["ipv6s"] == []
+    # full form with a group longer than 4 hex chars
+    assert find_iocs("12345:1:2:3:4:5:6:7")["ipv6s"] == []
+    # full form with an empty group (trailing colon, no '::')
+    assert find_iocs("1:2:3:4:5:6:7: ")["ipv6s"] == []
+    # full form with wrong number of groups (not 8)
+    assert find_iocs("1:2:3:4:5:6:7:8:9")["ipv6s"] == []
+
+
+def test_ipv6_duplicate_span_dedup():
+    """Repeated identical IPv6 spans should be deduplicated to one entry."""
+    iocs = find_iocs("::1 then again ::1")
+    assert iocs["ipv6s"] == ["::1"]
+
+
 def test_ssdeep_parsing():
     # https://github.com/fhightower/ioc-finder/issues/36
     s = "11:04:10 -0500"

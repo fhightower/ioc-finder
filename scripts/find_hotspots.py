@@ -76,7 +76,7 @@ GRAMMARS = [
 
 DEFAULT_LABELS = {label for label, _, ioc_type in GRAMMARS if ioc_type in DEFAULT_IOC_TYPES}
 
-REPEATS = 3
+REPEATS = 10
 
 
 def per_grammar_timings(text: str) -> list[tuple[str, float]]:
