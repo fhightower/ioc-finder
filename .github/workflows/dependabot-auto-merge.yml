@@ -3,7 +3,7 @@ name: Dependabot auto-merge
 on:
   pull_request_target:
   schedule:
-    - cron: "0 14 * * *"
+    - cron: "11 11 * * *"
   workflow_dispatch:
 
 permissions:
@@ -35,7 +35,7 @@ jobs:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
-      SOAK_DAYS: 5
+      SOAK_DAYS: 3
     steps:
       - name: Approve and enable auto-merge on soaked PRs
         env:
