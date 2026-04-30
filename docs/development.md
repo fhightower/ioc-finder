@@ -16,7 +16,7 @@ For local development without Docker, install [uv](https://docs.astral.sh/uv/) a
 uv sync --locked --group dev
 ```
 
-`pyproject.toml` is the source of truth for dependencies. The checked-in `requirements.txt` and `requirements_dev.txt` files are compatibility exports generated from the lockfile via `make export-requirements`.
+`pyproject.toml` declares the dependency ranges and `uv.lock` pins resolved versions. Both files are kept in sync by `uv` and updated together by Dependabot.
 
 ## Test ioc-finder 🧪
 
