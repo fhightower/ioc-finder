@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [9.2.0] - 2026.04.30
+
+### Added
+
+- Added regex prefiltering to all observable types (both default and non-default)
+
 ## [9.1.1] - 2026.04.29
 
 ### Fixed
