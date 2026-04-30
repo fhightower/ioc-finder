@@ -137,9 +137,7 @@ _USER_AGENT_START_RE = re.compile(r"[Mm]ozilla/\d")
 # `asn ?`, but if `\d+` fails after `as` (e.g. on "asn123" the next char is
 # 'n'), the engine retries `asn ?` and `\d+` succeeds. Don't add
 # re.IGNORECASE; the grammar's Literal()s are case-sensitive.
-_ASN_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?:AS[N ]*|as|asn ?)\d+(?![A-Za-z0-9])"
-)
+_ASN_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:AS[N ]*|as|asn ?)\d+(?![A-Za-z0-9])")
 
 # TLP-label candidates: literal "tlp" (caseless) + optional ":" / "-" / " "
 # separator + one of the four colors (caseless). The grammar has no
@@ -197,37 +195,27 @@ _BITCOIN_CANDIDATE_RE = re.compile(
 # match the ipv4 prefilter (alphanum_word_start excluding leading '.' too)
 # and alphanum_word_end. Per-octet `<256` and the bit-range bounds are
 # still enforced by the grammar.
-_IPV4_CIDR_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])"
-)
+_IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
 
 # Google AdSense publisher-id candidates: `pub-` or `PUB-` (the grammar uses
 # `one_of("pub- PUB-")`, so mixed case is rejected) + exactly 16 digits.
-_GOOGLE_ADSENSE_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?:pub-|PUB-)\d{16}(?![A-Za-z0-9])"
-)
+_GOOGLE_ADSENSE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:pub-|PUB-)\d{16}(?![A-Za-z0-9])")
 
 # Google Analytics tracker-id candidates: `ua-` or `UA-` (grammar uses
 # `one_of("ua- UA-")`) + 6+ digit account + `-` + digit property.
-_GOOGLE_ANALYTICS_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?:ua-|UA-)\d{6,}-\d+(?![A-Za-z0-9])"
-)
+_GOOGLE_ANALYTICS_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:ua-|UA-)\d{6,}-\d+(?![A-Za-z0-9])")
 
 # ssdeep candidates: `<chunksize>:<chunk>:<double_chunk>` where chunk and
 # double_chunk are runs of alphanums + '/+' (each min length 3 in the
 # grammar). The grammar's add_condition checks `len(chunk) >= len(double)`,
 # which the prefilter doesn't replicate — false positives are rejected by
 # the grammar. Boundary mirrors alphanum_word_start.
-_SSDEEP_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])\d+:[A-Za-z0-9/+]{3,}:[A-Za-z0-9/+]{3,}"
-)
+_SSDEEP_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])\d+:[A-Za-z0-9/+]{3,}:[A-Za-z0-9/+]{3,}")
 
 # Monero-address candidates: the grammar's regex is
 # `4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}` with alphanum boundaries. The body
 # alphabet excludes '0', 'I', 'O', 'l' (Base58).
-_MONERO_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}(?![A-Za-z0-9])"
-)
+_MONERO_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}(?![A-Za-z0-9])")
 
 # File-path candidates: the file_path grammar accepts either a Windows path
 # (drive letter + ':' + dotless body + '.' + 1–5 letter extension) or a Unix
@@ -603,9 +591,7 @@ def parse_ipv4_cidrs(text: str) -> list:
 
 def parse_registry_key_paths(text):
     """."""
-    full_parsed_registry_key_paths = _scan_candidates(
-        text, _REGISTRY_KEY_CANDIDATE_RE, ioc_grammars.registry_key_path
-    )
+    full_parsed_registry_key_paths = _scan_candidates(text, _REGISTRY_KEY_CANDIDATE_RE, ioc_grammars.registry_key_path)
 
     registry_key_paths = []
     for registry_key_path in full_parsed_registry_key_paths:
