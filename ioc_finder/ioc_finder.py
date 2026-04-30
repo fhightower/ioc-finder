@@ -1,6 +1,7 @@
 """Python package for finding observables in text."""
 
 import json
+import logging
 import re
 import urllib.parse as urlparse
 from collections.abc import Callable, Iterable, Mapping
@@ -11,6 +12,8 @@ import ioc_fanger
 from pyparsing import ParseException, ParseResults
 
 from ioc_finder import ioc_grammars
+
+logger = logging.getLogger(__name__)
 
 # Cheap regexes used to locate ATT&CK-ID-shaped candidate spans so the
 # pyparsing grammars (which carry alternations of hundreds of literal IDs)
@@ -235,13 +238,16 @@ def prepare_text(text: str) -> str:
     """Prepare the text for parsing.
 
     Currently, this involves fanging (https://ioc-fang.hightower.space/) the text."""
-    text = ioc_fanger.fang(text)
+    fanged = ioc_fanger.fang(text)
+    if logger.isEnabledFor(logging.DEBUG) and fanged != text:
+        logger.debug("prepare_text fanged the input (length=%d)", len(text))
     # text = text.encode('idna').decode('utf-8')
-    return text
+    return fanged
 
 
 def _clean_url(url: str) -> str:
     """Clean the given URL, removing common, unwanted characters which are usually not part of the URL."""
+    original = url
     # if there is a ")" in the URL and not a "(", remove everything including and after the ")"
     if ")" in url and "(" not in url:
         url = url.split(")")[0]
@@ -253,6 +259,8 @@ def _clean_url(url: str) -> str:
     url = url.removesuffix("'/>")
     url = url.removesuffix('"/>')
 
+    if url != original:
+        logger.debug("_clean_url trimmed %r -> %r", original, url)
     return url
 
 
@@ -725,7 +733,21 @@ def find_iocs(
         included_ioc_types = DEFAULT_IOC_TYPES
 
     included_ioc_types = set(included_ioc_types)
-    iocs = {}
+    unsupported = included_ioc_types - set(SUPPORTED_IOC_TYPES)
+    if unsupported:
+        logger.warning(
+            "Ignoring unsupported IOC types: %s. Supported types: %s",
+            sorted(unsupported),
+            SUPPORTED_IOC_TYPES,
+        )
+        included_ioc_types -= unsupported
+
+    logger.info(
+        "find_iocs starting (text_length=%d, ioc_type_count=%d)",
+        len(text),
+        len(included_ioc_types),
+    )
+    iocs: dict = {}
 
     text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
@@ -911,4 +933,14 @@ def find_iocs(
 
         iocs["file_paths"] = parse_file_paths(text)
 
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("find_iocs result counts: %s", {k: _count_iocs(v) for k, v in iocs.items()})
+    logger.info("find_iocs completed (ioc_types_parsed=%d)", len(iocs))
     return iocs
+
+
+def _count_iocs(value) -> int:
+    """Sum lengths of an IOC entry — list directly, or nested dict-of-lists for attack_* groups."""
+    if isinstance(value, dict):
+        return sum(len(v) for v in value.values())
+    return len(value)
