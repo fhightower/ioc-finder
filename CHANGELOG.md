@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed (Internal)
+
+- Switched fully over to UV.
+    - Changed Dependabot to the `uv` ecosystem so `pyproject.toml` and `uv.lock` are updated atomically.
+    - Removed the generated `requirements.txt` / `requirements_dev.txt` compatibility exports and the `make export-requirements` target. Contributors should use `uv sync --locked --group dev` to set up a dev environment.
+
 ## [9.1.1] - 2026.04.29
 
 ### Fixed

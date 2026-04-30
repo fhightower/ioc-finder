@@ -1,4 +1,4 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help init install lint test test-all coverage dist pypi export-requirements
+.PHONY: clean clean-test clean-pyc clean-build docs help init install lint test test-all coverage dist pypi
 .DEFAULT_GOAL := help
 define BROWSER_PYSCRIPT
 import os, webbrowser, sys
@@ -94,10 +94,6 @@ upstream: ## set the upstream for the repository
 
 init: ## install the project and development requirements with uv
 	$(UV) sync --locked --group dev
-
-export-requirements: ## regenerate compatibility requirements files from pyproject.toml
-	$(UV) export --frozen --no-hashes --no-emit-project --format requirements-txt --no-dev -o requirements.txt
-	$(UV) export --frozen --no-hashes --no-emit-project --format requirements-txt --all-groups -o requirements_dev.txt
 
 pypi: clean ## upload the code to pypi
 	$(UV) build
