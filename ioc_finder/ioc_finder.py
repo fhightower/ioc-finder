@@ -55,7 +55,7 @@ _DOMAIN_CANDIDATE_RE = re.compile(
 _EMAIL_CANDIDATE_RE = re.compile(
     r"(?:\\@|[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.\"()\\])+"
     r"@"
-    r"(?:\[[^\]\s]{1,80}\]|[A-Za-z0-9.\-]+)"
+    r"(?:\[[^\]\s]{1,80}\]|[A-Za-z0-9._\-]+)"
 )
 
 # IPv6 candidates: hex+colon runs that contain at least two colons. Boundaries
@@ -96,21 +96,16 @@ _CVE_CANDIDATE_RE = re.compile(
 # Optional(Word(printables, excludeChars=alphanums))), then the hash.
 # The trailing lookahead mirrors the grammar's alphanum_word_end so we don't
 # slice a 32/64-char window out of a longer hex run.
-_IMPHASH_CANDIDATE_RE = re.compile(r"(?:imphash|import hash)[^a-z0-9]*[a-f0-9]{32}(?![a-f0-9])")
-_AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![a-f0-9])")
+_IMPHASH_CANDIDATE_RE = re.compile(r"(?:imphash|import hash)[^a-z0-9]*[a-f0-9]{32}(?![a-z0-9])")
+_AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![a-z0-9])")
 
-# URL candidates: a non-whitespace run that contains either '://' (scheme
-# present) or '.<tld>/' (scheme-less URL with a path). The candidate is
-# intentionally generous on both ends — the URL grammar and _clean_url
-# trim the actual boundaries, so trailing punctuation like ')' or ',' must
-# stay in the span. Any non-whitespace char is allowed in the surrounding
-# context because the grammar handles unmatched quotes/parens itself and
-# _clean_url strips them after the fact.
-_URL_CANDIDATE_RE = re.compile(
-    r"\S*"
-    r"(?:://|\.[A-Za-z][A-Za-z0-9-]*/)"
-    r"\S*"
-)
+# URL marker: '://' (scheme present) or '.<tld>/' (scheme-less URL with a
+# path). The candidate span is built in Python by expanding from each
+# marker out to whitespace boundaries (see `_url_candidate_spans`). A pure
+# regex of the form `\S*<marker>\S*` would go quadratic on long
+# non-whitespace, non-URL runs (e.g. 10k bytes of base64) because the
+# leading `\S*` walks to the end and backtracks for each starting offset.
+_URL_MARKER_RE = re.compile(r"://|\.[A-Za-z][A-Za-z0-9-]*/")
 
 # MAC candidates: the three notations the grammar accepts —
 # `xx[:-]xx[:-]xx[:-]xx[:-]xx[:-]xx` (mixed colon/dash separators allowed)
@@ -132,20 +127,111 @@ _MAC_CANDIDATE_RE = re.compile(
 # containing two concatenated user agents into two matches.
 _USER_AGENT_START_RE = re.compile(r"[Mm]ozilla/\d")
 
+# ASN candidates: a leading "AS" / "as" / "asn" (the grammar uses
+# case-sensitive Literal()s — "AS" with optional "N "/spaces, lowercase "as",
+# or lowercase "asn" with optional space) followed by digits. Boundaries
+# mirror alphanum_word_start / alphanum_word_end. The grammar still
+# normalizes to "ASN<n>".
+#
+# Order matters and we rely on regex backtracking — `as` is tried before
+# `asn ?`, but if `\d+` fails after `as` (e.g. on "asn123" the next char is
+# 'n'), the engine retries `asn ?` and `\d+` succeeds. Don't add
+# re.IGNORECASE; the grammar's Literal()s are case-sensitive.
+_ASN_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:AS[N ]*|as|asn ?)\d+(?![A-Za-z0-9])")
+
+# TLP-label candidates: literal "tlp" (caseless) + optional ":" / "-" / " "
+# separator + one of the four colors (caseless). The grammar has no
+# alphanum boundary, so neither does the candidate.
+_TLP_CANDIDATE_RE = re.compile(
+    r"tlp[:\- ]?(?:red|amber|green|white)",
+    re.IGNORECASE,
+)
+
+# SHA512 candidates: a hex run of exactly 128 chars. Same boundary trick as
+# the md5/sha1/sha256 prefilters — file_hash_word_start lets a leading
+# 'x'/'X' through (issue #41), and the trailing alphanum_word_end keeps a
+# longer hex run from being sliced down.
+_SHA512_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{128}(?![A-Za-z0-9])")
+
+# Registry-key-path candidates: optional '<' + one of the case-sensitive
+# root-key literals + optional '>' + at least one '\' + the rest of the line.
+# The grammar enforces sub-path structure, the bracket-balance condition,
+# and the no-double-space rule — over-grabbing the rest of the line is fine
+# because scan_string will find the actual terminus.
+_REGISTRY_KEY_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"<?(?:HKEY_(?:PERFORMANCE_DATA|CURRENT_CONFIG|LOCAL_MACHINE|CLASSES_ROOT|CURRENT_USER|DYN_DATA|USERS)|HKLM|HKCC|HKCR|HKCU|HKU)>?"
+    r"\\[^\r\n]*"
+)
+
+# XMPP candidates: an email-shaped span where the domain contains "jabber"
+# or "xmpp". The grammar's condition runs on the post-downcase domain so we
+# match those keywords case-insensitively (inline `(?i:...)` only on the
+# keyword — the surrounding char classes are already biscriptal). Local-part
+# chars mirror email_local_part (alphanum init, alphanum+`+-_.` body);
+# domain chars mirror domain_name's label body (alphanums + `_-` and `.`
+# between labels).
+#
+# The leading domain run is lazy (`*?`) so that a long jabber/xmpp-free
+# domain doesn't trigger O(n²) backtracking — the prefilter is a superset
+# and the grammar still validates the actual span.
+_XMPP_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"[A-Za-z0-9][A-Za-z0-9+\-_.]*"
+    r"@"
+    r"[A-Za-z0-9._\-]*?(?i:jabber|xmpp)[A-Za-z0-9._\-]*"
+)
+
+# Bitcoin-address candidates: mirrors the three Regex() branches in the
+# grammar — P2PKH ("1…"), P2SH ("3…"), and Bech32 ("bc1…", lowercase).
+# Boundaries match alphanum_word_start / alphanum_word_end.
+_BITCOIN_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?:[13][A-Za-z0-9]{25,34}|bc1[A-Za-z0-9]{11,71})"
+    r"(?![A-Za-z0-9])"
+)
+
+# IPv4 CIDR candidates: an IPv4-shaped run + '/' + 1–2 digits. Boundaries
+# match the ipv4 prefilter (alphanum_word_start excluding leading '.' too)
+# and alphanum_word_end. Per-octet `<256` and the bit-range bounds are
+# still enforced by the grammar.
+_IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
+
+# Google AdSense publisher-id candidates: `pub-` or `PUB-` (the grammar uses
+# `one_of("pub- PUB-")`, so mixed case is rejected) + exactly 16 digits.
+_GOOGLE_ADSENSE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:pub-|PUB-)\d{16}(?![A-Za-z0-9])")
+
+# Google Analytics tracker-id candidates: `ua-` or `UA-` (grammar uses
+# `one_of("ua- UA-")`) + 6+ digit account + `-` + digit property.
+_GOOGLE_ANALYTICS_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:ua-|UA-)\d{6,}-\d+(?![A-Za-z0-9])")
+
+# ssdeep candidates: `<chunksize>:<chunk>:<double_chunk>` where chunk and
+# double_chunk are runs of alphanums + '/+' (each min length 3 in the
+# grammar). The grammar's add_condition checks `len(chunk) >= len(double)`,
+# which the prefilter doesn't replicate — false positives are rejected by
+# the grammar. Boundary mirrors alphanum_word_start.
+_SSDEEP_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])\d+:[A-Za-z0-9/+]{3,}:[A-Za-z0-9/+]{3,}")
+
+# Monero-address candidates: the grammar's regex is
+# `4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}` with alphanum boundaries. The body
+# alphabet excludes '0', 'I', 'O', 'l' (Base58).
+_MONERO_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}(?![A-Za-z0-9])")
+
 # File-path candidates: the file_path grammar accepts either a Windows path
 # (drive letter + ':' + dotless body + '.' + 1–5 letter extension) or a Unix
 # path (starting '~' or '/', same body+extension shape, with a "//" not in
 # tokens[0] post-condition the grammar enforces). The body uses
 # Word(printables + ' ', exclude_chars='.') — printable chars including
-# spaces but no dots — so the regex mirrors that with `[^\s.]+(?:\s[^\s.]+)*`,
-# matching dotless tokens that may be separated by single whitespace runs
-# (the file_path_1 test case has "AppData \Local" — a space inside a path).
+# spaces but no dots — so dotless tokens may be separated by runs of
+# spaces/tabs (the grammar's body word matches multi-space runs too, e.g.
+# "C:\Program  Files\app.exe"). Newlines are excluded from inter-token
+# separators because the grammar's printables don't include them.
 _FILE_PATH_CANDIDATE_RE = re.compile(
     r"(?<![A-Za-z0-9])"
     r"(?:"
-    r"[A-Za-z0-9]:[^\s.]+(?:\s[^\s.]+)*\.[A-Za-z]{1,5}"
+    r"[A-Za-z0-9]:[^\s.]+(?:[ \t]+[^\s.]+)*\.[A-Za-z]{1,5}"
     r"|"
-    r"[~/][^\s.]+(?:\s[^\s.]+)*\.[A-Za-z]{1,5}"
+    r"[~/][^\s.]+(?:[ \t]+[^\s.]+)*\.[A-Za-z]{1,5}"
     r")"
     r"(?![A-Za-z0-9])"
 )
@@ -206,11 +292,6 @@ def _deduplicate(indicator_list: Iterable) -> list:
     return list(set(indicator_list))
 
 
-def _listify(indicator_list: ParseResults) -> list:
-    """Convert the multi-dimensional list into a one-dimensional list with empty entries and duplicates removed."""
-    return _deduplicate([indicator[0] for indicator in indicator_list if indicator[0]])
-
-
 def _remove_items(items: list[str], text: str) -> str:
     """Remove each item from the text."""
     for item in items:
@@ -259,7 +340,7 @@ def _clean_url(url: str) -> str:
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
     grammar = ioc_grammars.scheme_less_url if parse_urls_without_scheme else ioc_grammars.url
-    raw_urls = _scan_candidates(text, _URL_CANDIDATE_RE, grammar)
+    raw_urls = _scan_url_candidates(text, grammar)
     # Cleaning may collapse two raw matches to the same string, so dedupe again.
     return _deduplicate(map(_clean_url, raw_urls))
 
@@ -267,7 +348,7 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
 def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
     grammar = ioc_grammars.scheme_less_url_complete if parse_urls_without_scheme else ioc_grammars.url_complete
-    raw_urls = _scan_candidates(text, _URL_CANDIDATE_RE, grammar)
+    raw_urls = _scan_url_candidates(text, grammar)
     return _deduplicate(map(_clean_url, raw_urls))
 
 
@@ -337,6 +418,42 @@ def _scan_candidates(text, candidate_re, grammar):
     out: list[str] = []
     for m in candidate_re.finditer(text):
         for tokens, _start, _end in grammar.scan_string(m.group(0)):
+            value = tokens[0]
+            if value and value not in seen:
+                seen.add(value)
+                out.append(value)
+    return out
+
+
+def _url_candidate_spans(text):
+    """Yield non-whitespace runs around each `_URL_MARKER_RE` hit. Built in
+    Python instead of as `\\S*<marker>\\S*` so a long non-whitespace run
+    that contains no marker (e.g. a 10kB base64 blob) doesn't trigger
+    O(n²) regex backtracking."""
+    seen_spans: set[tuple[int, int]] = set()
+    n = len(text)
+    last_span_end = -1
+    for m in _URL_MARKER_RE.finditer(text):
+        if m.start() < last_span_end:
+            continue
+        start = m.start()
+        while start > 0 and not text[start - 1].isspace():
+            start -= 1
+        end = m.end()
+        while end < n and not text[end].isspace():
+            end += 1
+        span = (start, end)
+        if span not in seen_spans:
+            seen_spans.add(span)
+            last_span_end = end
+            yield text[start:end]
+
+
+def _scan_url_candidates(text, grammar):
+    seen: set[str] = set()
+    out: list[str] = []
+    for span in _url_candidate_spans(text):
+        for tokens, _start, _end in grammar.scan_string(span):
             value = tokens[0]
             if value and value not in seen:
                 seen.add(value)
@@ -449,20 +566,17 @@ def parse_sha256s(text):
 
 def parse_sha512s(text):
     """."""
-    sha512s = ioc_grammars.sha512.search_string(text)
-    return _listify(sha512s)
+    return _scan_candidates(text, _SHA512_CANDIDATE_RE, ioc_grammars.sha512)
 
 
 def parse_ssdeeps(text):
     """."""
-    ssdeeps = ioc_grammars.ssdeep.search_string(text)
-    return _listify(ssdeeps)
+    return _scan_candidates(text, _SSDEEP_CANDIDATE_RE, ioc_grammars.ssdeep)
 
 
 def parse_asns(text):
     """."""
-    asns = ioc_grammars.asn.search_string(text)
-    return _listify(asns)
+    return _scan_candidates(text, _ASN_CANDIDATE_RE, ioc_grammars.asn)
 
 
 def parse_cves(text):
@@ -472,14 +586,12 @@ def parse_cves(text):
 
 def parse_ipv4_cidrs(text: str) -> list:
     """."""
-    cidrs = ioc_grammars.ipv4_cidr.search_string(text)
-    return _listify(cidrs)
+    return _scan_candidates(text, _IPV4_CIDR_CANDIDATE_RE, ioc_grammars.ipv4_cidr)
 
 
 def parse_registry_key_paths(text):
     """."""
-    parsed_registry_key_paths = ioc_grammars.registry_key_path.search_string(text)
-    full_parsed_registry_key_paths = _listify(parsed_registry_key_paths)
+    full_parsed_registry_key_paths = _scan_candidates(text, _REGISTRY_KEY_CANDIDATE_RE, ioc_grammars.registry_key_path)
 
     registry_key_paths = []
     for registry_key_path in full_parsed_registry_key_paths:
@@ -499,32 +611,27 @@ def parse_registry_key_paths(text):
 
 def parse_google_adsense_ids(text):
     """."""
-    adsense_publisher_ids = ioc_grammars.google_adsense_publisher_id.search_string(text)
-    return _listify(adsense_publisher_ids)
+    return _scan_candidates(text, _GOOGLE_ADSENSE_CANDIDATE_RE, ioc_grammars.google_adsense_publisher_id)
 
 
 def parse_google_analytics_ids(text):
     """."""
-    analytics_tracker_ids = ioc_grammars.google_analytics_tracker_id.search_string(text)
-    return _listify(analytics_tracker_ids)
+    return _scan_candidates(text, _GOOGLE_ANALYTICS_CANDIDATE_RE, ioc_grammars.google_analytics_tracker_id)
 
 
 def parse_bitcoin_addresses(text):
     """."""
-    bitcoin_addresses = ioc_grammars.bitcoin_address.search_string(text)
-    return _listify(bitcoin_addresses)
+    return _scan_candidates(text, _BITCOIN_CANDIDATE_RE, ioc_grammars.bitcoin_address)
 
 
 def parse_monero_addresses(text):
     """."""
-    monero_addresses = ioc_grammars.monero_address.search_string(text)
-    return _listify(monero_addresses)
+    return _scan_candidates(text, _MONERO_CANDIDATE_RE, ioc_grammars.monero_address)
 
 
 def parse_xmpp_addresses(text: str) -> list:
     """."""
-    xmpp_addresses = ioc_grammars.xmpp_address.search_string(text)
-    return _listify(xmpp_addresses)
+    return _scan_candidates(text, _XMPP_CANDIDATE_RE, ioc_grammars.xmpp_address)
 
 
 def _remove_xmpp_local_part(xmpp_addresses: list, text: str) -> str:
@@ -611,8 +718,7 @@ def parse_mobile_attack_techniques(text):
 
 def parse_tlp_labels(text):
     """."""
-    tlp_labels = ioc_grammars.tlp_label.search_string(text)
-    return _listify(tlp_labels)
+    return _scan_candidates(text, _TLP_CANDIDATE_RE, ioc_grammars.tlp_label)
 
 
 @click.command()

@@ -54,6 +54,7 @@ GRAMMARS = [
     ("email", I.parse_email_addresses, "email_addresses"),
     ("ipv6", I.parse_ipv6_addresses, "ipv6s"),
     ("ipv4", I.parse_ipv4_addresses, "ipv4s"),
+    ("ipv4_cidrs", I.parse_ipv4_cidrs, "ipv4_cidrs"),
     ("imphashes", I.parse_imphashes_, "imphashes"),
     ("authentihashes", I.parse_authentihashes_, "authentihashes"),
     ("md5", I.parse_md5s, "md5s"),
@@ -72,11 +73,21 @@ GRAMMARS = [
     ("user_agents", I.parse_user_agents, "user_agents"),
     ("file_paths", I.parse_file_paths, "file_paths"),
     ("tlp_labels", I.parse_tlp_labels, "tlp_labels"),
+    ("google_adsense_ids", I.parse_google_adsense_ids, "google_adsense_publisher_ids"),
+    ("google_analytics_ids", I.parse_google_analytics_ids, "google_analytics_tracker_ids"),
+    ("pre_attack_tactics", I.parse_pre_attack_tactics, "attack_tactics"),
+    ("pre_attack_techniques", I.parse_pre_attack_techniques, "attack_techniques"),
+    ("enterprise_attack_mitigations", I.parse_enterprise_attack_mitigations, "attack_mitigations"),
+    ("enterprise_attack_tactics", I.parse_enterprise_attack_tactics, "attack_tactics"),
+    ("enterprise_attack_techniques", I.parse_enterprise_attack_techniques, "attack_techniques"),
+    ("mobile_attack_mitigations", I.parse_mobile_attack_mitigations, "attack_mitigations"),
+    ("mobile_attack_tactics", I.parse_mobile_attack_tactics, "attack_tactics"),
+    ("mobile_attack_techniques", I.parse_mobile_attack_techniques, "attack_techniques"),
 ]
 
 DEFAULT_LABELS = {label for label, _, ioc_type in GRAMMARS if ioc_type in DEFAULT_IOC_TYPES}
 
-REPEATS = 10
+REPEATS = 100
 
 
 def per_grammar_timings(text: str) -> list[tuple[str, float]]:
