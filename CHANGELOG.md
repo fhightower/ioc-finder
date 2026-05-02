@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- `urls_complete` now accepts `@` in URL paths, matching the RFC 3986 `pchar` definition (e.g. `https://example.com/users/@alice` is now captured in full).
+
 ## [9.2.0] - 2026.04.30
 
 ### Added

@@ -177,6 +177,27 @@ def test_parse_domain_from_url__userinfo_url():
     assert result["domains"] == []
 
 
+def test_urls_complete__at_sign_in_path():
+    """The complete URL grammar should accept "@" in the path per RFC 3986 pchar."""
+    result = find_iocs(
+        "Check https://example.com/users/@alice for details",
+        parse_urls_without_scheme=False,
+    )
+    assert result["urls_complete"] == ["https://example.com/users/@alice"]
+
+    result = find_iocs(
+        "https://api.example.com/v1/@user/profile.json and https://gitlab.com/group/proj/-/issues/@me",
+        parse_urls_without_scheme=False,
+    )
+    assert iterables_have_same_items(
+        result["urls_complete"],
+        [
+            "https://api.example.com/v1/@user/profile.json",
+            "https://gitlab.com/group/proj/-/issues/@me",
+        ],
+    )
+
+
 def test_issue_104__encoded_url_properly_parsed():
     s = "https://asf.goole.com/mail?url=http%3A%2F%2Ffreasdfuewriter.com%2Fcs%2Fimage%2FCommerciaE.jpg&t=1575955624&ymreqid=733bc9eb-e8f-34cb-1cb5-120010019e00&sig=x2Pa2oOYxanG52s4vyCEFg--~Chttp://uniddloos.zddfdd.org/CBA0019_file_00002_pdf.zip"
     result = find_iocs(s)
