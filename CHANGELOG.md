@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Added structured logging throughout the library using the standard `logging` module ([#287](https://github.com/fhightower/ioc-finder/issues/287)). The package follows the standard library convention of attaching a `NullHandler` so consumers see no output unless they configure logging. `find_iocs` emits `INFO` at start/finish (text length, IOC type count), `WARNING` when unsupported types are passed via `included_ioc_types` (they are now ignored rather than silently treated as misses), and `DEBUG` for per-type result counts and lower-level transforms (text fanging, URL cleaning). Apps can opt in with e.g. `logging.getLogger("ioc_finder").setLevel(logging.DEBUG)`.
+
 ## [9.2.0] - 2026.04.30
 
 ### Added
