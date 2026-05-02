@@ -55,4 +55,13 @@ EMAIL_DATA = [
         {"parse_domain_name_from_xmpp_address": False, "parse_domain_from_email_address": False},
         id="xmpp_2",
     ),
+    param(
+        "user@xmpp_chat.example.com",
+        {
+            "xmpp_addresses": ["user@xmpp_chat.example.com"],
+            "domains": ["xmpp_chat.example.com"],
+        },
+        {},
+        id="xmpp_underscored_label",
+    ),
 ]
