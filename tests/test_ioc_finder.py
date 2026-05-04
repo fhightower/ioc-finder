@@ -29,6 +29,16 @@ def test_domain_parsing():
     assert "google.com" in iocs["domains"]
 
 
+def test_domain_parsing_oversized_label_does_not_swallow_trailing_domain():
+    # A label longer than 63 chars must not over-capture and hide an embedded
+    # valid domain to its right. The candidate regex caps each label body at
+    # 62 chars (max=63 total) to mirror ioc_grammars.label.
+    long_label = "a" * 100
+    s = f"{long_label}.bar.com"
+    iocs = find_iocs(s)
+    assert "bar.com" in iocs["domains"]
+
+
 def test_ipv4_parsing():
     s = "this is just a (1.2.3.54) test of 255.255.1.255 255.256.344.1"
     iocs = find_iocs(s)

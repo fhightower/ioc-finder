@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- Sped up domain name parsing by bypassing pyparsing for the standalone domain parser: candidate spans from the cheap regex are now validated against a TLD set directly, picking the rightmost TLD that leaves ≥1 preceding label. The `domain_name` grammar is still used as a sub-grammar inside email/url/xmpp parsers, where its inner label loop has been collapsed into a single `Regex` (replacing the `OneOrMore(label + "." + FollowedBy(...))` construction).
+
 ## [9.2.0] - 2026.04.30
 
 ### Added

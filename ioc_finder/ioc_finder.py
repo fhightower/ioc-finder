@@ -12,6 +12,10 @@ from pyparsing import ParseException, ParseResults
 
 from ioc_finder import ioc_grammars
 
+# `parse_domain_names` consults `ioc_grammars.TLD_SET` directly so the fast
+# path and the `domain_name` grammar (used as a sub-grammar in email/url/xmpp)
+# can't drift on which strings are considered TLDs.
+
 # Cheap regexes used to locate ATT&CK-ID-shaped candidate spans so the
 # pyparsing grammars (which carry alternations of hundreds of literal IDs)
 # only run where a match could plausibly occur rather than at every offset.
@@ -26,17 +30,18 @@ _ATTACK_TACTIC_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])TA\d{4}[A-Za-z0-9]*",
 _ATTACK_TECHNIQUE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])T\d{4}[A-Za-z0-9.]*", re.IGNORECASE)
 
 # A dotted run of label-like chars — cheap regex used to locate candidate domain
-# spans so the pyparsing grammar only runs where a domain could plausibly exist,
-# rather than at every offset of the input. The char classes here are kept in
-# sync with ioc_grammars.label (ASCII-only); if IDN support is ever added, both
-# this regex and the grammar need to change together.
+# spans. Each label is capped at 63 chars to mirror ioc_grammars.label
+# (`Word(..., max=63)`); without the cap, a too-long-label run would over-capture
+# and hide an embedded valid domain (e.g. "<100 a's>.bar.com" → "bar.com" still
+# wants to surface). Char classes are otherwise ASCII-only — if IDN support is
+# ever added, both this regex and `ioc_grammars.label` need to change together.
 _DOMAIN_CANDIDATE_RE = re.compile(
     # Boundaries mirror ioc_grammars.alphanum_word_start / alphanum_word_end,
     # which only treat ASCII alphanumerics as word chars — so a domain may
     # start right after '-' or '_' (e.g. "(-example.com)", "abc.-def.com").
     r"(?<![A-Za-z0-9])"
-    r"[A-Za-z0-9_][A-Za-z0-9_-]*"
-    r"(?:\.[A-Za-z0-9_][A-Za-z0-9_-]*)+"
+    r"[A-Za-z0-9_][A-Za-z0-9_-]{0,62}"
+    r"(?:\.[A-Za-z0-9_][A-Za-z0-9_-]{0,62})+"
     r"(?![A-Za-z0-9])"
 )
 
@@ -402,7 +407,32 @@ def _percent_decode_url(urls: list, text: str) -> str:
 
 def parse_domain_names(text):
     """."""
-    return _scan_candidates(text, _DOMAIN_CANDIDATE_RE, ioc_grammars.domain_name)
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in _DOMAIN_CANDIDATE_RE.finditer(text):
+        candidate = m.group(0).lower()
+        segments = candidate.split(".")
+        # Walk segments right-to-left for the rightmost TLD that still
+        # leaves ≥1 preceding label. Mirrors how `domain_name`'s
+        # OneOrMore(label + ".") + domain_tld backtracks to land on the
+        # longest valid `…labels.tld` — e.g. "foo.com.invalid" → "foo.com",
+        # "192.168.1.1" → no match, "gmail.com.zip" → "gmail.com.zip".
+        # Assumes every entry in `ioc_grammars.TLD_SET` is a single label. If `tlds`
+        # is ever replaced by a Public Suffix List (which contains multi-
+        # label suffixes like "co.uk"), this single-segment lookup will
+        # miss them and the walk needs to grow a multi-segment probe.
+        tld_idx = -1
+        for i in range(len(segments) - 1, 0, -1):
+            if segments[i] in ioc_grammars.TLD_SET:
+                tld_idx = i
+                break
+        if tld_idx < 1:
+            continue
+        domain = ".".join(segments[: tld_idx + 1])
+        if domain not in seen:
+            seen.add(domain)
+            out.append(domain)
+    return out
 
 
 def parse_ipv4_addresses(text):

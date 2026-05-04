@@ -6,7 +6,6 @@ from pyparsing import (
     Char,
     Combine,
     Empty,
-    FollowedBy,
     Literal,
     MatchFirst,
     NotAny,
@@ -46,12 +45,25 @@ alphanum_word_end = WordEnd(word_chars=alphanums)
 
 # the label definition ignores the fact that labels should not end in an hyphen
 label = Word(init_chars=alphanums + "_", body_chars=alphanums + "-_", max=63)
+# Single source of truth for the TLD set. The pyparsing `domain_tld` below
+# and the fast-path `parse_domain_names` in ioc_finder both consult this set
+# so they cannot drift. Assumed to contain only single-label TLDs (see the
+# walk in `parse_domain_names`).
+TLD_SET = frozenset(t.lower() for t in tlds)
 domain_tld = one_of(tlds, caseless=True)
+# Equivalent to `OneOrMore(label + ("." + FollowedBy(Word(alphanums + "-_"))))`
+# but as a single Regex so pyparsing isn't paying OneOrMore + FollowedBy +
+# Word per label. The `{0,62}` body cap mirrors `label`'s `max=63`, and the
+# trailing `(?=...)` mirrors the FollowedBy that ensures each `.` is followed
+# by another label-valid character (so `domain_tld` runs against a real label
+# start rather than `.`-then-end-of-input). Used inside `domain_name` only;
+# `label` is still used standalone elsewhere.
+domain_labels = Regex(
+    r"(?:[A-Za-z0-9_][A-Za-z0-9_-]{0,62}\.)+(?=[A-Za-z0-9_-])"
+)
 domain_name = (
     alphanum_word_start
-    + Combine(
-        Combine(OneOrMore(label + ("." + FollowedBy(Word(alphanums + "-_")))))("domain_labels") + domain_tld("tld")
-    )
+    + Combine(domain_labels("domain_labels") + domain_tld("tld"))
     + alphanum_word_end
 ).set_parse_action(pyparsing_common.downcase_tokens)
 
