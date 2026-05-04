@@ -71,7 +71,7 @@ To lint ioc-finder, run the following command from the root directory of the pro
 docker-compose run --rm lint
 ```
 
-Typically, this command will run a number of linters on the project's code with the goal of improving code qality and catching bugs before they are released (you can read more about the benefits of linting [here][linting-intro]). To view the details of what this command does, take a look at the `lint` service in the project's `docker-compose.yml` file.
+Typically, this command will run a number of linters on the project's code with the goal of improving code quality and catching bugs before they are released (you can read more about the benefits of linting [here][linting-intro]). To view the details of what this command does, take a look at the `lint` service in the project's `docker-compose.yml` file.
 
 If you are running lint locally without Docker, use:
 

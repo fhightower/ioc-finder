@@ -55,7 +55,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- The domain parser has been speed up with a regex pre-filter to identify possible candidate domains before using the grammar ([#335](https://github.com/fhightower/ioc-finder/pull/335))
+- The domain parser has been sped up with a regex pre-filter to identify possible candidate domains before using the grammar ([#335](https://github.com/fhightower/ioc-finder/pull/335))
 - The enterprise/mobile/pre-attack mitigation, tactic, and technique parsers now use a regex pre-filter to identify candidate ATT&CK-ID spans before running the grammar, significantly improving performance on large inputs ([#238](https://github.com/fhightower/ioc-finder/issues/238))
 
 ## [8.0.2] - 2026.04.23
@@ -88,9 +88,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Changed
 
-- The content formally returned in the `urls` key is now returned in the `urls_complete` key and the `urls` key now returns a subset of the `urls_complete` data - removing technically valid URLs
-which are unliklely to be found in the wild
-    - e.g. `https://example.com/abc,False,False` is a valid URL per the [RFC](https://www.rfc-editor.org/rfc/rfc3986#section-3.3), but it unlikely that this is *actually* a URL actively being used
+- The content formerly returned in the `urls` key is now returned in the `urls_complete` key and the `urls` key now returns a subset of the `urls_complete` data - removing technically valid URLs
+which are unlikely to be found in the wild
+    - e.g. `https://example.com/abc,False,False` is a valid URL per the [RFC](https://www.rfc-editor.org/rfc/rfc3986#section-3.3), but it is unlikely that this is *actually* a URL actively being used
     - Given `https://example.com/abc,False,False` as input, `ioc_finder.find_iocs("https://example.com/abc,False,False")` will return:
 
     ```python
@@ -152,7 +152,7 @@ which are unliklely to be found in the wild
 - *Possible breaking change:* Update required pyparsing version to [v3](https://github.com/pyparsing/pyparsing/blob/966d6fded149c6c11993746b0d72166bc04e4504/CHANGES#L49)
   - Although there are no public API changes associated with this version, this may be a breaking change if you are using ioc-finder and have pyparsing pinned to a version less than v3
   - I've chosen to release this as a new minor version b/c I think requirement version updates w/ no API changes and no system requirement changes constitute a minor version change
-- Updated parsing of Google Analytics Tracker IDs so that matched must be all lower-cased or all upper-cased (e.g. `ua-...` and `UA-...` will be matched, but `uA-...` will not)  (this makes the parsing consistent with how Google Adsense Publisher IDs are parsed)
+- Updated parsing of Google Analytics Tracker IDs so that matches must be all lower-cased or all upper-cased (e.g. `ua-...` and `UA-...` will be matched, but `uA-...` will not)  (this makes the parsing consistent with how Google Adsense Publisher IDs are parsed)
 
 ## [7.1.0] - 2022.06.13
 
@@ -180,7 +180,7 @@ which are unliklely to be found in the wild
 
 ### Fixed
 
-- ASN grammar improved reduce false positives by not matching on lower-case `"as "` ([#136](https://github.com/fhightower/ioc-finder/issues/136))
+- ASN grammar improved to reduce false positives by not matching on lower-case `"as "` ([#136](https://github.com/fhightower/ioc-finder/issues/136))
 
 ## [6.0.0] - 2021.05.20
 

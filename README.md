@@ -14,5 +14,5 @@ Parse [indicators of compromise](https://searchsecurity.techtarget.com/definitio
 
 💪 I'm looking for [sponsorship](https://github.com/sponsors/fhightower) for this project.
 I have a number of improvements and helpful features I'd like to add and would appreciate some support as I invest this time and focus.
-If you use this project for in a commercial capacity and/or find it useful, please consider [contributing](https://github.com/sponsors/fhightower) even a small amount. Thanks!
+If you use this project in a commercial capacity and/or find it useful, please consider [contributing](https://github.com/sponsors/fhightower) even a small amount. Thanks!
 

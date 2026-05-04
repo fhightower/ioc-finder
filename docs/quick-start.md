@@ -146,7 +146,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
 
 ##### Output Details
 
-There are two grammars for email addresses. There is a fairly complete grammar to find email addresses matching the spec (which is very broad). Any of these complete email addresses (e.g. `foo"bar@gmail.com`) will be sent as output to in `email_addresses_complete` key.
+There are two grammars for email addresses. There is a fairly complete grammar to find email addresses matching the spec (which is very broad). Any of these complete email addresses (e.g. `foo"bar@gmail.com`) will be sent as output in the `email_addresses_complete` key.
 
 Email addresses in the simple form we are familiar with (e.g. `bar@gmail.com`) will be sent as output in the `email_addresses` key.
 
