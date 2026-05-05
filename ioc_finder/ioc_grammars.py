@@ -58,13 +58,9 @@ domain_tld = one_of(tlds, caseless=True)
 # by another label-valid character (so `domain_tld` runs against a real label
 # start rather than `.`-then-end-of-input). Used inside `domain_name` only;
 # `label` is still used standalone elsewhere.
-domain_labels = Regex(
-    r"(?:[A-Za-z0-9_][A-Za-z0-9_-]{0,62}\.)+(?=[A-Za-z0-9_-])"
-)
+domain_labels = Regex(r"(?:[A-Za-z0-9_][A-Za-z0-9_-]{0,62}\.)+(?=[A-Za-z0-9_-])")
 domain_name = (
-    alphanum_word_start
-    + Combine(domain_labels("domain_labels") + domain_tld("tld"))
-    + alphanum_word_end
+    alphanum_word_start + Combine(domain_labels("domain_labels") + domain_tld("tld")) + alphanum_word_end
 ).set_parse_action(pyparsing_common.downcase_tokens)
 
 ipv4_section = (
