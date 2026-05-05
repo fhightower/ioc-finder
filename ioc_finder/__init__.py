@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import logging
+
 from .ioc_finder import (
     DEFAULT_IOC_TYPES,
     SUPPORTED_IOC_TYPES,
@@ -37,6 +39,12 @@ from .ioc_finder import (
     parse_xmpp_addresses,
     prepare_text,
 )
+
+# Library convention: attach a NullHandler so importing the package never
+# emits "no handlers could be found" warnings when the consuming app has not
+# configured logging. Apps opt in to ioc_finder's logs by configuring the
+# "ioc_finder" logger (or root) themselves.
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __all__ = [
     "DEFAULT_IOC_TYPES",
