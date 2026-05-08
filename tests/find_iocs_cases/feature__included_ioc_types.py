@@ -45,6 +45,8 @@ IOC_EXAMPLES = {
     ],  # I don't like this parsing... I've ticketed this for improvement here: https://github.com/fhightower/ioc-finder/issues/227
     "tlp_labels": ["TLP:RED"],
     "file_paths": ["~/foo/bar/abc.py"],
+    "snort_rules": ['alert tcp any any -> any 80 (msg:"WEB-MISC test"; sid:1000001; rev:1;)'],
+    "yara_rules": ['rule TestRule { strings: $a = "evil" condition: $a }'],
     "attack_mitigations": {"enterprise": ["M1036", "M1015"]},
     "attack_tactics": {"pre_attack": ["TA0012"]},
     "attack_techniques": {"pre_attack": ["T1329"]},

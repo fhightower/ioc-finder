@@ -75,6 +75,7 @@ def test_cli_without_domain_from_url_parsing():
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "snort_rules": [],
     "ssdeeps": [],
     "tlp_labels": [],
     "urls": [
@@ -84,7 +85,8 @@ def test_cli_without_domain_from_url_parsing():
         "https://example.org/test/bingo.php"
     ],
     "user_agents": [],
-    "xmpp_addresses": []
+    "xmpp_addresses": [],
+    "yara_rules": []
 }"""
     )
 

@@ -32,11 +32,13 @@ from .ioc_finder import (
     parse_sha1s,
     parse_sha256s,
     parse_sha512s,
+    parse_snort_rules,
     parse_ssdeeps,
     parse_tlp_labels,
     parse_urls,
     parse_user_agents,
     parse_xmpp_addresses,
+    parse_yara_rules,
     prepare_text,
 )
 
@@ -76,10 +78,12 @@ __all__ = [
     "parse_sha1s",
     "parse_sha256s",
     "parse_sha512s",
+    "parse_snort_rules",
     "parse_ssdeeps",
     "parse_tlp_labels",
     "parse_urls",
     "parse_user_agents",
     "parse_xmpp_addresses",
+    "parse_yara_rules",
     "prepare_text",
 ]

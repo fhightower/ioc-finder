@@ -225,6 +225,50 @@ _SSDEEP_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])\d+:[A-Za-z0-9/+]{3,}:[A-Za-
 # alphabet excludes '0', 'I', 'O', 'l' (Base58).
 _MONERO_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}(?![A-Za-z0-9])")
 
+# Snort/Suricata-rule candidate header: the rule's leading "<action> <proto>
+# <src> <sport> <dir> <dst> <dport> (" up to the opening paren of the body.
+# The body is then walked in Python by `_extract_snort_rule_body` so we can
+# count parens while skipping over double-quoted content (where unbalanced
+# parens inside `content:"…"` / `pcre:"…"` strings would otherwise throw the
+# count off). Action and protocol lists mirror Snort 3 / Suricata 7 docs;
+# this is intentionally a superset — the `sid:<digits>` post-condition is
+# what discriminates real rules from prose like "drop udp connections".
+_SNORT_HEADER_RE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?:alert|log|pass|activate|dynamic|drop|reject|sdrop|rejectsrc|rejectdst|rejectboth)"
+    r"[ \t]+"
+    r"[a-z][a-z0-9-]{1,30}"
+    r"[ \t]+"
+    r"\S+[ \t]+\S+[ \t]+"
+    r"(?:->|<>|<-)"
+    r"[ \t]+\S+[ \t]+\S+[ \t]*"
+    r"\("
+)
+
+# `sid:<digits>` is a required option in any complete Snort rule
+# (https://docs.snort.org/rules/options/general/sid). Used as the post-
+# condition that promotes a candidate header into a real rule.
+_SNORT_SID_RE = re.compile(r"\bsid\s*:\s*\d+")
+
+# Yara-rule candidate header: optional `private`/`global` modifiers + `rule`
+# + identifier + optional `: tag tag…` + opening `{`. Body brace-walking
+# happens in `_extract_yara_rule_body`. Identifier rules from the Yara
+# language spec: starts with `[A-Za-z_]`, body `[A-Za-z0-9_]`, max 128 chars.
+_YARA_HEADER_RE = re.compile(
+    r"(?<![A-Za-z0-9_])"
+    r"(?:(?:private|global)\s+){0,2}"
+    r"rule\s+"
+    r"[A-Za-z_][A-Za-z0-9_]{0,127}"
+    r"(?:\s*:\s*[A-Za-z_][A-Za-z0-9_]*(?:\s+[A-Za-z_][A-Za-z0-9_]*)*)?"
+    r"\s*\{"
+)
+
+# `condition:` is the only mandatory section of a Yara rule
+# (https://yara.readthedocs.io/en/stable/writingrules.html). Used as the
+# post-condition to filter out incomplete or coincidental `rule X { … }`
+# constructs.
+_YARA_CONDITION_RE = re.compile(r"\bcondition\s*:")
+
 # File-path candidates: the file_path grammar accepts either a Windows path
 # (drive letter + ':' + dotless body + '.' + 1–5 letter extension) or a Unix
 # path (starting '~' or '/', same body+extension shape, with a "//" not in
@@ -274,12 +318,14 @@ SUPPORTED_IOC_TYPES = [
     "sha1s",
     "sha256s",
     "sha512s",
+    "snort_rules",
     "ssdeeps",
     "tlp_labels",
     "urls",
     "urls_complete",
     "user_agents",
     "xmpp_addresses",
+    "yara_rules",
 ]
 
 DEFAULT_IOC_TYPES = [
@@ -714,6 +760,155 @@ def parse_file_paths(text):
     return _scan_candidates(text, _FILE_PATH_CANDIDATE_RE, ioc_grammars.file_path)
 
 
+def _extract_snort_rule_body(text: str, body_start: int) -> int | None:
+    """Return the index just past the matching `)` for a Snort rule whose
+    `(` sits at `body_start - 1`. Walks paren depth while skipping over
+    double-quoted content; returns None if the parens never balance (e.g.
+    truncated rule at end of buffer)."""
+    depth = 1
+    i = body_start
+    n = len(text)
+    while i < n and depth > 0:
+        c = text[i]
+        if c == '"':
+            i += 1
+            while i < n and text[i] != '"':
+                # Snort options use `\;` and `\"` escapes inside quoted values;
+                # an escape consumes the next char rather than terminating the
+                # string, otherwise a `\"` would close the string prematurely.
+                if text[i] == "\\" and i + 1 < n:
+                    i += 2
+                else:
+                    i += 1
+            i += 1
+            continue
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        i += 1
+    return i if depth == 0 else None
+
+
+def parse_snort_rules(text: str) -> list:
+    """Find Snort/Suricata rules in `text`.
+
+    Each match is the full rule text, from the action keyword through the
+    closing `)` of the option body. Rules must contain a `sid:<digits>`
+    option to be returned, which filters out prose containing action/proto
+    keywords (e.g. "drop udp connections")."""
+    seen: set[str] = set()
+    out: list[str] = []
+    pos = 0
+    n = len(text)
+    while pos < n:
+        m = _SNORT_HEADER_RE.search(text, pos)
+        if not m:
+            break
+        end = _extract_snort_rule_body(text, m.end())
+        if end is None:
+            # Unbalanced — give up on this anchor but allow searches inside
+            # the would-be body so a real rule nested after broken text is
+            # still found.
+            pos = m.end()
+            continue
+        rule = text[m.start() : end]
+        if _SNORT_SID_RE.search(rule) and rule not in seen:
+            seen.add(rule)
+            out.append(rule)
+        pos = end
+    return out
+
+
+def _extract_yara_rule_body(text: str, body_start: int) -> int | None:
+    """Return the index just past the matching `}` for a Yara rule whose
+    `{` sits at `body_start - 1`. Yara's hex strings, regex literals,
+    quoted strings, and both line/block comment styles can each contain
+    characters that look like braces; this walker skips over them so the
+    outer brace count reflects only the rule body's own structure."""
+    depth = 1
+    i = body_start
+    n = len(text)
+    while i < n and depth > 0:
+        c = text[i]
+        # /* block comment */
+        if c == "/" and i + 1 < n and text[i + 1] == "*":
+            close = text.find("*/", i + 2)
+            i = (close + 2) if close != -1 else n
+            continue
+        # // line comment
+        if c == "/" and i + 1 < n and text[i + 1] == "/":
+            nl = text.find("\n", i + 2)
+            i = (nl + 1) if nl != -1 else n
+            continue
+        # double-quoted string literal
+        if c == '"':
+            i += 1
+            while i < n and text[i] != '"':
+                if text[i] == "\\" and i + 1 < n:
+                    i += 2
+                else:
+                    i += 1
+            i += 1
+            continue
+        # /regex/ literal — only treat `/` as a regex opener if a closing `/`
+        # appears on the same line (the Yara grammar's regex literals don't
+        # span newlines). This avoids mis-classifying division-like usage in
+        # `condition:` expressions, though Yara has no `/` operator anyway.
+        if c == "/":
+            j = i + 1
+            while j < n and text[j] != "/" and text[j] != "\n":
+                if text[j] == "\\" and j + 1 < n:
+                    j += 2
+                else:
+                    j += 1
+            if j < n and text[j] == "/":
+                i = j + 1
+                # consume regex flags (i, s, g — the Yara-supported subset)
+                while i < n and text[i] in "isg":
+                    i += 1
+                continue
+            # No closing `/`; treat as a literal slash.
+            i += 1
+            continue
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+        i += 1
+    return i if depth == 0 else None
+
+
+def parse_yara_rules(text: str) -> list:
+    """Find Yara rules in `text`.
+
+    Each match is the full rule text, from the (optional) `private`/`global`
+    modifiers through the closing `}`. Rules must contain a `condition:`
+    keyword to be returned — that's the one mandatory Yara section, and
+    it filters out empty stubs and the bare phrase "rule X { … }" used in
+    natural-language prose."""
+    seen: set[str] = set()
+    out: list[str] = []
+    pos = 0
+    n = len(text)
+    while pos < n:
+        m = _YARA_HEADER_RE.search(text, pos)
+        if not m:
+            break
+        end = _extract_yara_rule_body(text, m.end())
+        if end is None:
+            # Body never balances — advance past the header so a real rule
+            # later in the buffer is still found, but skip this anchor.
+            pos = m.end()
+            continue
+        rule = text[m.start() : end]
+        if _YARA_CONDITION_RE.search(rule) and rule not in seen:
+            seen.add(rule)
+            out.append(rule)
+        pos = end
+    return out
+
+
 def parse_pre_attack_tactics(text):
     """."""
     return _scan_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar)
@@ -1054,6 +1249,18 @@ def find_iocs(
             "enterprise": parse_enterprise_attack_techniques(original_text),
             "mobile": parse_mobile_attack_techniques(original_text),
         }
+
+    # snort/yara rules — extracted from `original_text` so rule contents
+    # aren't disturbed by `prepare_text` fanging or by upstream IOC removals
+    # (e.g. URL stripping). We don't strip the rule bodies from `text`
+    # afterwards: a rule containing IOCs (hashes in `meta:`, IPs in a Snort
+    # header) is itself an indicator, but downstream callers may also want
+    # those embedded IOCs surfaced individually — same pragmatism as how
+    # registry_key_paths and file_paths don't strip themselves either.
+    if "snort_rules" in included_ioc_types:
+        iocs["snort_rules"] = parse_snort_rules(original_text)
+    if "yara_rules" in included_ioc_types:
+        iocs["yara_rules"] = parse_yara_rules(original_text)
 
     if "file_paths" in included_ioc_types:
         # if there are still url paths in the text, remove them so they don't get parsed as file names
