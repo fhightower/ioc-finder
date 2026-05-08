@@ -234,6 +234,25 @@ _MONERO_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])4[0-9AB][1-9A-HJ-NP-Za-km-z]
 # spaces/tabs (the grammar's body word matches multi-space runs too, e.g.
 # "C:\Program  Files\app.exe"). Newlines are excluded from inter-token
 # separators because the grammar's printables don't include them.
+# PEM-encoded X.509 certificate candidates: the BEGIN/END markers are
+# distinctive enough that no separate prefilter is really needed, but for
+# consistency we still anchor `_scan_candidates` on a cheap match. The
+# grammar's full pattern is essentially the same; both use re.DOTALL so the
+# base64 body can span lines.
+_X509_CERTIFICATE_CANDIDATE_RE = re.compile(
+    r"-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----",
+    re.DOTALL,
+)
+
+# Generic PEM block candidates (artifact). The candidate regex doesn't enforce
+# label symmetry — the grammar's backreference does. Without a backref here,
+# adjacent mismatched blocks would still be candidates, but the grammar
+# rejects them.
+_ARTIFACT_CANDIDATE_RE = re.compile(
+    r"-----BEGIN (?!CERTIFICATE-----)[A-Z][A-Z0-9 ]*-----.+?-----END [A-Z][A-Z0-9 ]*-----",
+    re.DOTALL,
+)
+
 _FILE_PATH_CANDIDATE_RE = re.compile(
     r"(?<![A-Za-z0-9])"
     r"(?:"
@@ -250,6 +269,7 @@ IndicatorDict = dict[str, IndicatorList]
 IndicatorData = Mapping[str, IndicatorList | IndicatorDict]
 
 SUPPORTED_IOC_TYPES = [
+    "artifacts",
     "asns",
     "attack_mitigations",
     "attack_tactics",
@@ -279,6 +299,7 @@ SUPPORTED_IOC_TYPES = [
     "urls",
     "urls_complete",
     "user_agents",
+    "x509_certificates",
     "xmpp_addresses",
 ]
 
@@ -714,6 +735,16 @@ def parse_file_paths(text):
     return _scan_candidates(text, _FILE_PATH_CANDIDATE_RE, ioc_grammars.file_path)
 
 
+def parse_x509_certificates(text):
+    """."""
+    return _scan_candidates(text, _X509_CERTIFICATE_CANDIDATE_RE, ioc_grammars.x509_certificate)
+
+
+def parse_artifacts(text):
+    """."""
+    return _scan_candidates(text, _ARTIFACT_CANDIDATE_RE, ioc_grammars.artifact)
+
+
 def parse_pre_attack_tactics(text):
     """."""
     return _scan_candidates(text, _ATTACK_TACTIC_CANDIDATE_RE, ioc_grammars.pre_attack_tactics_grammar)
@@ -888,6 +919,20 @@ def find_iocs(
     text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
+
+    # PEM blocks (x509 certificates and other artifacts). Extract first and
+    # strip from `text` so that hex runs inside the base64 body don't surface
+    # as md5/sha1/sha256, etc. We always strip regardless of whether the
+    # caller asked for these IOC types — leaving them in would corrupt other
+    # parsers' output.
+    x509_certificates = parse_x509_certificates(text)
+    artifacts = parse_artifacts(text)
+    if "x509_certificates" in included_ioc_types:
+        iocs["x509_certificates"] = x509_certificates
+    if "artifacts" in included_ioc_types:
+        iocs["artifacts"] = artifacts
+    text = _remove_items(x509_certificates, text)
+    text = _remove_items(artifacts, text)
 
     # urls
     if "urls" in included_ioc_types:

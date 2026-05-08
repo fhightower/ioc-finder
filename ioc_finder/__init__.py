@@ -6,6 +6,7 @@ from .ioc_finder import (
     DEFAULT_IOC_TYPES,
     SUPPORTED_IOC_TYPES,
     find_iocs,
+    parse_artifacts,
     parse_asns,
     parse_authentihashes_,
     parse_bitcoin_addresses,
@@ -36,6 +37,7 @@ from .ioc_finder import (
     parse_tlp_labels,
     parse_urls,
     parse_user_agents,
+    parse_x509_certificates,
     parse_xmpp_addresses,
     prepare_text,
 )
@@ -50,6 +52,7 @@ __all__ = [
     "DEFAULT_IOC_TYPES",
     "SUPPORTED_IOC_TYPES",
     "find_iocs",
+    "parse_artifacts",
     "parse_asns",
     "parse_authentihashes_",
     "parse_bitcoin_addresses",
@@ -80,6 +83,7 @@ __all__ = [
     "parse_tlp_labels",
     "parse_urls",
     "parse_user_agents",
+    "parse_x509_certificates",
     "parse_xmpp_addresses",
     "prepare_text",
 ]
