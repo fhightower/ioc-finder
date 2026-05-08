@@ -14,11 +14,7 @@ _PRIVATE_KEY_BLOCK = (
     "-----END PRIVATE KEY-----"
 )
 
-_PGP_BLOCK = (
-    "-----BEGIN PGP MESSAGE-----\n"
-    "hQEMA1234567890ABCDEFG/HiJklMnOpQrStUv/Wxyz0\n"
-    "-----END PGP MESSAGE-----"
-)
+_PGP_BLOCK = "-----BEGIN PGP MESSAGE-----\nhQEMA1234567890ABCDEFG/HiJklMnOpQrStUv/Wxyz0\n-----END PGP MESSAGE-----"
 
 _CSR_BLOCK = (
     "-----BEGIN CERTIFICATE REQUEST-----\n"
@@ -77,9 +73,7 @@ PEM_DATA = [
     param(
         # PEM body contains a 32-char hex-only run that would otherwise
         # match as an md5. Stripping must prevent that.
-        "-----BEGIN CERTIFICATE-----\n"
-        "abcdef0123456789abcdef0123456789\n"
-        "-----END CERTIFICATE-----",
+        "-----BEGIN CERTIFICATE-----\nabcdef0123456789abcdef0123456789\n-----END CERTIFICATE-----",
         {
             "x509_certificates": [
                 "-----BEGIN CERTIFICATE-----\nabcdef0123456789abcdef0123456789\n-----END CERTIFICATE-----"
