@@ -546,7 +546,7 @@ dev = [
     { name = "hypothesis", specifier = ">=6.14.1,<7.0" },
     { name = "ipython", specifier = ">=8.18.0,<10.0" },
     { name = "mkdocs-material", specifier = ">=8.0.1,<10.0" },
-    { name = "mypy", specifier = ">=1.8.0,<3.0" },
+    { name = "mypy", specifier = ">=2.0,<3.0" },
     { name = "pytest", specifier = ">=9.0,<10.0" },
     { name = "pytest-benchmark", specifier = ">=4.0.0,<6.0" },
     { name = "pytest-cov", specifier = ">=7.0,<8.0" },
