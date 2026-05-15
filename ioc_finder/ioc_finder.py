@@ -5,6 +5,7 @@ import logging
 import re
 import urllib.parse as urlparse
 from collections.abc import Callable, Iterable, Mapping
+from difflib import SequenceMatcher
 from string import hexdigits
 
 import click
@@ -249,6 +250,13 @@ IndicatorDict = dict[str, IndicatorList]
 # using `Mapping` b/c it is covariant (https://mypy.readthedocs.io/en/stable/generics.html#variance-of-generic-types)
 IndicatorData = Mapping[str, IndicatorList | IndicatorDict]
 
+# Span-aware shape returned when `find_iocs(..., include_spans=True)`. Each
+# IOC type maps to a dict of `value -> [(start, end), ...]`, where offsets
+# are positions in the *original* (unfanged) input text.
+SpanList = list[tuple[int, int]]
+IndicatorSpanGroup = dict[str, SpanList]
+IndicatorSpanData = Mapping[str, IndicatorSpanGroup]
+
 SUPPORTED_IOC_TYPES = [
     "asns",
     "attack_mitigations",
@@ -307,6 +315,16 @@ def _remove_items(items: list[str], text: str) -> str:
     return text
 
 
+def _remove_items_keep_offsets(items: Iterable[str], text: str) -> str:
+    """Like `_remove_items`, but substitutes a same-length whitespace run so
+    every character offset to the right of the removal is preserved. Used by
+    the `include_spans=True` pipeline where downstream parsers still need to
+    report positions that line up with the original text."""
+    for item in items:
+        text = text.replace(item, " " * len(item))
+    return text
+
+
 def _get_items(
     iocs: IndicatorData,
     key: str,
@@ -331,6 +349,45 @@ def prepare_text(text: str) -> str:
     return fanged
 
 
+def _build_fang_offset_maps(original: str, fanged: str) -> tuple[list[int], list[int]]:
+    """Map every fanged-text offset back to an offset in the original text.
+
+    Returns (left_map, right_map), each of length len(fanged)+1. For a span
+    `(s, e)` measured against `fanged`, the corresponding span in the original
+    text is `(left_map[s], right_map[e])`. Within an "equal" block both maps
+    agree; within a non-equal block (e.g. fanged "." for original "[.]") the
+    left map collapses interior offsets to the block's start in the original
+    and the right map to the block's end, so that a span starting or ending
+    inside a fanged region still grabs the whole original token.
+    """
+    if original == fanged:
+        # Identity map. Hot path: most inputs aren't fanged at all and
+        # SequenceMatcher is O(n*m) worst case, so skip it when we can.
+        return list(range(len(fanged) + 1)), list(range(len(fanged) + 1))
+
+    sm = SequenceMatcher(a=original, b=fanged, autojunk=False)
+    n = len(fanged)
+    left_map = [0] * (n + 1)
+    right_map = [0] * (n + 1)
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == "equal":
+            for j in range(j1, j2 + 1):
+                left_map[j] = i1 + (j - j1)
+                right_map[j] = i1 + (j - j1)
+        else:
+            # Boundaries: at j1 the span hasn't entered this block yet; at j2
+            # it has fully consumed it. Interior positions can't be located
+            # precisely so we widen them outward.
+            left_map[j1] = i1
+            right_map[j1] = i1
+            for j in range(j1 + 1, j2):
+                left_map[j] = i1
+                right_map[j] = i2
+            left_map[j2] = i2
+            right_map[j2] = i2
+    return left_map, right_map
+
+
 def _clean_url(url: str) -> str:
     """Clean the given URL, removing common, unwanted characters which are usually not part of the URL."""
     original = url
@@ -348,6 +405,16 @@ def _clean_url(url: str) -> str:
     if url != original:
         logger.debug("_clean_url trimmed %r -> %r", original, url)
     return url
+
+
+def _clean_url_span(url: str, start: int, _end: int) -> tuple[str, int, int]:
+    """`_clean_url`, but also adjust the span to point at the cleaned suffix.
+
+    Every trim in `_clean_url` is right-side only, so the start offset is
+    preserved and the end shrinks by however many characters were stripped.
+    """
+    cleaned = _clean_url(url)
+    return cleaned, start, start + len(cleaned)
 
 
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
@@ -384,6 +451,18 @@ def _remove_url_domain_name(urls: list, text: str) -> str:
     return text
 
 
+def _remove_url_domain_name_keep_offsets(urls: Iterable[str], text: str) -> str:
+    """Length-preserving sibling of `_remove_url_domain_name`."""
+    for url in urls:
+        parsed_url = _parse_url(url)
+        url_authority = parsed_url.url_authority
+        # pragma below mirrors the defensive fallback in `_remove_url_domain_name`
+        if isinstance(url_authority, ParseResults):  # pragma: no cover
+            url_authority = url_authority[0]
+        text = text.replace(url_authority, " " * len(url_authority))
+    return text
+
+
 def _remove_url_paths(urls: list, text: str) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
@@ -394,6 +473,19 @@ def _remove_url_paths(urls: list, text: str) -> str:
         # if the 'url' has a URL path and is not a cidr range, remove the url_path
         if not is_cidr_range and len(url_path) > 1:
             text = text.replace(url_path, " ")
+    return text
+
+
+def _remove_url_paths_keep_offsets(urls: Iterable[str], text: str) -> str:
+    """Length-preserving sibling of `_remove_url_paths`. Operates on the
+    *non-decoded* path because `include_spans=True` skips percent-decoding to
+    keep offsets aligned with the original text."""
+    for url in urls:
+        parsed_url = _parse_url(url)
+        url_path = parsed_url.url_path
+        is_cidr_range = parse_ipv4_cidrs(str(url))
+        if not is_cidr_range and len(url_path) > 1:
+            text = text.replace(url_path, " " * len(url_path))
     return text
 
 
@@ -411,6 +503,36 @@ def _percent_decode_url(urls: list, text: str) -> str:
     for url in urls:
         text = text.replace(url, urlparse.unquote_plus(url))
     return text
+
+
+def _domain_from_candidate(candidate: str) -> str | None:
+    """Walk segments right-to-left for the rightmost TLD that still leaves ≥1
+    preceding label, then join the surviving prefix. Shared between
+    `parse_domain_names` and its span-aware sibling."""
+    segments = candidate.split(".")
+    tld_idx = -1
+    for i in range(len(segments) - 1, 0, -1):
+        if segments[i] in ioc_grammars.TLD_SET:
+            tld_idx = i
+            break
+    if tld_idx < 1:
+        return None
+    return ".".join(segments[: tld_idx + 1])
+
+
+def parse_domain_names_with_spans(text):
+    """Span-aware sibling of `parse_domain_names`. The extracted domain is a
+    prefix of the (case-folded) candidate, so the start offset of the
+    candidate match is also the start offset of the domain in `text`."""
+    out: dict[str, list[tuple[int, int]]] = {}
+    for m in _DOMAIN_CANDIDATE_RE.finditer(text):
+        candidate = m.group(0).lower()
+        domain = _domain_from_candidate(candidate)
+        if domain is None:
+            continue
+        start = m.start()
+        out.setdefault(domain, []).append((start, start + len(domain)))
+    return out
 
 
 def parse_domain_names(text):
@@ -463,6 +585,21 @@ def _scan_candidates(text, candidate_re, grammar):
     return out
 
 
+def _scan_candidates_with_spans(text, candidate_re, grammar):
+    """Span-aware sibling of `_scan_candidates`. Returns a dict mapping each
+    distinct value to its list of `(start, end)` spans (offsets into `text`,
+    in match order — duplicates preserved across occurrences but not within
+    one occurrence)."""
+    out: dict[str, list[tuple[int, int]]] = {}
+    for m in candidate_re.finditer(text):
+        base = m.start()
+        for tokens, s, e in grammar.scan_string(m.group(0)):
+            value = tokens[0]
+            if value:
+                out.setdefault(value, []).append((base + s, base + e))
+    return out
+
+
 def _url_candidate_spans(text):
     """Yield non-whitespace runs around each `_URL_MARKER_RE` hit. Built in
     Python instead of as `\\S*<marker>\\S*` so a long non-whitespace run
@@ -496,6 +633,44 @@ def _scan_url_candidates(text, grammar):
             if value and value not in seen:
                 seen.add(value)
                 out.append(value)
+    return out
+
+
+def _url_candidate_spans_with_offsets(text):
+    """Sibling of `_url_candidate_spans` that yields `(span_text, base_offset)`
+    so callers can translate match-relative spans back into the original."""
+    seen_spans: set[tuple[int, int]] = set()
+    n = len(text)
+    last_span_end = -1
+    for m in _URL_MARKER_RE.finditer(text):
+        if m.start() < last_span_end:
+            continue
+        start = m.start()
+        while start > 0 and not text[start - 1].isspace():
+            start -= 1
+        end = m.end()
+        while end < n and not text[end].isspace():
+            end += 1
+        span = (start, end)
+        if span not in seen_spans:
+            seen_spans.add(span)
+            last_span_end = end
+            yield text[start:end], start
+
+
+def _scan_url_candidates_with_spans(text, grammar):
+    """Span-aware sibling of `_scan_url_candidates`. Returns
+    dict[cleaned_url, list[(start, end)]] where spans are offsets into `text`
+    after `_clean_url` trimming has been applied."""
+    out: dict[str, list[tuple[int, int]]] = {}
+    for span_text, base in _url_candidate_spans_with_offsets(text):
+        for tokens, s, e in grammar.scan_string(span_text):
+            value = tokens[0]
+            if not value:  # pragma: no cover  -- defensive; mirrors the same skip in `_scan_url_candidates`
+                continue
+            cleaned, cs, ce = _clean_url_span(value, base + s, base + e)
+            if cleaned:
+                out.setdefault(cleaned, []).append((cs, ce))
     return out
 
 
@@ -558,6 +733,16 @@ def _scan_validated(text, candidate_re, validator):
         if validator(span):
             seen.add(span)
             out.append(span)
+    return out
+
+
+def _scan_validated_with_spans(text, candidate_re, validator):
+    """Span-aware sibling of `_scan_validated`."""
+    out: dict[str, list[tuple[int, int]]] = {}
+    for m in candidate_re.finditer(text):
+        span = m.group(0)
+        if validator(span):
+            out.setdefault(span, []).append((m.start(), m.end()))
     return out
 
 
@@ -677,6 +862,14 @@ def _remove_xmpp_local_part(xmpp_addresses: list, text: str) -> str:
     for address in xmpp_addresses:
         text = text.replace(address.split("@")[0] + "@", " ")
 
+    return text
+
+
+def _remove_xmpp_local_part_keep_offsets(xmpp_addresses: Iterable[str], text: str) -> str:
+    """Length-preserving sibling of `_remove_xmpp_local_part`."""
+    for address in xmpp_addresses:
+        target = address.split("@")[0] + "@"
+        text = text.replace(target, " " * len(target))
     return text
 
 
@@ -841,7 +1034,8 @@ def find_iocs(
     parse_domain_name_from_xmpp_address: bool = True,
     parse_urls_without_scheme: bool = True,
     included_ioc_types: Iterable[str] | None = None,
-) -> IndicatorData:
+    include_spans: bool = False,
+) -> IndicatorData | IndicatorSpanData:
     """Find observables (a.k.a. indicators of compromise) in the given text.
 
     Args:
@@ -864,6 +1058,13 @@ def find_iocs(
             the full list of parseable types, see ``SUPPORTED_IOC_TYPES``. When
             specified, the boolean options above only take effect if their
             corresponding IOC type is included.
+        include_spans: When ``True``, return ``{ioc_type: {value: [(start, end), ...]}}``
+            with offsets pointing into the original input ``text``. Currently
+            only the IOC types in ``DEFAULT_IOC_TYPES`` are supported in this
+            mode; passing any other type in ``included_ioc_types`` raises
+            ``ValueError``. Percent-encoded sub-IOCs inside URL paths are not
+            recovered in span mode (the non-span mode percent-decodes the
+            text in place, which would shift every downstream offset).
     """
     if included_ioc_types is None:
         included_ioc_types = DEFAULT_IOC_TYPES
@@ -877,6 +1078,25 @@ def find_iocs(
             SUPPORTED_IOC_TYPES,
         )
         included_ioc_types -= unsupported
+
+    if include_spans:
+        unsupported_for_spans = included_ioc_types - set(DEFAULT_IOC_TYPES)
+        if unsupported_for_spans:
+            raise ValueError(
+                "include_spans=True currently supports only the default IOC types "
+                f"({sorted(DEFAULT_IOC_TYPES)}); got unsupported types: "
+                f"{sorted(unsupported_for_spans)}"
+            )
+        return _find_iocs_with_spans(
+            text,
+            parse_domain_from_url=parse_domain_from_url,
+            parse_from_url_path=parse_from_url_path,
+            parse_domain_from_email_address=parse_domain_from_email_address,
+            parse_address_from_cidr=parse_address_from_cidr,
+            parse_domain_name_from_xmpp_address=parse_domain_name_from_xmpp_address,
+            parse_urls_without_scheme=parse_urls_without_scheme,
+            included_ioc_types=included_ioc_types,
+        )
 
     logger.info(
         "find_iocs starting (text_length=%d, ioc_type_count=%d)",
@@ -1080,3 +1300,129 @@ def _count_iocs(value) -> int:
     if isinstance(value, dict):
         return sum(len(v) for v in value.values())
     return len(value)
+
+
+def _translate_span_groups(
+    groups: dict[str, list[tuple[int, int]]],
+    left_map: list[int],
+    right_map: list[int],
+) -> IndicatorSpanGroup:
+    """Translate every fanged-text span in `groups` back to original-text
+    offsets via the offset maps."""
+    return {value: [(left_map[s], right_map[e]) for s, e in spans] for value, spans in groups.items()}
+
+
+def _find_iocs_with_spans(
+    text: str,
+    *,
+    parse_domain_from_url: bool,
+    parse_from_url_path: bool,
+    parse_domain_from_email_address: bool,
+    parse_address_from_cidr: bool,  # noqa: ARG001 — only used when "ipv4_cidrs" requested (non-default)
+    parse_domain_name_from_xmpp_address: bool,
+    parse_urls_without_scheme: bool,
+    included_ioc_types: set[str],
+) -> IndicatorSpanData:
+    """Span-aware variant of `find_iocs` for the default IOC types.
+
+    Mirrors the relevant subset of the non-span pipeline, but every text
+    mutation uses a same-length whitespace substitution so offsets stay
+    aligned with the (fanged) input. After parsing, every span is mapped
+    back to the original (pre-fanging) text via `_build_fang_offset_maps`.
+
+    The percent-decoding step that the non-span flow performs is skipped:
+    it rewrites the text in place and would shift every downstream offset.
+    Percent-encoded sub-IOCs inside URL paths therefore aren't recovered
+    in this mode — a documented trade-off.
+    """
+    logger.info(
+        "find_iocs starting in span mode (text_length=%d, ioc_type_count=%d)",
+        len(text),
+        len(included_ioc_types),
+    )
+
+    fanged = prepare_text(text)
+    left_map, right_map = _build_fang_offset_maps(text, fanged)
+
+    pristine = fanged  # `cves` parses against the unmodified fanged text
+    work = fanged
+    iocs: dict[str, dict[str, list[tuple[int, int]]]] = {}
+
+    # urls — parsed first, before any text mutation
+    if "urls" in included_ioc_types:
+        url_grammar = ioc_grammars.scheme_less_url if parse_urls_without_scheme else ioc_grammars.url
+        iocs["urls"] = _scan_url_candidates_with_spans(work, url_grammar)
+        url_strings = list(iocs["urls"].keys())
+    else:
+        url_strings = []
+
+    # Strip URL pieces from `work` to mirror the non-span pipeline's pre-parse
+    # cleanup for downstream domain/IP/hash parsing. Length-preserving so spans
+    # found later still line up with the fanged text.
+    if not parse_domain_from_url and not parse_from_url_path:
+        work = _remove_items_keep_offsets(url_strings, work)
+    elif not parse_domain_from_url:
+        work = _remove_url_domain_name_keep_offsets(url_strings, work)
+    elif not parse_from_url_path:
+        work = _remove_url_paths_keep_offsets(url_strings, work)
+
+    # XMPP cleanup happens for the email path: whether or not the user wants
+    # XMPP addresses (they aren't a default type), we don't want xmpp local
+    # parts re-surfacing as emails. Mirror the non-span flow's branching.
+    needs_email = "email_addresses" in included_ioc_types
+    needs_domain = "domains" in included_ioc_types
+    if needs_domain and not parse_domain_name_from_xmpp_address:
+        xmpp_addresses = parse_xmpp_addresses(work)
+        work = _remove_items_keep_offsets(xmpp_addresses, work)
+    elif needs_email:
+        xmpp_addresses = parse_xmpp_addresses(work)
+        work = _remove_xmpp_local_part_keep_offsets(xmpp_addresses, work)
+
+    # `_remove_url_userinfo` only fires when `urls_complete` is requested,
+    # which isn't a default — skip.
+
+    if needs_email:
+        iocs["email_addresses"] = _scan_candidates_with_spans(work, _EMAIL_CANDIDATE_RE, ioc_grammars.email_address)
+        if not parse_domain_from_email_address:
+            work = _remove_items_keep_offsets(iocs["email_addresses"].keys(), work)
+
+    if "ipv6s" in included_ioc_types:
+        # Strip the literal `[IPv6:` so it isn't re-parsed as an address piece
+        # (mirrors the non-span flow).
+        work = _remove_items_keep_offsets(["[IPv6:"], work)
+
+    if needs_domain:
+        iocs["domains"] = parse_domain_names_with_spans(work)
+
+    if "ipv4s" in included_ioc_types:
+        iocs["ipv4s"] = _scan_candidates_with_spans(work, _IPV4_CANDIDATE_RE, ioc_grammars.ipv4_address)
+
+    if "ipv6s" in included_ioc_types:
+        iocs["ipv6s"] = _scan_validated_with_spans(work, _IPV6_CANDIDATE_RE, _is_valid_ipv6)
+
+    # md5: remove imphashes first so they aren't double-counted
+    if "md5s" in included_ioc_types:
+        imphashes = parse_imphashes_(work)
+        md5_text = _remove_items_keep_offsets(imphashes, work)
+        iocs["md5s"] = _scan_candidates_with_spans(md5_text, _MD5_CANDIDATE_RE, ioc_grammars.md5)
+
+    if "sha1s" in included_ioc_types:
+        iocs["sha1s"] = _scan_candidates_with_spans(work, _SHA1_CANDIDATE_RE, ioc_grammars.sha1)
+
+    # sha256: remove authentihashes first
+    if "sha256s" in included_ioc_types:
+        authentihashes = parse_authentihashes_(work)
+        sha256_text = _remove_items_keep_offsets(authentihashes, work)
+        iocs["sha256s"] = _scan_candidates_with_spans(sha256_text, _SHA256_CANDIDATE_RE, ioc_grammars.sha256)
+
+    if "cves" in included_ioc_types:
+        iocs["cves"] = _scan_candidates_with_spans(pristine, _CVE_CANDIDATE_RE, ioc_grammars.cve)
+
+    translated: dict[str, IndicatorSpanGroup] = {
+        ioc_type: _translate_span_groups(groups, left_map, right_map) for ioc_type, groups in iocs.items()
+    }
+
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug("find_iocs (span mode) result counts: %s", {k: len(v) for k, v in translated.items()})
+    logger.info("find_iocs completed in span mode (ioc_types_parsed=%d)", len(translated))
+    return translated
