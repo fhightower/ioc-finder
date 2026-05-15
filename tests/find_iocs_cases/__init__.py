@@ -11,9 +11,11 @@ from .ids import ID_DATA
 from .ip_addr import IP_DATA
 from .mac_addr import MAC_DATA
 from .registry_keys import REGISTRY_DATA
+from .snort_rules import SNORT_DATA
 from .tlp_labels import TLP_DATA
 from .urls import URL_DATA
 from .user_agents import UA_DATA
+from .yara_rules import YARA_DATA
 
 cases = [
     TLP_DATA,
@@ -33,6 +35,8 @@ cases = [
     MAC_DATA,
     URL_DATA,
     UA_DATA,
+    SNORT_DATA,
+    YARA_DATA,
 ]
 
 ALL_TESTS = [val for sublist in cases for val in sublist]
