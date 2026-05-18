@@ -9,9 +9,16 @@ from string import hexdigits
 
 import click
 import ioc_fanger
-from pyparsing import ParseException, ParseResults
+from pyparsing import Or, ParseException, ParseResults
 
 from ioc_finder import ioc_grammars
+
+# `scheme_less_url` and `scheme_less_url_complete` match only URLs without a
+# scheme. When the caller wants both kinds, combine them with the scheme'd
+# grammars under `Or` (longest-match) so a scheme'd URL like
+# "https://foo.com/x" is preferred over the scheme-less suffix "foo.com/x".
+_url_with_optional_scheme = Or([ioc_grammars.url, ioc_grammars.scheme_less_url])
+_url_complete_with_optional_scheme = Or([ioc_grammars.url_complete, ioc_grammars.scheme_less_url_complete])
 
 logger = logging.getLogger(__name__)
 
@@ -352,7 +359,7 @@ def _clean_url(url: str) -> str:
 
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    grammar = ioc_grammars.scheme_less_url if parse_urls_without_scheme else ioc_grammars.url
+    grammar = _url_with_optional_scheme if parse_urls_without_scheme else ioc_grammars.url
     raw_urls = _scan_url_candidates(text, grammar)
     # Cleaning may collapse two raw matches to the same string, so dedupe again.
     return _deduplicate(map(_clean_url, raw_urls))
@@ -360,17 +367,26 @@ def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
 
 def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    grammar = ioc_grammars.scheme_less_url_complete if parse_urls_without_scheme else ioc_grammars.url_complete
+    grammar = _url_complete_with_optional_scheme if parse_urls_without_scheme else ioc_grammars.url_complete
     raw_urls = _scan_url_candidates(text, grammar)
     return _deduplicate(map(_clean_url, raw_urls))
 
 
 def _parse_url(url: str) -> ParseResults:
-    """Parse a URL using the narrower grammar first, then the complete grammar."""
-    try:
-        return ioc_grammars.scheme_less_url.parse_string(url)
-    except ParseException:
-        return ioc_grammars.scheme_less_url_complete.parse_string(url)
+    """Parse a URL using the narrower grammar first, then the complete grammar.
+    Tries scheme'd variants before scheme-less so a URL like "https://foo.com"
+    parses as a scheme'd URL rather than failing the scheme-less grammar."""
+    for grammar in (
+        ioc_grammars.url,
+        ioc_grammars.scheme_less_url,
+        ioc_grammars.url_complete,
+        ioc_grammars.scheme_less_url_complete,
+    ):
+        try:
+            return grammar.parse_string(url)
+        except ParseException:
+            continue
+    return ioc_grammars.scheme_less_url_complete.parse_string(url)
 
 
 def _remove_url_domain_name(urls: list, text: str) -> str:
@@ -400,7 +416,10 @@ def _remove_url_paths(urls: list, text: str) -> str:
 def _remove_url_userinfo(urls: list, text: str) -> str:
     """Remove userinfo from each URL so it is not parsed as an email address."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url_complete.parse_string(url)
+        try:
+            parsed_url = ioc_grammars.url_complete.parse_string(url)
+        except ParseException:
+            parsed_url = ioc_grammars.scheme_less_url_complete.parse_string(url)
         userinfo = parsed_url.url_authority.get("url_userinfo")
         if userinfo:
             text = text.replace(f"{userinfo}@", " ")
