@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- New `ipv6_cidrs` IOC type with a matching `parse_ipv6_cidrs` helper ([#121](https://github.com/fhightower/ioc-finder/issues/121)). It accepts the same shortened/`::`/trailing-`::` forms as the existing IPv6 address parser plus a `/0..128` bit range, and integrates with the existing CIDR-vs-URL and `parse_address_from_cidr` handling. CIDR parsing runs against the pre-fang text so the standard fanger (which rewrites `::/` to `://`) cannot silently swallow indicators like `2001:db8::/32`.
 - Added structured logging throughout the library using the standard `logging` module ([#287](https://github.com/fhightower/ioc-finder/issues/287)). The package follows the standard library convention of attaching a `NullHandler` so consumers see no output unless they configure logging. `find_iocs` emits `INFO` at start/finish (text length, IOC type count), `WARNING` when unsupported types are passed via `included_ioc_types` (they are now ignored rather than silently treated as misses), and `DEBUG` for per-type result counts and lower-level transforms (text fanging, URL cleaning). Apps can opt in with e.g. `logging.getLogger("ioc_finder").setLevel(logging.DEBUG)`.
 
 ## [9.2.0] - 2026.04.30
