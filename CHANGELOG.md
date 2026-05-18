@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 
 - Sped up domain name parsing by bypassing pyparsing for the standalone domain parser: candidate spans from the cheap regex are now validated against a TLD set directly, picking the rightmost TLD that leaves ≥1 preceding label. The `domain_name` grammar is still used as a sub-grammar inside email/url/xmpp parsers, where its inner label loop has been collapsed into a single `Regex` (replacing the `OneOrMore(label + "." + FollowedBy(...))` construction).
+- The `scheme_less_url` and `scheme_less_url_complete` grammars no longer also match URLs with a scheme; they only match URLs without one ([#244](https://github.com/fhightower/ioc-finder/issues/244)). `parse_urls` and `parse_urls_complete` now run the scheme-ful grammar first and mask each matched URL before running the scheme-less grammar, so user-facing output of `find_iocs` is unchanged but embedded scheme-less hosts inside a scheme-ful URL's query (e.g. `https://shortener.com/?url=foo.com/bar`) no longer surface as a second URL.
 
 ### Fixed
 

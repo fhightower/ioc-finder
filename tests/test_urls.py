@@ -1,9 +1,12 @@
 """Test the URL parsing against the urls here: https://mathiasbynens.be/demo/url-regex."""
 
+import pytest
 from d8s_lists import iterables_have_same_items
+from pyparsing import ParseException
 
 from ioc_finder import find_iocs as _find_iocs
-from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES
+from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES, _parse_url, _remove_url_userinfo
+from ioc_finder.ioc_grammars import scheme_less_url
 
 
 def find_iocs(*args, **kwargs):
@@ -215,3 +218,78 @@ def test_url__percent_encoded_path():
         result["domains"], ["example.com", "bar.com"]
     )  # the key here is that "foo.com" is not parsed because it is part of the path (which has been removed)
     assert result["file_paths"] == []
+
+
+def test_scheme_ful_url_does_not_surface_twice():
+    """See https://github.com/fhightower/ioc-finder/issues/244. A scheme-ful URL
+    must not also surface as a scheme-less URL via the offset right after
+    `://`."""
+    result = find_iocs("https://example.com/path")
+    assert result["urls"] == ["https://example.com/path"]
+
+
+def test_scheme_less_url_after_scheme_ful_url():
+    result = find_iocs("https://a.com foo.com/bar")
+    assert iterables_have_same_items(result["urls"], ["https://a.com", "foo.com/bar"])
+
+
+def test_embedded_url_in_query_does_not_surface_separately():
+    """A scheme-less host/path embedded in a scheme-ful URL's query string must
+    not be matched as a second URL."""
+    result = find_iocs("Visit https://shortener.com/?url=foo.com/bar")
+    assert result["urls"] == ["https://shortener.com/?url=foo.com/bar"]
+
+
+def test_scheme_less_url_dedup():
+    result = find_iocs("foo.com/bar foo.com/bar")
+    assert result["urls"] == ["foo.com/bar"]
+
+
+def test_scheme_less_url_grammar_rejects_scheme_ful_input():
+    with pytest.raises(ParseException):
+        scheme_less_url.parse_string("https://foo.com/bar")
+
+
+def test_scheme_less_url_grammar_accepts_bare_input():
+    parsed = scheme_less_url.parse_string("foo.com/bar")
+    assert parsed[0] == "foo.com/bar"
+
+
+def test_scheme_less_url_grammar_scan_skips_post_scheme_offset():
+    """scan_string over a scheme-ful URL should yield zero hits because the
+    scheme-less grammar's stricter start refuses to match immediately after
+    `/`."""
+    assert list(scheme_less_url.scan_string("https://foo.com/bar")) == []
+
+
+def test_scheme_less_url_grammar_still_finds_parenthesised_match():
+    """Punctuation-delimited scheme-less URLs are not affected by the stricter
+    `/` boundary. We assert the match starts right after `(` so the boundary
+    check has not made the grammar refuse a legitimate parenthesised URL."""
+    matches = list(scheme_less_url.scan_string("(foo.com/bar)"))
+    assert len(matches) == 1
+    tokens, start, _ = matches[0]
+    assert tokens[0].startswith("foo.com/bar")
+    assert start == 1
+
+
+def test_parse_url_helper_handles_scheme_ful_and_scheme_less():
+    parsed = _parse_url("https://example.com/path")
+    authority = parsed.url_authority
+    if not isinstance(authority, str):
+        authority = authority[0]
+    assert authority == "example.com"
+
+    parsed = _parse_url("example.com/path")
+    authority = parsed.url_authority
+    if not isinstance(authority, str):
+        authority = authority[0]
+    assert authority == "example.com"
+
+
+def test_remove_url_userinfo_works_for_scheme_ful_url():
+    stripped = _remove_url_userinfo(
+        ["http://userid:password@example.com/"],
+        "http://userid:password@example.com/",
+    )
+    assert "userid:password@" not in stripped
