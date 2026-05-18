@@ -205,6 +205,16 @@ _BITCOIN_CANDIDATE_RE = re.compile(
 # still enforced by the grammar.
 _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
 
+# IPv6 CIDR candidates: hex+colon runs that contain at least two colons,
+# followed by '/' and 1-3 digit bit-range. Same boundary shape as the IPv6
+# address prefilter; the bit-range is validated against 0..128 by the
+# Python validator below (which also reuses `_is_valid_ipv6` so the same
+# shortened/`::`/trailing-`::` forms the address parser accepts are also
+# accepted here). See https://github.com/fhightower/ioc-finder/issues/121.
+_IPV6_CIDR_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])"
+)
+
 # Google AdSense publisher-id candidates: `pub-` or `PUB-` (the grammar uses
 # `one_of("pub- PUB-")`, so mixed case is rejected) + exactly 16 digits.
 _GOOGLE_ADSENSE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:pub-|PUB-)\d{16}(?![A-Za-z0-9])")
@@ -266,6 +276,7 @@ SUPPORTED_IOC_TYPES = [
     "imphashes",
     "ipv4_cidrs",
     "ipv4s",
+    "ipv6_cidrs",
     "ipv6s",
     "mac_addresses",
     "md5s",
@@ -627,6 +638,24 @@ def parse_ipv4_cidrs(text: str) -> list:
     return _scan_candidates(text, _IPV4_CIDR_CANDIDATE_RE, ioc_grammars.ipv4_cidr)
 
 
+def _is_valid_ipv6_cidr(span: str) -> bool:
+    """Validate an IPv6 CIDR span. Reuses `_is_valid_ipv6` for the address half
+    so the same shortened/`::`/trailing-`::` forms accepted by
+    `parse_ipv6_addresses` are also accepted here (the strict `ipv6_address`
+    grammar would reject `::/0` and `1::/64`)."""
+    addr, _, bits = span.rpartition("/")
+    if not bits.isdigit():
+        return False
+    if not 0 <= int(bits) <= 128:
+        return False
+    return _is_valid_ipv6(addr)
+
+
+def parse_ipv6_cidrs(text: str) -> list:
+    """."""
+    return _scan_validated(text, _IPV6_CIDR_CANDIDATE_RE, _is_valid_ipv6_cidr)
+
+
 def parse_registry_key_paths(text):
     """."""
     full_parsed_registry_key_paths = _scan_candidates(text, _REGISTRY_KEY_CANDIDATE_RE, ioc_grammars.registry_key_path)
@@ -885,6 +914,11 @@ def find_iocs(
     )
     iocs: dict = {}
 
+    # Stash the pre-fang text. `ioc_fanger.fang` rewrites the `::/` in IPv6 CIDRs
+    # to `://` (mistaking it for a defanged scheme separator), which would
+    # silently swallow indicators like `2001:db8::/32`. parse_ipv6_cidrs runs
+    # against this pre-fang copy so the rewrite cannot destroy the IOC.
+    prefang_text = text
     text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
@@ -954,22 +988,46 @@ def find_iocs(
     # cidr ranges
     if "ipv4_cidrs" in included_ioc_types:
         iocs["ipv4_cidrs"] = parse_ipv4_cidrs(text)
+    if "ipv6_cidrs" in included_ioc_types:
+        # Parse against pre-fang text so the fanger does not eat the `::/` chars.
+        iocs["ipv6_cidrs"] = parse_ipv6_cidrs(prefang_text)
 
-    # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
+    # remove URLs that are also cidr ranges (see https://github.com/fhightower/ioc-finder/issues/91)
     url_parsing_requires_cidr_removal = (
         "urls" in included_ioc_types or "urls_complete" in included_ioc_types
     ) and parse_urls_without_scheme
-    ip_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
-    if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
-        cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
+    ipv4_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
+    ipv6_address_parsing_requires_cidr_removal = "ipv6s" in included_ioc_types and not parse_address_from_cidr
+    # For ipv6 CIDRs the fang rewrite turns `::/` into `://`, so the address
+    # half is no longer present in the post-fang text. When the user wants
+    # ipv6 addresses parsed from CIDRs (the default), re-inject the address
+    # halves so parse_ipv6_addresses can pick them up.
+    ipv6_address_parsing_requires_cidr_reinjection = (
+        "ipv6s" in included_ioc_types and "ipv6_cidrs" in included_ioc_types and parse_address_from_cidr
+    )
+    if (
+        url_parsing_requires_cidr_removal
+        or ipv4_address_parsing_requires_cidr_removal
+        or ipv6_address_parsing_requires_cidr_removal
+        or ipv6_address_parsing_requires_cidr_reinjection
+    ):
+        ipv4_cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
+        ipv6_cidr_ranges = _get_items(iocs, "ipv6_cidrs", parse_ipv6_cidrs, prefang_text)
         if url_parsing_requires_cidr_removal:
-            for cidr in cidr_ranges:
+            for cidr in ipv4_cidr_ranges + ipv6_cidr_ranges:
                 if cidr in iocs.get("urls", []):
                     iocs["urls"].remove(cidr)
                 if cidr in iocs.get("urls_complete", []):
                     iocs["urls_complete"].remove(cidr)
-        if ip_address_parsing_requires_cidr_removal:
-            text = _remove_items(cidr_ranges, text)
+        if ipv4_address_parsing_requires_cidr_removal:
+            text = _remove_items(ipv4_cidr_ranges, text)
+        if ipv6_address_parsing_requires_cidr_removal:
+            text = _remove_items(ipv6_cidr_ranges, text)
+        if ipv6_address_parsing_requires_cidr_reinjection:
+            for cidr in ipv6_cidr_ranges:
+                addr = cidr.rsplit("/", 1)[0]
+                if addr not in text:
+                    text = f"{text} {addr}"
 
     # file hashes
     if "imphashes" in included_ioc_types:
