@@ -43,7 +43,7 @@ The `find_iocs` takes the following keywords (all of them default to `True`):
 - `parse_address_from_cidr` (default=True): Whether or not to parse IP addresses from CIDR ranges (e.g. `0.0.0.1` from `0.0.0.1/24`). Only applicable when `"ipv4s"` is in `included_ioc_types`.
 - `parse_domain_name_from_xmpp_address` (default=True): Whether or not to parse domain names from XMPP addresses. Only applicable when `"domains"` is in `included_ioc_types`.
 - `parse_urls_without_scheme` (default=True): Whether or not to parse URLs without a scheme (see [https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Generic_syntax](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier#Generic_syntax)) (e.g. `hightower.space/projects`). Only applicable when `"urls"` or `"urls_complete"` is in `included_ioc_types`.
-- `included_ioc_types` (default=None): A collection of IOC type names to parse. When `None`, all default types are parsed. Valid values are: `"asns"`, `"attack_mitigations"`, `"attack_tactics"`, `"attack_techniques"`, `"authentihashes"`, `"bitcoin_addresses"`, `"cves"`, `"domains"`, `"email_addresses"`, `"email_addresses_complete"`, `"file_paths"`, `"google_adsense_publisher_ids"`, `"google_analytics_tracker_ids"`, `"imphashes"`, `"ipv4_cidrs"`, `"ipv4s"`, `"ipv6s"`, `"mac_addresses"`, `"md5s"`, `"monero_addresses"`, `"registry_key_paths"`, `"sha1s"`, `"sha256s"`, `"sha512s"`, `"ssdeeps"`, `"tlp_labels"`, `"urls"`, `"urls_complete"`, `"user_agents"`, `"xmpp_addresses"`. Note that when using `included_ioc_types`, the boolean options above only take effect if their corresponding IOC type is included.
+- `included_ioc_types` (default=None): A collection of IOC type names to parse. When `None`, all default types are parsed. Valid values are: `"asns"`, `"attack_mitigations"`, `"attack_tactics"`, `"attack_techniques"`, `"authentihashes"`, `"bitcoin_addresses"`, `"cves"`, `"domains"`, `"email_addresses"`, `"email_addresses_complete"`, `"file_paths"`, `"google_adsense_publisher_ids"`, `"google_analytics_tracker_ids"`, `"imphashes"`, `"ipv4_cidrs"`, `"ipv4s"`, `"ipv6s"`, `"mac_addresses"`, `"md5s"`, `"monero_addresses"`, `"registry_key_paths"`, `"sha1s"`, `"sha256s"`, `"sha512s"`, `"socket_addresses"`, `"ssdeeps"`, `"tlp_labels"`, `"urls"`, `"urls_complete"`, `"user_agents"`, `"xmpp_addresses"`. Note that when using `included_ioc_types`, the boolean options above only take effect if their corresponding IOC type is included.
 
 See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/tests/test_ioc_finder.py) for more examples.
 
@@ -88,6 +88,7 @@ The `find_iocs()` returns a dictionary in the following structure:
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "socket_addresses": [],
     "ssdeeps": [],
     "tlp_labels": [],
     "urls": [],
@@ -136,6 +137,7 @@ For example, running the example code shown at the start of the [usage](#usage) 
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "socket_addresses": [],
     "ssdeeps": [],
     "tlp_labels": [],
     "urls": ["https://example.org/test/bingo.php"],
@@ -214,6 +216,7 @@ This will return:
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "socket_addresses": [],
     "ssdeeps": [],
     "tlp_labels": [],
     "urls": [

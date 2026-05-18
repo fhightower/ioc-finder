@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Added
 
+- New `socket_addresses` IOC type with a matching `parse_socket_addresses` helper ([#248](https://github.com/fhightower/ioc-finder/issues/248)). Accepts `ipv4:port` and bracketed `[ipv6]:port` shapes with a `1..65535` port range. IPv6 host validation reuses the existing `_is_valid_ipv6` helper so the same shortened forms accepted by `parse_ipv6_addresses` are accepted here too. Observed text is preserved verbatim (no leading-zero normalization). Port `0` is intentionally excluded as IANA-reserved.
 - Added structured logging throughout the library using the standard `logging` module ([#287](https://github.com/fhightower/ioc-finder/issues/287)). The package follows the standard library convention of attaching a `NullHandler` so consumers see no output unless they configure logging. `find_iocs` emits `INFO` at start/finish (text length, IOC type count), `WARNING` when unsupported types are passed via `included_ioc_types` (they are now ignored rather than silently treated as misses), and `DEBUG` for per-type result counts and lower-level transforms (text fanging, URL cleaning). Apps can opt in with e.g. `logging.getLogger("ioc_finder").setLevel(logging.DEBUG)`.
 
 ## [9.2.0] - 2026.04.30
