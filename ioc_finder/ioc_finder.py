@@ -205,6 +205,19 @@ _BITCOIN_CANDIDATE_RE = re.compile(
 # still enforced by the grammar.
 _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
 
+# Socket address candidates: either a dotted IPv4 quad or a bracketed IPv6
+# literal, followed by ':' and a 1..5 digit port. Boundaries reject hugging
+# alphanumerics so e.g. `5.1.2.3.4:80` cannot tail-match `1.2.3.4:80`. The
+# numeric port range, octet ranges, and IPv6 shape are validated by the
+# Python validator below; the prefilter is intentionally a superset.
+# See https://github.com/fhightower/ioc-finder/issues/248.
+_SOCKET_ADDRESS_CANDIDATE_RE = re.compile(
+    r"(?<![A-Za-z0-9.])"
+    r"(?:(?:\d{1,3}\.){3}\d{1,3}|\[[0-9A-Fa-f:]+\])"
+    r":\d{1,5}"
+    r"(?![A-Za-z0-9])"
+)
+
 # Google AdSense publisher-id candidates: `pub-` or `PUB-` (the grammar uses
 # `one_of("pub- PUB-")`, so mixed case is rejected) + exactly 16 digits.
 _GOOGLE_ADSENSE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])(?:pub-|PUB-)\d{16}(?![A-Za-z0-9])")
@@ -274,6 +287,7 @@ SUPPORTED_IOC_TYPES = [
     "sha1s",
     "sha256s",
     "sha512s",
+    "socket_addresses",
     "ssdeeps",
     "tlp_labels",
     "urls",
@@ -543,6 +557,41 @@ def parse_ipv6_addresses(text):
     # _scan_candidates + a pyparsing grammar. The grammar applies no parse
     # actions to ipv6_address, so skipping it preserves the output shape.
     return _scan_validated(text, _IPV6_CANDIDATE_RE, _is_valid_ipv6)
+
+
+def _is_valid_ipv4_quad(host: str) -> bool:
+    """Plain-Python IPv4 quad validation that, unlike `ipv4_address`, returns
+    the host text unchanged (no leading-zero normalization). Used by
+    parse_socket_addresses so observed text like `001.002.003.004:80` is
+    preserved verbatim."""
+    parts = host.split(".")
+    if len(parts) != 4:
+        return False
+    for p in parts:
+        if not p.isdigit():
+            return False
+        if not 0 <= int(p) <= 255:
+            return False
+    return True
+
+
+def _is_valid_socket_address(span: str) -> bool:
+    """Validate a `host:port` span. Host is either an IPv4 quad or a bracketed
+    IPv6 literal; port is 1..65535 (port 0 is reserved by IANA and excluded
+    on purpose). Bracketed IPv6 reuses `_is_valid_ipv6` so the same
+    shortened/`::`/trailing-`::` forms accepted by `parse_ipv6_addresses` work
+    here too."""
+    host, _, port = span.rpartition(":")
+    if not port.isdigit() or not 1 <= int(port) <= 65535:
+        return False
+    if host.startswith("[") and host.endswith("]"):
+        return _is_valid_ipv6(host[1:-1])
+    return _is_valid_ipv4_quad(host)
+
+
+def parse_socket_addresses(text):
+    """."""
+    return _scan_validated(text, _SOCKET_ADDRESS_CANDIDATE_RE, _is_valid_socket_address)
 
 
 def _scan_validated(text, candidate_re, validator):
@@ -995,6 +1044,11 @@ def find_iocs(
         iocs["ipv4s"] = parse_ipv4_addresses(text)
     if "ipv6s" in included_ioc_types:
         iocs["ipv6s"] = parse_ipv6_addresses(text)
+    if "socket_addresses" in included_ioc_types:
+        # Run alongside the address parsers so a socket like `1.2.3.4:8080`
+        # surfaces in addition to its IPv4 half (matching existing CIDR
+        # behavior where the address half is also reported by default).
+        iocs["socket_addresses"] = parse_socket_addresses(text)
 
     # file hashes
     if "sha512s" in included_ioc_types:
