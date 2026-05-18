@@ -40,6 +40,7 @@ IOC_EXAMPLES = {
         "496aKKdqF1xQSSEzw7wNrkZkDUsCD5cSmNCfVhVgEps52WERBcLDGzdF5UugmFoHMm9xRJdewvK2TFfAJNwEV25rTcVF5Vp"
     ],
     "mac_addresses": ["AA-F2-C9-A6-B3-4F"],
+    "socket_addresses": ["1.1.1.1:8080"],
     "user_agents": [
         "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1) TLP"
     ],  # I don't like this parsing... I've ticketed this for improvement here: https://github.com/fhightower/ioc-finder/issues/227

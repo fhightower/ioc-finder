@@ -75,6 +75,7 @@ def test_cli_without_domain_from_url_parsing():
     "sha1s": [],
     "sha256s": [],
     "sha512s": [],
+    "socket_addresses": [],
     "ssdeeps": [],
     "tlp_labels": [],
     "urls": [

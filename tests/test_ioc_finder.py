@@ -186,6 +186,114 @@ def test_cve_parsing():
     assert "CVE-1928-1004" in iocs["cves"]
 
 
+def test_socket_address_parsing_ipv4():
+    """See https://github.com/fhightower/ioc-finder/issues/248."""
+    valid = [
+        "1.2.3.4:8080",
+        "127.0.0.1:80",
+        "255.255.255.255:65535",
+        "0.0.0.0:1",
+        "1.2.3.4:080",
+        "001.002.003.004:80",
+    ]
+    iocs = find_iocs(" ".join(valid))
+    assert sorted(iocs["socket_addresses"]) == sorted(valid)
+
+
+def test_socket_address_parsing_ipv6_bracketed():
+    valid = [
+        "[2001:db8::1]:8080",
+        "[::1]:443",
+        "[::]:80",
+        "[1::]:80",
+        "[2001:0db8:0000:0000:0000:ff00:0042:8329]:443",
+    ]
+    iocs = find_iocs(" ".join(valid))
+    assert sorted(iocs["socket_addresses"]) == sorted(valid)
+
+
+def test_socket_address_parsing_punctuation_boundaries():
+    iocs = find_iocs("attacker connected to 1.2.3.4:8080 last night")
+    assert iocs["socket_addresses"] == ["1.2.3.4:8080"]
+    iocs = find_iocs("(1.2.3.4:8080)")
+    assert iocs["socket_addresses"] == ["1.2.3.4:8080"]
+    iocs = find_iocs("1.2.3.4:8080.")
+    assert iocs["socket_addresses"] == ["1.2.3.4:8080"]
+    iocs = find_iocs("1.2.3.4:8080,")
+    assert iocs["socket_addresses"] == ["1.2.3.4:8080"]
+
+
+def test_socket_address_parsing_multiple_in_text():
+    iocs = find_iocs("1.2.3.4:80 5.6.7.8:443")
+    assert sorted(iocs["socket_addresses"]) == ["1.2.3.4:80", "5.6.7.8:443"]
+
+
+def test_socket_address_parsing_rejects_invalid_ports():
+    """Port 0 (reserved), out of range, non-numeric."""
+    s = "1.2.3.4:0 1.2.3.4:65536 1.2.3.4:99999 1.2.3.4:abc"
+    iocs = find_iocs(s)
+    assert iocs["socket_addresses"] == []
+
+
+def test_socket_address_parsing_rejects_missing_pieces():
+    iocs = find_iocs("1.2.3.4: :8080")
+    assert iocs["socket_addresses"] == []
+
+
+def test_socket_address_parsing_rejects_invalid_ipv4_octet():
+    iocs = find_iocs("999.1.1.1:80")
+    assert iocs["socket_addresses"] == []
+
+
+def test_socket_address_parsing_rejects_domain_port():
+    iocs = find_iocs("example.com:8080")
+    assert iocs["socket_addresses"] == []
+
+
+def test_socket_address_parsing_rejects_unbracketed_ipv6():
+    """Unbracketed IPv6 is ambiguous with one more group, so we require brackets."""
+    iocs = find_iocs("2001:db8::1:8080")
+    assert iocs["socket_addresses"] == []
+
+
+def test_socket_address_parsing_rejects_ipv4_mapped_in_brackets():
+    """`_is_valid_ipv6` does not support IPv4-mapped dotted-tail forms, so this
+    bracketed host is rejected."""
+    iocs = find_iocs("[::ffff:192.0.2.128]:443")
+    assert iocs["socket_addresses"] == []
+
+
+def test_socket_address_coexists_with_ipv4_in_url():
+    """A scheme-ful URL with host:port still yields the URL, and the socket
+    parser also extracts the host:port (matching existing ipv4-from-url
+    behavior). The IPv4 half also surfaces in ipv4s."""
+    iocs = find_iocs("https://1.2.3.4:8080/path")
+    assert "https://1.2.3.4:8080/path" in iocs["urls"]
+    assert "1.2.3.4:8080" in iocs["socket_addresses"]
+    assert "1.2.3.4" in iocs["ipv4s"]
+
+
+def test_socket_address_coexists_with_ipv4():
+    iocs = find_iocs("1.2.3.4:8080")
+    assert iocs["socket_addresses"] == ["1.2.3.4:8080"]
+    assert iocs["ipv4s"] == ["1.2.3.4"]
+
+
+def test_socket_address_does_not_match_ipv4_cidr():
+    iocs = find_iocs("1.2.3.4/24")
+    assert iocs["socket_addresses"] == []
+    assert iocs["ipv4_cidrs"] == ["1.2.3.4/24"]
+
+
+def test_socket_address_with_bracketed_ipv6_pin_ipv6_visibility():
+    """Pin the current visibility behavior: a bracketed IPv6 socket address
+    surfaces in socket_addresses while the inner host also appears in ipv6s
+    because the candidate regex allows starting after `[`."""
+    iocs = find_iocs("[2001:db8::1]:8080")
+    assert iocs["socket_addresses"] == ["[2001:db8::1]:8080"]
+    assert iocs["ipv6s"] == ["2001:db8::1"]
+
+
 def test_ipv4_cidr_parsing():
     s = "1.2.3.4/0 1.2.3.4/10 1.2.3.4/20 1.2.3.4/32"
     iocs = find_iocs(s)
