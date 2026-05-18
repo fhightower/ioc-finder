@@ -350,27 +350,50 @@ def _clean_url(url: str) -> str:
     return url
 
 
+def _scheme_less_scan(text: str, scheme_ful_matches: list[str], grammar) -> list:
+    """Mask out scheme-ful URL matches so the scheme-less grammar does not
+    re-discover their authority/path/query as a second URL. Same-length space
+    padding is used so any caller relying on original offsets stays correct
+    (current callers only use plain string replace)."""
+    stripped = text
+    for url in scheme_ful_matches:
+        stripped = stripped.replace(url, " " * len(url))
+    return _scan_url_candidates(stripped, grammar)
+
+
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    grammar = ioc_grammars.scheme_less_url if parse_urls_without_scheme else ioc_grammars.url
-    raw_urls = _scan_url_candidates(text, grammar)
+    raw_urls = _scan_url_candidates(text, ioc_grammars.url)
+    if parse_urls_without_scheme:
+        raw_urls = list(raw_urls)
+        raw_urls.extend(_scheme_less_scan(text, raw_urls, ioc_grammars.scheme_less_url))
     # Cleaning may collapse two raw matches to the same string, so dedupe again.
     return _deduplicate(map(_clean_url, raw_urls))
 
 
 def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    grammar = ioc_grammars.scheme_less_url_complete if parse_urls_without_scheme else ioc_grammars.url_complete
-    raw_urls = _scan_url_candidates(text, grammar)
+    raw_urls = _scan_url_candidates(text, ioc_grammars.url_complete)
+    if parse_urls_without_scheme:
+        raw_urls = list(raw_urls)
+        raw_urls.extend(_scheme_less_scan(text, raw_urls, ioc_grammars.scheme_less_url_complete))
     return _deduplicate(map(_clean_url, raw_urls))
 
 
 def _parse_url(url: str) -> ParseResults:
-    """Parse a URL using the narrower grammar first, then the complete grammar."""
-    try:
-        return ioc_grammars.scheme_less_url.parse_string(url)
-    except ParseException:
-        return ioc_grammars.scheme_less_url_complete.parse_string(url)
+    """Parse a URL by trying the four URL grammars in order, since each may match
+    a different shape of input (scheme-ful vs scheme-less, narrow vs complete)."""
+    for grammar in (
+        ioc_grammars.url,
+        ioc_grammars.scheme_less_url,
+        ioc_grammars.url_complete,
+        ioc_grammars.scheme_less_url_complete,
+    ):
+        try:
+            return grammar.parse_string(url)
+        except ParseException:
+            continue
+    raise ParseException(url, msg=f"could not parse URL: {url!r}")
 
 
 def _remove_url_domain_name(urls: list, text: str) -> str:
@@ -400,7 +423,16 @@ def _remove_url_paths(urls: list, text: str) -> str:
 def _remove_url_userinfo(urls: list, text: str) -> str:
     """Remove userinfo from each URL so it is not parsed as an email address."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url_complete.parse_string(url)
+        # Only the "complete" grammars expose url_userinfo. Try both because
+        # `scheme_less_url_complete` now rejects scheme-ful URLs.
+        for grammar in (ioc_grammars.url_complete, ioc_grammars.scheme_less_url_complete):
+            try:
+                parsed_url = grammar.parse_string(url)
+                break
+            except ParseException:
+                continue
+        else:
+            continue
         userinfo = parsed_url.url_authority.get("url_userinfo")
         if userinfo:
             text = text.replace(f"{userinfo}@", " ")
