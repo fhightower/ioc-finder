@@ -19,6 +19,7 @@ IOC_EXAMPLES = {
     "email_addresses_complete": ["me@example.com"],
     "email_addresses": ["me@example.com"],
     "ipv4_cidrs": ["1.1.1.1/0"],
+    "ipv6_cidrs": ["2001:db8::/32"],
     "imphashes": ["18ddf28a71089acdbab5038f58044c0a"],
     "authentihashes": ["3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"],
     "ipv4s": ["1.1.1.1"],

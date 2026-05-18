@@ -201,6 +201,84 @@ def test_ipv4_cidr_parsing():
     assert len(iocs["ipv4s"]) == 0
 
 
+def test_ipv6_cidr_parsing():
+    """See https://github.com/fhightower/ioc-finder/issues/121."""
+    valid = [
+        "2001:db8::/32",
+        "::/0",
+        "1::/64",
+        "::1/128",
+        "fe80::/10",
+        "FE80::/10",
+        "fc00::/7",
+        "fe80::1234:5678:9abc:def0/64",
+        "2001:db8::/128",
+        "2001:0db8:0000:0000:0000:ff00:0042:8329/128",
+    ]
+    iocs = find_iocs(" ".join(valid))
+    assert sorted(iocs["ipv6_cidrs"]) == sorted(valid)
+
+
+def test_ipv6_cidr_parsing_trailing_period_excluded():
+    iocs = find_iocs("Block 2001:db8::/32 at the firewall.")
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+
+
+def test_ipv6_cidr_parsing_in_list():
+    iocs = find_iocs("2001:db8::/32, fe80::/10")
+    assert sorted(iocs["ipv6_cidrs"]) == ["2001:db8::/32", "fe80::/10"]
+
+
+def test_ipv6_cidr_parsing_rejects_invalid():
+    """Bit range out of bounds, missing/empty bits, malformed address shapes."""
+    s = "2001:db8::/129 2001:db8::/256 2001:db8::/abc 2001:db8::/ 2001:db8::"
+    iocs = find_iocs(s)
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_parsing_rejects_extra_bit_digit():
+    """`2001:db8::/1299` must not partial-match as `2001:db8::/129`."""
+    iocs = find_iocs("2001:db8::/1299")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_parsing_rejects_triple_colon():
+    iocs = find_iocs("2001:db8:::/64")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_parsing_rejects_dotted_tail_ipv4_mapped():
+    """`_is_valid_ipv6` does not support IPv4-mapped dotted-tail forms, so the
+    corresponding CIDR is rejected too."""
+    iocs = find_iocs("::ffff:192.0.2.128/128")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_default_includes_address_half():
+    iocs = find_iocs("2001:db8::/32")
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+    assert iocs["ipv6s"] == ["2001:db8::"]
+
+
+def test_ipv6_cidr_parse_address_from_cidr_false():
+    iocs = find_iocs("2001:db8::/32", parse_address_from_cidr=False)
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+    assert iocs["ipv6s"] == []
+
+
+def test_ipv6_cidr_not_parsed_as_url():
+    """See https://github.com/fhightower/ioc-finder/issues/91 for the IPv4
+    counterpart that motivated this removal."""
+    iocs = find_iocs("2001:db8::/32")
+    assert iocs["urls"] == []
+
+
+def test_mixed_ipv4_and_ipv6_cidrs():
+    iocs = find_iocs("1.2.3.0/24 and 2001:db8::/32")
+    assert iocs["ipv4_cidrs"] == ["1.2.3.0/24"]
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+
+
 def test_registry_key_parsing():
     s = r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
     iocs = find_iocs(s)

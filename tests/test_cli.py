@@ -67,6 +67,7 @@ def test_cli_without_domain_from_url_parsing():
     "imphashes": [],
     "ipv4_cidrs": [],
     "ipv4s": [],
+    "ipv6_cidrs": [],
     "ipv6s": [],
     "mac_addresses": [],
     "md5s": [],
