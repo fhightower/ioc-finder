@@ -492,14 +492,14 @@ wheels = [
 
 [[package]]
 name = "ioc-fanger"
-version = "4.2.1"
+version = "5.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/72/fad00a23dfa666d391879654ad7dd166211a9d8fd74f83a228f5e5fa4164/ioc_fanger-4.2.1.tar.gz", hash = "sha256:8e4d96d3bc591b3976d697eb0024d15cdf557ddec0d5dc392c0e932d73e74806", size = 19542, upload-time = "2022-09-27T11:34:40.877Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cd/89/6010d4af0bdef5475ac29302c406692cd4cd25da4d88851117e0d543ad77/ioc_fanger-5.0.0.tar.gz", hash = "sha256:94cfc7f7c2801d54cfbb794beac0663c1dbff7a14167decf067a7202b49af356", size = 115715, upload-time = "2026-05-13T11:23:35.673Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/29/cd/eadada1cdcf7d7b9b5053e583239e59b9e05902a2983032d790fbfc7bad7/ioc_fanger-4.2.1-py2.py3-none-any.whl", hash = "sha256:f96ac3085613891df9af0b08580bb4c476e79e4a6a6869cb478f4054a7a78044", size = 6443, upload-time = "2022-09-27T11:34:38.7Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/fe/f464b0d69f7209be2897eecfcdbc899a6ebe60b9d846207d0604b3896039/ioc_fanger-5.0.0-py3-none-any.whl", hash = "sha256:0391947de217740020020baa34f79f155c5f347e6a048fd4e5b2ab5e36cf4cd0", size = 7273, upload-time = "2026-05-13T11:23:34.302Z" },
 ]
 
 [[package]]
@@ -534,7 +534,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "click", specifier = ">=7.1.2,<9.0" },
-    { name = "ioc-fanger", specifier = ">=4.2.1,<4.3" },
+    { name = "ioc-fanger", specifier = ">=4.2.1,<5.1" },
     { name = "pyparsing", specifier = ">=3.1,<4.0" },
 ]
 
