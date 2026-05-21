@@ -211,9 +211,7 @@ _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/
 # Python validator below (which also reuses `_is_valid_ipv6` so the same
 # shortened/`::`/trailing-`::` forms the address parser accepts are also
 # accepted here). See https://github.com/fhightower/ioc-finder/issues/121.
-_IPV6_CIDR_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])"
-)
+_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])")
 
 # Google AdSense publisher-id candidates: `pub-` or `PUB-` (the grammar uses
 # `one_of("pub- PUB-")`, so mixed case is rejected) + exactly 16 digits.
