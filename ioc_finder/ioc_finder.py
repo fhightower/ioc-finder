@@ -211,7 +211,14 @@ _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/
 # Python validator below (which also reuses `_is_valid_ipv6` so the same
 # shortened/`::`/trailing-`::` forms the address parser accepts are also
 # accepted here). See https://github.com/fhightower/ioc-finder/issues/121.
-_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])")
+#
+# The lookbehind also rejects starts right after `]` or `)` (defang close
+# brackets) so partially-defanged inputs like `2001[:]db8::/32` or
+# `2001(:)db8::/32` do not partial-match as a truncated `db8::/32`. Fully
+# refanging those forms would require running the validator against the
+# post-fang text, which has its own quirks; this narrow boundary fix is
+# enough to keep the partial-host truncation from surfacing.
+_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])")
 
 # Google AdSense publisher-id candidates: `pub-` or `PUB-` (the grammar uses
 # `one_of("pub- PUB-")`, so mixed case is rejected) + exactly 16 digits.

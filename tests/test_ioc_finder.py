@@ -308,6 +308,19 @@ def test_defanged_ipv6_cidr_is_unreachable():
     assert iocs["ipv6_cidrs"] == []
 
 
+def test_partially_defanged_ipv6_cidr_does_not_yield_truncated_match():
+    """A partially-defanged input like `2001[:]db8::/32` must not yield a
+    truncated `db8::/32` match. The CIDR candidate regex's lookbehind rejects
+    starts immediately after `]` or `)`, the close-brackets used by `[:]` /
+    `(:)` defang markers, so the partial host alone never anchors. See PR
+    #370 review thread (TRUNCATED false-positive comment)."""
+    iocs = find_iocs("2001[:]db8::/32")
+    assert iocs["ipv6_cidrs"] == []
+
+    iocs = find_iocs("2001(:)db8::/32")
+    assert iocs["ipv6_cidrs"] == []
+
+
 def test_registry_key_parsing():
     s = r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
     iocs = find_iocs(s)
