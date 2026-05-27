@@ -1009,8 +1009,22 @@ def find_iocs(
         or ipv6_address_parsing_requires_cidr_removal
         or ipv6_address_parsing_requires_cidr_reinjection
     ):
-        ipv4_cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
-        ipv6_cidr_ranges = _get_items(iocs, "ipv6_cidrs", parse_ipv6_cidrs, prefang_text)
+        # Only compute each range list when something below actually consumes it,
+        # so we don't pay for an unused parse pass.
+        ipv4_cidr_ranges = (
+            _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
+            if (url_parsing_requires_cidr_removal or ipv4_address_parsing_requires_cidr_removal)
+            else []
+        )
+        ipv6_cidr_ranges = (
+            _get_items(iocs, "ipv6_cidrs", parse_ipv6_cidrs, prefang_text)
+            if (
+                url_parsing_requires_cidr_removal
+                or ipv6_address_parsing_requires_cidr_removal
+                or ipv6_address_parsing_requires_cidr_reinjection
+            )
+            else []
+        )
         if url_parsing_requires_cidr_removal:
             for cidr in ipv4_cidr_ranges + ipv6_cidr_ranges:
                 if cidr in iocs.get("urls", []):
@@ -1022,10 +1036,15 @@ def find_iocs(
         if ipv6_address_parsing_requires_cidr_removal:
             text = _remove_items(ipv6_cidr_ranges, text)
         if ipv6_address_parsing_requires_cidr_reinjection:
+            # Always append the address half. A substring `in text` guard would
+            # incorrectly skip injection when the CIDR base is a *prefix* of an
+            # unrelated IPv6 in the same text (e.g. `2001:db8::/32` next to
+            # `2001:db8::1234`), causing parse_ipv6_addresses to miss the base.
+            # parse_ipv6_addresses deduplicates, so re-injecting an address that
+            # also appears as an independent token in `text` is harmless.
             for cidr in ipv6_cidr_ranges:
                 addr = cidr.rsplit("/", 1)[0]
-                if addr not in text:
-                    text = f"{text} {addr}"
+                text = f"{text} {addr}"
 
     # file hashes
     if "imphashes" in included_ioc_types:

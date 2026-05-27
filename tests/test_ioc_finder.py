@@ -279,6 +279,35 @@ def test_mixed_ipv4_and_ipv6_cidrs():
     assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
 
 
+def test_ipv6_cidr_address_half_when_overlaps_with_longer_ipv6():
+    """A CIDR's address half must still surface in ipv6s even when it is a
+    prefix substring of an unrelated longer IPv6 in the same text. Without the
+    fix, the substring guard treated `2001:db8::` as already present (it is, as
+    a prefix of `2001:db8::1234`) and skipped re-injecting it, so the CIDR base
+    was lost from `ipv6s`. See PR #370 review thread."""
+    iocs = find_iocs(
+        "2001:db8::1234 is inside 2001:db8::/32",
+        included_ioc_types=["ipv6s", "ipv6_cidrs"],
+    )
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+    assert sorted(iocs["ipv6s"]) == ["2001:db8::", "2001:db8::1234"]
+
+
+def test_defanged_ipv6_cidr_is_unreachable():
+    """Defanged IPv6 CIDRs like `2001[:]db8[:][:]/32` are intentionally
+    unreachable.
+
+    `parse_ipv6_cidrs` runs against the pre-fang text to dodge a known
+    `ioc_fanger.fang` quirk (`::/` -> `://`) that would otherwise destroy
+    correctly-fanged CIDRs. The trade-off is that an already-defanged CIDR is
+    seen by `parse_ipv6_cidrs` before fang has had a chance to refang the
+    bracket-style `[:]` markers, so the candidate regex never matches. This
+    test pins that behavior so a future change does not silently start
+    accepting these without us thinking about it."""
+    iocs = find_iocs("2001[:]db8[:][:]/32")
+    assert iocs["ipv6_cidrs"] == []
+
+
 def test_registry_key_parsing():
     s = r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
     iocs = find_iocs(s)
