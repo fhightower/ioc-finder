@@ -255,22 +255,43 @@ def test_scheme_less_url_grammar_accepts_bare_input():
     assert parsed[0] == "foo.com/bar"
 
 
-def test_scheme_less_url_grammar_scan_skips_post_scheme_offset():
-    """scan_string over a scheme-ful URL should yield zero hits because the
-    scheme-less grammar's stricter start refuses to match immediately after
-    `/`."""
-    assert list(scheme_less_url.scan_string("https://foo.com/bar")) == []
-
-
 def test_scheme_less_url_grammar_still_finds_parenthesised_match():
-    """Punctuation-delimited scheme-less URLs are not affected by the stricter
-    `/` boundary. We assert the match starts right after `(` so the boundary
-    check has not made the grammar refuse a legitimate parenthesised URL."""
+    """A punctuation-delimited scheme-less URL is found, starting right after
+    the opening `(`."""
     matches = list(scheme_less_url.scan_string("(foo.com/bar)"))
     assert len(matches) == 1
     tokens, start, _ = matches[0]
     assert tokens[0].startswith("foo.com/bar")
     assert start == 1
+
+
+def test_slash_preceded_scheme_less_url_still_found():
+    """A scheme-less URL whose host is preceded by a bare `/` must still be
+    found. The scheme-ful URL masking pass (not a grammar start boundary) is
+    what prevents scheme-ful URLs from re-surfacing, so a leading `/` here is
+    harmless. See PR #369 review thread."""
+    assert find_iocs("path/to/foo.com/bar")["urls"] == ["foo.com/bar"]
+
+
+def test_scheme_ful_substring_does_not_leak_scheme_less_match():
+    """Masking a scheme-ful URL must blank its exact character span, not every
+    occurrence of its match text. A shorter scheme-ful URL whose text is a
+    prefix of a longer one previously caused `str.replace` to punch a hole in
+    the longer URL, leaking a spurious scheme-less match from the remainder.
+    See PR #369 review thread."""
+    result = find_iocs("see http://a.com or http://a.com?u=b.co/x for more")
+    assert iterables_have_same_items(result["urls"], ["http://a.com", "http://a.com?u=b.co/x"])
+    assert "b.co/x" not in result["urls"]
+
+
+def test_embedded_url_in_query_not_found_when_scheme_less_disabled():
+    """With parse_urls_without_scheme=False only the scheme-ful URL is parsed,
+    so the embedded scheme-less host in its query never surfaces."""
+    result = find_iocs(
+        "Visit https://shortener.com/?url=foo.com/bar",
+        parse_urls_without_scheme=False,
+    )
+    assert result["urls"] == ["https://shortener.com/?url=foo.com/bar"]
 
 
 def test_parse_url_helper_handles_scheme_ful_and_scheme_less():
