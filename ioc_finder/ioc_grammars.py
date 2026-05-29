@@ -152,17 +152,16 @@ url_complete = alphanum_word_start + Combine(
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
 # Issue #244: `scheme_less_url[_complete]` now only matches URLs without a
-# scheme. We also tighten the starting boundary so a match cannot begin
-# immediately after `/`; otherwise scanning `https://foo.com/bar` would surface
-# `foo.com/bar` at the offset right after `://`. `parse_urls` masks scheme-ful
-# URL matches before running this grammar so embedded URL paths/queries (e.g.
+# scheme (the scheme-ful alternative has been dropped). `parse_urls` runs the
+# scheme-ful grammar first and masks each matched URL's character span before
+# running this grammar, so a scheme-ful URL never re-surfaces as a scheme-less
+# one and embedded URL paths/queries (e.g.
 # `https://shortener.com/?url=foo.com/bar`) do not surface twice either.
-scheme_less_url_word_start = WordStart(word_chars=alphanums + "/")
-scheme_less_url = scheme_less_url_word_start + Combine(
+scheme_less_url = alphanum_word_start + Combine(
     Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
-scheme_less_url_complete = scheme_less_url_word_start + Combine(
+scheme_less_url_complete = alphanum_word_start + Combine(
     Combine(url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path"))
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
