@@ -309,6 +309,126 @@ def test_ipv4_cidr_parsing():
     assert len(iocs["ipv4s"]) == 0
 
 
+def test_ipv6_cidr_parsing():
+    """See https://github.com/fhightower/ioc-finder/issues/121."""
+    valid = [
+        "2001:db8::/32",
+        "::/0",
+        "1::/64",
+        "::1/128",
+        "fe80::/10",
+        "FE80::/10",
+        "fc00::/7",
+        "fe80::1234:5678:9abc:def0/64",
+        "2001:db8::/128",
+        "2001:0db8:0000:0000:0000:ff00:0042:8329/128",
+    ]
+    iocs = find_iocs(" ".join(valid))
+    assert sorted(iocs["ipv6_cidrs"]) == sorted(valid)
+
+
+def test_ipv6_cidr_parsing_trailing_period_excluded():
+    iocs = find_iocs("Block 2001:db8::/32 at the firewall.")
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+
+
+def test_ipv6_cidr_parsing_in_list():
+    iocs = find_iocs("2001:db8::/32, fe80::/10")
+    assert sorted(iocs["ipv6_cidrs"]) == ["2001:db8::/32", "fe80::/10"]
+
+
+def test_ipv6_cidr_parsing_rejects_invalid():
+    """Bit range out of bounds, missing/empty bits, malformed address shapes."""
+    s = "2001:db8::/129 2001:db8::/256 2001:db8::/abc 2001:db8::/ 2001:db8::"
+    iocs = find_iocs(s)
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_parsing_rejects_extra_bit_digit():
+    """`2001:db8::/1299` must not partial-match as `2001:db8::/129`."""
+    iocs = find_iocs("2001:db8::/1299")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_parsing_rejects_triple_colon():
+    iocs = find_iocs("2001:db8:::/64")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_parsing_rejects_dotted_tail_ipv4_mapped():
+    """`_is_valid_ipv6` does not support IPv4-mapped dotted-tail forms, so the
+    corresponding CIDR is rejected too."""
+    iocs = find_iocs("::ffff:192.0.2.128/128")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_ipv6_cidr_default_includes_address_half():
+    iocs = find_iocs("2001:db8::/32")
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+    assert iocs["ipv6s"] == ["2001:db8::"]
+
+
+def test_ipv6_cidr_parse_address_from_cidr_false():
+    iocs = find_iocs("2001:db8::/32", parse_address_from_cidr=False)
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+    assert iocs["ipv6s"] == []
+
+
+def test_ipv6_cidr_not_parsed_as_url():
+    """See https://github.com/fhightower/ioc-finder/issues/91 for the IPv4
+    counterpart that motivated this removal."""
+    iocs = find_iocs("2001:db8::/32")
+    assert iocs["urls"] == []
+
+
+def test_mixed_ipv4_and_ipv6_cidrs():
+    iocs = find_iocs("1.2.3.0/24 and 2001:db8::/32")
+    assert iocs["ipv4_cidrs"] == ["1.2.3.0/24"]
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+
+
+def test_ipv6_cidr_address_half_when_overlaps_with_longer_ipv6():
+    """A CIDR's address half must still surface in ipv6s even when it is a
+    prefix substring of an unrelated longer IPv6 in the same text. Without the
+    fix, the substring guard treated `2001:db8::` as already present (it is, as
+    a prefix of `2001:db8::1234`) and skipped re-injecting it, so the CIDR base
+    was lost from `ipv6s`. See PR #370 review thread."""
+    iocs = find_iocs(
+        "2001:db8::1234 is inside 2001:db8::/32",
+        included_ioc_types=["ipv6s", "ipv6_cidrs"],
+    )
+    assert iocs["ipv6_cidrs"] == ["2001:db8::/32"]
+    assert sorted(iocs["ipv6s"]) == ["2001:db8::", "2001:db8::1234"]
+
+
+def test_defanged_ipv6_cidr_is_unreachable():
+    """Defanged IPv6 CIDRs like `2001[:]db8[:][:]/32` are intentionally
+    unreachable.
+
+    `parse_ipv6_cidrs` runs against the pre-fang text to dodge a known
+    `ioc_fanger.fang` quirk (`::/` -> `://`) that would otherwise destroy
+    correctly-fanged CIDRs. The trade-off is that an already-defanged CIDR is
+    seen by `parse_ipv6_cidrs` before fang has had a chance to refang the
+    bracket-style `[:]` markers, so the candidate regex never matches. This
+    test pins that behavior so a future change does not silently start
+    accepting these without us thinking about it."""
+    iocs = find_iocs("2001[:]db8[:][:]/32")
+    assert iocs["ipv6_cidrs"] == []
+
+
+def test_partially_defanged_ipv6_cidr_does_not_yield_truncated_match():
+    """A partially-defanged input like `2001[:]db8::/32` must not yield a
+    truncated `db8::/32` match. The CIDR candidate regex's lookbehind rejects
+    starts immediately after `]` or `)`, the close-brackets used by `[:]` /
+    `(:)` defang markers, so the partial host alone never anchors. See PR
+    #370 review thread (TRUNCATED false-positive comment)."""
+    iocs = find_iocs("2001[:]db8::/32")
+    assert iocs["ipv6_cidrs"] == []
+
+    iocs = find_iocs("2001(:)db8::/32")
+    assert iocs["ipv6_cidrs"] == []
+
+
 def test_registry_key_parsing():
     s = r"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows HKLM\Software\Microsoft\Windows HKCC\Software\Microsoft\Windows"
     iocs = find_iocs(s)
@@ -533,6 +653,37 @@ def test_user_agents():
         in iocs["user_agents"]
     )
     assert "Mozilla/5.0 (Windows nt 6.1; wow64; rv:11.0) Gecko Firefox/11.0" in iocs["user_agents"]
+
+
+def test_user_agent_does_not_swallow_trailing_tlp_label():
+    """See https://github.com/fhightower/ioc-finder/issues/227."""
+    s = "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1) TLP:RED"
+    iocs = find_iocs(s)
+    assert iocs["user_agents"] == ["Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1)"]
+    assert iocs["tlp_labels"] == ["TLP:RED"]
+
+
+def test_user_agent_does_not_swallow_trailing_tlp_label_with_versioned_platform():
+    s = "Mozilla/5.0 (Windows NT 10.0) Gecko/20100101 Firefox/89.0 TLP:AMBER"
+    iocs = find_iocs(s)
+    assert iocs["user_agents"] == ["Mozilla/5.0 (Windows NT 10.0) Gecko/20100101 Firefox/89.0"]
+    assert iocs["tlp_labels"] == ["TLP:AMBER"]
+
+
+def test_user_agent_drops_bare_platform_followed_by_colon():
+    s = "Mozilla/5.0 (X11) Gecko Chrome HOST: example.com"
+    iocs = find_iocs(s)
+    assert iocs["user_agents"] == ["Mozilla/5.0 (X11) Gecko Chrome"]
+    assert "example.com" in iocs["domains"]
+
+
+def test_user_agent_keeps_versioned_platform_before_colon():
+    """A platform that carries a numeric version is kept even when the next
+    char is ':' (e.g. ':443' acting like a port number). The trailing ':443'
+    is not a valid platform start, so the user_agent loop exits cleanly."""
+    s = "Mozilla/5.0 (X11; Linux x86_64) Chrome/91.0:443/foo"
+    iocs = find_iocs(s)
+    assert iocs["user_agents"] == ["Mozilla/5.0 (X11; Linux x86_64) Chrome/91.0"]
 
 
 def test_monero_addresses():

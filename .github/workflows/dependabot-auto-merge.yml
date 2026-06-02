@@ -19,17 +19,26 @@ jobs:
         id: meta
         uses: dependabot/fetch-metadata@v2
 
-      - name: Ensure label exists
+      - name: Ensure labels exist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh label create auto-merge-candidate --color ededed --description "Dependabot dev-dep PR eligible for auto-merge after soak" --force --repo "$GITHUB_REPOSITORY"
+        run: |
+          gh label create auto-merge-candidate --color ededed --description "Dependabot dev-dep PR eligible for auto-merge after soak" --force --repo "$GITHUB_REPOSITORY"
+          gh label create needs-manual-merge --color d93f0b --description "Dependabot PR not eligible for auto-merge; needs manual review" --force --repo "$GITHUB_REPOSITORY"
 
-      - name: Label dev-dependency PRs
+      - name: Label auto-merge candidates
         if: steps.meta.outputs.dependency-type == 'direct:development' && (steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr edit "$PR_URL" --add-label auto-merge-candidate
+
+      - name: Label PRs needing manual review
+        if: ${{ !(steps.meta.outputs.dependency-type == 'direct:development' && (steps.meta.outputs.update-type == 'version-update:semver-patch' || steps.meta.outputs.update-type == 'version-update:semver-minor')) }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr edit "$PR_URL" --add-label needs-manual-merge
 
   soak-and-merge:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
@@ -37,7 +46,7 @@ jobs:
     env:
       SOAK_DAYS: 3
     steps:
-      - name: Approve and enable auto-merge on soaked PRs
+      - name: Enable auto-merge on soaked PRs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -47,17 +56,12 @@ jobs:
             --author "app/dependabot" \
             --label auto-merge-candidate \
             --state open \
-            --json number,createdAt,autoMergeRequest,reviewDecision \
+            --json number,createdAt,autoMergeRequest \
             --jq ".[] | select(.createdAt < \"$cutoff\") | .number" \
           | while read -r pr; do
-              decision=$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json reviewDecision --jq .reviewDecision)
-              if [ "$decision" != "APPROVED" ]; then
-                echo "Approving PR #$pr"
-                gh pr review "$pr" --approve --repo "$GITHUB_REPOSITORY" --body "Auto-approved after ${SOAK_DAYS}d soak."
-              fi
               auto=$(gh pr view "$pr" --repo "$GITHUB_REPOSITORY" --json autoMergeRequest --jq .autoMergeRequest)
               if [ "$auto" = "null" ] || [ -z "$auto" ]; then
                 echo "Enabling auto-merge on PR #$pr"
-                gh pr merge "$pr" --auto --squash --repo "$GITHUB_REPOSITORY"
+                gh pr merge "$pr" --auto --squash --repo "$GITHUB_REPOSITORY" || echo "Failed to enable auto-merge on PR #$pr"
               fi
             done

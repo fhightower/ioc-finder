@@ -205,6 +205,21 @@ _BITCOIN_CANDIDATE_RE = re.compile(
 # still enforced by the grammar.
 _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
 
+# IPv6 CIDR candidates: hex+colon runs that contain at least two colons,
+# followed by '/' and 1-3 digit bit-range. Same boundary shape as the IPv6
+# address prefilter; the bit-range is validated against 0..128 by the
+# Python validator below (which also reuses `_is_valid_ipv6` so the same
+# shortened/`::`/trailing-`::` forms the address parser accepts are also
+# accepted here). See https://github.com/fhightower/ioc-finder/issues/121.
+#
+# The lookbehind also rejects starts right after `]` or `)` (defang close
+# brackets) so partially-defanged inputs like `2001[:]db8::/32` or
+# `2001(:)db8::/32` do not partial-match as a truncated `db8::/32`. Fully
+# refanging those forms would require running the validator against the
+# post-fang text, which has its own quirks; this narrow boundary fix is
+# enough to keep the partial-host truncation from surfacing.
+_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])")
+
 # Socket address candidates: either a dotted IPv4 quad or a bracketed IPv6
 # literal, followed by ':' and a 1..5 digit port. Boundaries reject hugging
 # alphanumerics so e.g. `5.1.2.3.4:80` cannot tail-match `1.2.3.4:80`. The
@@ -279,6 +294,7 @@ SUPPORTED_IOC_TYPES = [
     "imphashes",
     "ipv4_cidrs",
     "ipv4s",
+    "ipv6_cidrs",
     "ipv6s",
     "mac_addresses",
     "md5s",
@@ -366,25 +382,41 @@ def _clean_url(url: str) -> str:
 
 def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    grammar = ioc_grammars.scheme_less_url if parse_urls_without_scheme else ioc_grammars.url
-    raw_urls = _scan_url_candidates(text, grammar)
+    raw_urls, scheme_ful_spans = _scan_url_candidates_with_spans(text, ioc_grammars.url)
+    raw_urls = list(raw_urls)
+    if parse_urls_without_scheme:
+        # Blank the exact spans the scheme-ful URLs occupy so the scheme-less
+        # grammar can't re-discover their authority/path/query as a second URL.
+        masked = _mask_spans(text, scheme_ful_spans)
+        raw_urls.extend(_scan_url_candidates(masked, ioc_grammars.scheme_less_url))
     # Cleaning may collapse two raw matches to the same string, so dedupe again.
     return _deduplicate(map(_clean_url, raw_urls))
 
 
 def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
     """."""
-    grammar = ioc_grammars.scheme_less_url_complete if parse_urls_without_scheme else ioc_grammars.url_complete
-    raw_urls = _scan_url_candidates(text, grammar)
+    raw_urls, scheme_ful_spans = _scan_url_candidates_with_spans(text, ioc_grammars.url_complete)
+    raw_urls = list(raw_urls)
+    if parse_urls_without_scheme:
+        masked = _mask_spans(text, scheme_ful_spans)
+        raw_urls.extend(_scan_url_candidates(masked, ioc_grammars.scheme_less_url_complete))
     return _deduplicate(map(_clean_url, raw_urls))
 
 
 def _parse_url(url: str) -> ParseResults:
-    """Parse a URL using the narrower grammar first, then the complete grammar."""
-    try:
-        return ioc_grammars.scheme_less_url.parse_string(url)
-    except ParseException:
-        return ioc_grammars.scheme_less_url_complete.parse_string(url)
+    """Parse a URL by trying the four URL grammars in order, since each may match
+    a different shape of input (scheme-ful vs scheme-less, narrow vs complete)."""
+    for grammar in (
+        ioc_grammars.url,
+        ioc_grammars.scheme_less_url,
+        ioc_grammars.url_complete,
+        ioc_grammars.scheme_less_url_complete,
+    ):
+        try:
+            return grammar.parse_string(url)
+        except ParseException:
+            continue
+    raise ParseException(url, msg=f"could not parse URL: {url!r}")
 
 
 def _remove_url_domain_name(urls: list, text: str) -> str:
@@ -414,7 +446,16 @@ def _remove_url_paths(urls: list, text: str) -> str:
 def _remove_url_userinfo(urls: list, text: str) -> str:
     """Remove userinfo from each URL so it is not parsed as an email address."""
     for url in urls:
-        parsed_url = ioc_grammars.scheme_less_url_complete.parse_string(url)
+        # Only the "complete" grammars expose url_userinfo. Try both because
+        # `scheme_less_url_complete` now rejects scheme-ful URLs.
+        for grammar in (ioc_grammars.url_complete, ioc_grammars.scheme_less_url_complete):
+            try:
+                parsed_url = grammar.parse_string(url)
+                break
+            except ParseException:
+                continue
+        else:
+            continue
         userinfo = parsed_url.url_authority.get("url_userinfo")
         if userinfo:
             text = text.replace(f"{userinfo}@", " ")
@@ -478,9 +519,10 @@ def _scan_candidates(text, candidate_re, grammar):
 
 
 def _url_candidate_spans(text):
-    """Yield non-whitespace runs around each `_URL_MARKER_RE` hit. Built in
-    Python instead of as `\\S*<marker>\\S*` so a long non-whitespace run
-    that contains no marker (e.g. a 10kB base64 blob) doesn't trigger
+    """Yield `(offset, substring)` for each non-whitespace run around a
+    `_URL_MARKER_RE` hit, where `offset` is the run's start index in `text`.
+    Built in Python instead of as `\\S*<marker>\\S*` so a long non-whitespace
+    run that contains no marker (e.g. a 10kB base64 blob) doesn't trigger
     O(n²) regex backtracking."""
     seen_spans: set[tuple[int, int]] = set()
     n = len(text)
@@ -498,19 +540,44 @@ def _url_candidate_spans(text):
         if span not in seen_spans:
             seen_spans.add(span)
             last_span_end = end
-            yield text[start:end]
+            yield start, text[start:end]
 
 
-def _scan_url_candidates(text, grammar):
+def _scan_url_candidates_with_spans(text, grammar):
+    """Run `grammar.scan_string` over each URL candidate span, returning both
+    the deduplicated match values and the absolute `(start, end)` character
+    spans every raw match occupies in `text`. The spans let callers mask the
+    exact regions a scheme-ful URL covers (rather than `str.replace`-ing the
+    match text, which blows holes in a longer URL whose substring equals a
+    shorter match elsewhere)."""
     seen: set[str] = set()
     out: list[str] = []
-    for span in _url_candidate_spans(text):
-        for tokens, _start, _end in grammar.scan_string(span):
+    spans: list[tuple[int, int]] = []
+    for offset, span in _url_candidate_spans(text):
+        for tokens, sub_start, sub_end in grammar.scan_string(span):
+            spans.append((offset + sub_start, offset + sub_end))
             value = tokens[0]
             if value and value not in seen:
                 seen.add(value)
                 out.append(value)
-    return out
+    return out, spans
+
+
+def _scan_url_candidates(text, grammar):
+    values, _spans = _scan_url_candidates_with_spans(text, grammar)
+    return values
+
+
+def _mask_spans(text: str, spans: list[tuple[int, int]]) -> str:
+    """Return `text` with every `(start, end)` character range blanked to
+    spaces. Same-length replacement keeps all other offsets stable."""
+    if not spans:
+        return text
+    chars = list(text)
+    for start, end in spans:
+        for i in range(start, min(end, len(chars))):
+            chars[i] = " "
+    return "".join(chars)
 
 
 _IPV6_HEXNUMS = frozenset(hexdigits)
@@ -674,6 +741,24 @@ def parse_cves(text):
 def parse_ipv4_cidrs(text: str) -> list:
     """."""
     return _scan_candidates(text, _IPV4_CIDR_CANDIDATE_RE, ioc_grammars.ipv4_cidr)
+
+
+def _is_valid_ipv6_cidr(span: str) -> bool:
+    """Validate an IPv6 CIDR span. Reuses `_is_valid_ipv6` for the address half
+    so the same shortened/`::`/trailing-`::` forms accepted by
+    `parse_ipv6_addresses` are also accepted here (the strict `ipv6_address`
+    grammar would reject `::/0` and `1::/64`)."""
+    addr, _, bits = span.rpartition("/")
+    if not bits.isdigit():
+        return False
+    if not 0 <= int(bits) <= 128:
+        return False
+    return _is_valid_ipv6(addr)
+
+
+def parse_ipv6_cidrs(text: str) -> list:
+    """."""
+    return _scan_validated(text, _IPV6_CIDR_CANDIDATE_RE, _is_valid_ipv6_cidr)
 
 
 def parse_registry_key_paths(text):
@@ -934,6 +1019,11 @@ def find_iocs(
     )
     iocs: dict = {}
 
+    # Stash the pre-fang text. `ioc_fanger.fang` rewrites the `::/` in IPv6 CIDRs
+    # to `://` (mistaking it for a defanged scheme separator), which would
+    # silently swallow indicators like `2001:db8::/32`. parse_ipv6_cidrs runs
+    # against this pre-fang copy so the rewrite cannot destroy the IOC.
+    prefang_text = text
     text = prepare_text(text)
     # keep a copy of the original text - some items should be parsed from the original text
     original_text = text
@@ -1003,22 +1093,65 @@ def find_iocs(
     # cidr ranges
     if "ipv4_cidrs" in included_ioc_types:
         iocs["ipv4_cidrs"] = parse_ipv4_cidrs(text)
+    if "ipv6_cidrs" in included_ioc_types:
+        # Parse against pre-fang text so the fanger does not eat the `::/` chars.
+        iocs["ipv6_cidrs"] = parse_ipv6_cidrs(prefang_text)
 
-    # remove URLs that are also ipv4_cidrs (see https://github.com/fhightower/ioc-finder/issues/91)
+    # remove URLs that are also cidr ranges (see https://github.com/fhightower/ioc-finder/issues/91)
     url_parsing_requires_cidr_removal = (
         "urls" in included_ioc_types or "urls_complete" in included_ioc_types
     ) and parse_urls_without_scheme
-    ip_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
-    if url_parsing_requires_cidr_removal or ip_address_parsing_requires_cidr_removal:
-        cidr_ranges = _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
+    ipv4_address_parsing_requires_cidr_removal = "ipv4s" in included_ioc_types and not parse_address_from_cidr
+    ipv6_address_parsing_requires_cidr_removal = "ipv6s" in included_ioc_types and not parse_address_from_cidr
+    # For ipv6 CIDRs the fang rewrite turns `::/` into `://`, so the address
+    # half is no longer present in the post-fang text. When the user wants
+    # ipv6 addresses parsed from CIDRs (the default), re-inject the address
+    # halves so parse_ipv6_addresses can pick them up.
+    ipv6_address_parsing_requires_cidr_reinjection = (
+        "ipv6s" in included_ioc_types and "ipv6_cidrs" in included_ioc_types and parse_address_from_cidr
+    )
+    if (
+        url_parsing_requires_cidr_removal
+        or ipv4_address_parsing_requires_cidr_removal
+        or ipv6_address_parsing_requires_cidr_removal
+        or ipv6_address_parsing_requires_cidr_reinjection
+    ):
+        # Only compute each range list when something below actually consumes it,
+        # so we don't pay for an unused parse pass.
+        ipv4_cidr_ranges = (
+            _get_items(iocs, "ipv4_cidrs", parse_ipv4_cidrs, text)
+            if (url_parsing_requires_cidr_removal or ipv4_address_parsing_requires_cidr_removal)
+            else []
+        )
+        ipv6_cidr_ranges = (
+            _get_items(iocs, "ipv6_cidrs", parse_ipv6_cidrs, prefang_text)
+            if (
+                url_parsing_requires_cidr_removal
+                or ipv6_address_parsing_requires_cidr_removal
+                or ipv6_address_parsing_requires_cidr_reinjection
+            )
+            else []
+        )
         if url_parsing_requires_cidr_removal:
-            for cidr in cidr_ranges:
+            for cidr in ipv4_cidr_ranges + ipv6_cidr_ranges:
                 if cidr in iocs.get("urls", []):
                     iocs["urls"].remove(cidr)
                 if cidr in iocs.get("urls_complete", []):
                     iocs["urls_complete"].remove(cidr)
-        if ip_address_parsing_requires_cidr_removal:
-            text = _remove_items(cidr_ranges, text)
+        if ipv4_address_parsing_requires_cidr_removal:
+            text = _remove_items(ipv4_cidr_ranges, text)
+        if ipv6_address_parsing_requires_cidr_removal:
+            text = _remove_items(ipv6_cidr_ranges, text)
+        if ipv6_address_parsing_requires_cidr_reinjection:
+            # Always append the address half. A substring `in text` guard would
+            # incorrectly skip injection when the CIDR base is a *prefix* of an
+            # unrelated IPv6 in the same text (e.g. `2001:db8::/32` next to
+            # `2001:db8::1234`), causing parse_ipv6_addresses to miss the base.
+            # parse_ipv6_addresses deduplicates, so re-injecting an address that
+            # also appears as an independent token in `text` is harmless.
+            for cidr in ipv6_cidr_ranges:
+                addr = cidr.rsplit("/", 1)[0]
+                text = f"{text} {addr}"
 
     # file hashes
     if "imphashes" in included_ioc_types:

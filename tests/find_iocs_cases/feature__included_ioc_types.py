@@ -19,6 +19,7 @@ IOC_EXAMPLES = {
     "email_addresses_complete": ["me@example.com"],
     "email_addresses": ["me@example.com"],
     "ipv4_cidrs": ["1.1.1.1/0"],
+    "ipv6_cidrs": ["2001:db8::/32"],
     "imphashes": ["18ddf28a71089acdbab5038f58044c0a"],
     "authentihashes": ["3f1b149d07e7e8636636b8b7f7043c40ed64a10b28986181fb046c498432c2d4"],
     "ipv4s": ["1.1.1.1"],
@@ -41,9 +42,7 @@ IOC_EXAMPLES = {
     ],
     "mac_addresses": ["AA-F2-C9-A6-B3-4F"],
     "socket_addresses": ["1.1.1.1:8080"],
-    "user_agents": [
-        "Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1) TLP"
-    ],  # I don't like this parsing... I've ticketed this for improvement here: https://github.com/fhightower/ioc-finder/issues/227
+    "user_agents": ["Mozilla/4.0 (compatible; MSIE 7.0b; Windows NT 5.1; .NET CLR 1.1.4322; InfoPath.1)"],
     "tlp_labels": ["TLP:RED"],
     "file_paths": ["~/foo/bar/abc.py"],
     "attack_mitigations": {"enterprise": ["M1036", "M1015"]},
@@ -58,7 +57,6 @@ all_ioc_text = all_ioc_text.replace(
     IOC_EXAMPLES["authentihashes"][0],  # type: ignore
     f"authentihash {IOC_EXAMPLES['authentihashes'][0]}",  # type: ignore
 )
-all_ioc_text = all_ioc_text.replace(IOC_EXAMPLES["user_agents"][0], IOC_EXAMPLES["user_agents"][0].rstrip(" TLP"))  # type: ignore
 # add the attack data
 all_ioc_text = all_ioc_text + " " + " ".join(IOC_EXAMPLES["attack_mitigations"]["enterprise"])  # type: ignore
 all_ioc_text = all_ioc_text + " " + " ".join(IOC_EXAMPLES["attack_tactics"]["pre_attack"])  # type: ignore

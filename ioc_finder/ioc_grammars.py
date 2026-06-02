@@ -151,23 +151,19 @@ url_complete = alphanum_word_start + Combine(
     + Optional(Combine("/" + Optional(url_path_complete)))("url_path")
     + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
-scheme_less_url = alphanum_word_start + Or(
-    [
-        url,
-        Combine(
-            Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
-            + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-        ),
-    ]
+# Issue #244: `scheme_less_url[_complete]` now only matches URLs without a
+# scheme (the scheme-ful alternative has been dropped). `parse_urls` runs the
+# scheme-ful grammar first and masks each matched URL's character span before
+# running this grammar, so a scheme-ful URL never re-surfaces as a scheme-less
+# one and embedded URL paths/queries (e.g.
+# `https://shortener.com/?url=foo.com/bar`) do not surface twice either.
+scheme_less_url = alphanum_word_start + Combine(
+    Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
+    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
-scheme_less_url_complete = alphanum_word_start + Or(
-    [
-        url_complete,
-        Combine(
-            Combine(url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path"))
-            + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-        ),
-    ]
+scheme_less_url_complete = alphanum_word_start + Combine(
+    Combine(url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path"))
+    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
 )
 
 # this allows for matching file hashes preceeded with an 'x' or 'X'...
@@ -375,7 +371,12 @@ user_agent_details = Regex(r"\(.+?\)")
 user_agent_platform = Combine(
     alphanum_word_start
     + Regex(r"[a-zA-Z]{2,}/?").add_condition(lambda tokens: tokens[0].lower().strip("/") != "mozilla")
-    + Optional(user_agent_platform_version)
+    # A platform either has a numeric version, or is a bare token that must not be
+    # immediately followed by ":". Without that constraint a token like "TLP" in
+    # "...) TLP:RED" gets absorbed into the user agent. The MatchFirst tries the
+    # version first so platforms with versions (e.g. "Chrome/91.0") still match
+    # cleanly even when they happen to abut a colon. See issue #227.
+    + (user_agent_platform_version | NotAny(":"))
 )
 user_agent = Combine(
     user_agent_start + user_agent_details + ZeroOrMore(user_agent_platform + Optional(user_agent_details)),

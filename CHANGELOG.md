@@ -9,14 +9,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 
 - Sped up domain name parsing by bypassing pyparsing for the standalone domain parser: candidate spans from the cheap regex are now validated against a TLD set directly, picking the rightmost TLD that leaves ≥1 preceding label. The `domain_name` grammar is still used as a sub-grammar inside email/url/xmpp parsers, where its inner label loop has been collapsed into a single `Regex` (replacing the `OneOrMore(label + "." + FollowedBy(...))` construction).
+- The `scheme_less_url` and `scheme_less_url_complete` grammars no longer also match URLs with a scheme; they only match URLs without one ([#244](https://github.com/fhightower/ioc-finder/issues/244)). `parse_urls` and `parse_urls_complete` now run the scheme-ful grammar first and mask each matched URL before running the scheme-less grammar, so user-facing output of `find_iocs` is unchanged but embedded scheme-less hosts inside a scheme-ful URL's query (e.g. `https://shortener.com/?url=foo.com/bar`) no longer surface as a second URL.
 
 ### Fixed
 
 - `urls_complete` now accepts `@` in URL paths, matching the RFC 3986 `pchar` definition (e.g. `https://example.com/users/@alice` is now captured in full).
+- `parse_user_agents` no longer absorbs a trailing token like ` TLP` from input such as `Mozilla/4.0 (...) TLP:RED`. A bare (version-less) platform token must not be immediately followed by `:`. Versioned platforms (e.g. `Chrome/91.0`) are unaffected. ([#227](https://github.com/fhightower/ioc-finder/issues/227))
 
 ### Added
 
 - New `socket_addresses` IOC type with a matching `parse_socket_addresses` helper ([#248](https://github.com/fhightower/ioc-finder/issues/248)). Accepts `ipv4:port` and bracketed `[ipv6]:port` shapes with a `1..65535` port range. IPv6 host validation reuses the existing `_is_valid_ipv6` helper so the same shortened forms accepted by `parse_ipv6_addresses` are accepted here too. Observed text is preserved verbatim (no leading-zero normalization). Port `0` is intentionally excluded as IANA-reserved.
+- New `ipv6_cidrs` IOC type with a matching `parse_ipv6_cidrs` helper ([#121](https://github.com/fhightower/ioc-finder/issues/121)). It accepts the same shortened/`::`/trailing-`::` forms as the existing IPv6 address parser plus a `/0..128` bit range, and integrates with the existing CIDR-vs-URL and `parse_address_from_cidr` handling. CIDR parsing runs against the pre-fang text so the standard fanger (which rewrites `::/` to `://`) cannot silently swallow indicators like `2001:db8::/32`.
 - Added structured logging throughout the library using the standard `logging` module ([#287](https://github.com/fhightower/ioc-finder/issues/287)). The package follows the standard library convention of attaching a `NullHandler` so consumers see no output unless they configure logging. `find_iocs` emits `INFO` at start/finish (text length, IOC type count), `WARNING` when unsupported types are passed via `included_ioc_types` (they are now ignored rather than silently treated as misses), and `DEBUG` for per-type result counts and lower-level transforms (text fanging, URL cleaning). Apps can opt in with e.g. `logging.getLogger("ioc_finder").setLevel(logging.DEBUG)`.
 
 ## [9.2.0] - 2026.04.30

@@ -12,4 +12,9 @@ def test_url_parsing_func():
 def test_url_candidate_spans_skip_markers_inside_expanded_span():
     text = ("a.a/" * 5000) + " https://example.com/path"
 
-    assert list(_url_candidate_spans(text)) == [text.split()[0], "https://example.com/path"]
+    first = text.split()[0]
+    second = "https://example.com/path"
+    assert list(_url_candidate_spans(text)) == [
+        (0, first),
+        (len(first) + 1, second),
+    ]
