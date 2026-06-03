@@ -49,102 +49,37 @@ See [test_ioc_finder.py](https://github.com/fhightower/ioc-finder/blob/master/te
 
 #### Output
 
-The `find_iocs()` returns a dictionary in the following structure:
+The `find_iocs()` returns a dictionary keyed by IOC type. By default, the common types are parsed, producing the following structure:
 
 ```json
 {
-    "asns": [],
-    "attack_mitigations": {
-        "enterprise": [],
-        "mobile": []
-    },
-    "attack_tactics": {
-        "enterprise": [],
-        "mobile": [],
-        "pre_attack": []
-    },
-    "attack_techniques": {
-        "enterprise": [],
-        "mobile": [],
-        "pre_attack": []
-    },
-    "authentihashes": [],
-    "bitcoin_addresses": [],
     "cves": [],
     "domains": [],
     "email_addresses": [],
-    "email_addresses_complete": [],
-    "file_paths": [],
-    "google_adsense_publisher_ids": [],
-    "google_analytics_tracker_ids": [],
-    "imphashes": [],
-    "ipv4_cidrs": [],
     "ipv4s": [],
-    "ipv6_cidrs": [],
     "ipv6s": [],
-    "mac_addresses": [],
     "md5s": [],
-    "monero_addresses": [],
-    "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
-    "sha512s": [],
-    "socket_addresses": [],
-    "ssdeeps": [],
-    "tlp_labels": [],
-    "urls": [],
-    "user_agents": [],
-    "xmpp_addresses": []
+    "urls": []
 }
-
 ```
+
+Pass `included_ioc_types` (or the CLI's `--all` flag) to parse additional types; any included type adds its own key to the output dictionary. See the [options](#options) above for the full list of supported types.
 
 For example, running the example code shown at the start of the [usage](#usage) section above produces the following output:
 
 ```json
 {
-    "asns": [],
-    "attack_mitigations": {
-        "enterprise": [],
-        "mobile": []
-    },
-    "attack_tactics": {
-        "enterprise": [],
-        "mobile": [],
-        "pre_attack": []
-    },
-    "attack_techniques": {
-        "enterprise": [],
-        "mobile": [],
-        "pre_attack": []
-    },
-    "authentihashes": [],
-    "bitcoin_addresses": [],
     "cves": [],
-    "domains": ["example.org", "example.com"],
+    "domains": ["example.com", "example.org"],
     "email_addresses": [],
-    "email_addresses_complete": [],
-    "file_paths": [],
-    "google_adsense_publisher_ids": [],
-    "google_analytics_tracker_ids": [],
-    "imphashes": [],
-    "ipv4_cidrs": [],
     "ipv4s": [],
-    "ipv6_cidrs": [],
     "ipv6s": [],
-    "mac_addresses": [],
     "md5s": [],
-    "monero_addresses": [],
-    "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
-    "sha512s": [],
-    "socket_addresses": [],
-    "ssdeeps": [],
-    "tlp_labels": [],
-    "urls": ["https://example.org/test/bingo.php"],
-    "user_agents": [],
-    "xmpp_addresses": []
+    "urls": ["https://example.org/test/bingo.php"]
 }
 ```
 
@@ -180,53 +115,20 @@ This will return:
 
 ```json
 {
-    "asns": [],
-    "attack_mitigations": {
-        "enterprise": [],
-        "mobile": []
-    },
-    "attack_tactics": {
-        "enterprise": [],
-        "mobile": [],
-        "pre_attack": []
-    },
-    "attack_techniques": {
-        "enterprise": [],
-        "mobile": [],
-        "pre_attack": []
-    },
-    "authentihashes": [],
-    "bitcoin_addresses": [],
     "cves": [],
     "domains": [
         "example.com",
         "example.org"
     ],
     "email_addresses": [],
-    "email_addresses_complete": [],
-    "file_paths": [],
-    "google_adsense_publisher_ids": [],
-    "google_analytics_tracker_ids": [],
-    "imphashes": [],
-    "ipv4_cidrs": [],
     "ipv4s": [],
-    "ipv6_cidrs": [],
     "ipv6s": [],
-    "mac_addresses": [],
     "md5s": [],
-    "monero_addresses": [],
-    "registry_key_paths": [],
     "sha1s": [],
     "sha256s": [],
-    "sha512s": [],
-    "socket_addresses": [],
-    "ssdeeps": [],
-    "tlp_labels": [],
     "urls": [
         "https://example.org/test/bingo.php"
-    ],
-    "user_agents": [],
-    "xmpp_addresses": []
+    ]
 }
 ```
 
