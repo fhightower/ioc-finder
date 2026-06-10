@@ -47,6 +47,14 @@ def test_unicode_boundary_semantics():
     assert parse_domain_names("see example.com中 now") == ["example.com"]
     assert parse_domain_names("see example.com中 now", parse_unicode_iocs=True) == []
 
+    # Scope: the rule applies to bare domains only. Email/URL/XMPP grammars
+    # keep ASCII word boundaries even in the Unicode layer, so Unicode mode
+    # never removes an email/URL/XMPP match that ASCII mode finds.
+    assert parse_email_addresses("bob@example.com中") == ["bob@example.com"]
+    assert parse_email_addresses("bob@example.com中", parse_unicode_iocs=True) == ["bob@example.com"]
+    assert parse_urls("https://example.com中/path", parse_unicode_iocs=True) == ["https://example.com"]
+    assert parse_xmpp_addresses("a@jabber.example.com中", parse_unicode_iocs=True) == ["a@jabber.example.com"]
+
 
 def test_unicode_email_address():
     text = f"reach out to bob@{UNICODE_DOMAIN} please"

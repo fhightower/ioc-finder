@@ -200,9 +200,16 @@ _XMPP_CANDIDATE_RE = re.compile(
 # word and yields no domain (mirroring how `example.comX` yields none in ASCII
 # mode), whereas ASCII mode treats the `中` as a boundary and reports
 # `example.com`. This is a deliberate semantic difference, covered by
-# `test_unicode_boundary_semantics`. Local parts stay ASCII, matching the
-# email/XMPP local-part grammars (which parse_unicode_iocs leaves untouched).
-# See ioc_grammars._build_domain_layer for the corresponding grammar change.
+# `test_unicode_boundary_semantics`.
+#
+# Scope: the rule applies to *bare domains only*. The email/URL/XMPP grammars
+# keep the ASCII `alphanum_word_start`/`alphanum_word_end` boundaries even in
+# the Unicode layer, so `bob@example.com中` still yields `bob@example.com` in
+# both modes — Unicode mode never *removes* an email/URL/XMPP match that ASCII
+# mode finds. Also deliberate; pinned by the same test. Local parts stay
+# ASCII, matching the email/XMPP local-part grammars (which parse_unicode_iocs
+# leaves untouched). See ioc_grammars._build_domain_layer for the
+# corresponding grammar change.
 _DOMAIN_CANDIDATE_RE_UNICODE = re.compile(
     r"(?<![^\W_])"
     r"\w[\w-]{0,62}"
