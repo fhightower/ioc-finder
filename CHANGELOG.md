@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Added a `parse_unicode_iocs` option to `find_iocs` (and a `--parse_unicode_iocs` CLI flag), default `False` ([#298](https://github.com/fhightower/ioc-finder/issues/298)). When enabled, domain labels may contain non-ASCII (Unicode) characters — e.g. `warrıors.com` (note the dotless `ı`) is now parsed, as is the domain part of email, URL, and XMPP IOCs. The TLD itself stays ASCII (IANA stores internationalized TLDs in their `xn--` punycode form), as do email/URL/XMPP local parts and URL paths. The ASCII and Unicode grammar variants are generated from a single builder (`ioc_grammars._build_domain_layer`) so they can't drift.
+
 ## [9.3.0] - 2026.06.05
 
 ### Changed
