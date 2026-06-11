@@ -1,5 +1,7 @@
 import copy
+import functools
 import re
+from types import SimpleNamespace
 
 from pyparsing import (
     CaselessLiteral,
@@ -51,17 +53,8 @@ label = Word(init_chars=alphanums + "_", body_chars=alphanums + "-_", max=63)
 # walk in `parse_domain_names`).
 TLD_SET = frozenset(t.lower() for t in tlds)
 domain_tld = one_of(tlds, caseless=True)
-# Equivalent to `OneOrMore(label + ("." + FollowedBy(Word(alphanums + "-_"))))`
-# but as a single Regex so pyparsing isn't paying OneOrMore + FollowedBy +
-# Word per label. The `{0,62}` body cap mirrors `label`'s `max=63`, and the
-# trailing `(?=...)` mirrors the FollowedBy that ensures each `.` is followed
-# by another label-valid character (so `domain_tld` runs against a real label
-# start rather than `.`-then-end-of-input). Used inside `domain_name` only;
-# `label` is still used standalone elsewhere.
-domain_labels = Regex(r"(?:[A-Za-z0-9_][A-Za-z0-9_-]{0,62}\.)+(?=[A-Za-z0-9_-])")
-domain_name = (
-    alphanum_word_start + Combine(domain_labels("domain_labels") + domain_tld("tld")) + alphanum_word_end
-).set_parse_action(pyparsing_common.downcase_tokens)
+# `domain_name` (and everything built on it) is defined in `_build_domain_layer`
+# below, after the IP-address grammars it embeds.
 
 ipv4_section = (
     Word(nums, as_keyword=True, max=3)
@@ -95,76 +88,174 @@ ipv6_address = (
     + ipv6_word_end
 )
 
-complete_email_comment = Regex(r"\([a-zA-Z0-9]+\)")
-# the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>>
-# are possible in a quoted complete_email_local_part
-# (and the double-quotes and backslash should be preceded by a backslash)
-complete_email_local_part = Combine(
-    Optional(complete_email_comment)("email_address_start_comment")
-    + OneOrMore(MatchFirst([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), CaselessLiteral("\\@")]))
-    + Optional(complete_email_comment)("email_address_end_comment")
-)
-complete_email_address = Combine(
-    complete_email_local_part("email_address_local_part")
-    + "@"
-    + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
-)
+# --- domain / email / URL / XMPP grammar layer -------------------------------
+# Everything below hangs off `domain_name`, and the only thing the
+# `parse_unicode_iocs` option (find_iocs(..., parse_unicode_iocs=True)) changes
+# is the set of characters allowed inside a domain label. `_build_domain_layer`
+# rebuilds the whole layer from one label pattern so the ASCII and Unicode
+# variants can't drift: the ASCII variant is unpacked into module globals
+# immediately (preserving the historical names) and `unicode_domain_layer()`
+# returns the Unicode one.
 
-email_local_part = Word(alphanums, body_chars=alphanums + "+-_.").set_parse_action(pyparsing_common.downcase_tokens)
-email_address = alphanum_word_start + Combine(
-    email_local_part("email_address_local_part")
-    + "@"
-    + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
-)
+# `domain_labels` is equivalent to `OneOrMore(label + ("." + FollowedBy(...)))`
+# collapsed into a single Regex (so pyparsing isn't paying OneOrMore +
+# FollowedBy + Word per label). The `{0,62}` body cap mirrors `label`'s
+# `max=63`, and the trailing `(?=...)` ensures each `.` is followed by another
+# label-valid character so `domain_tld` runs against a real label start rather
+# than `.`-then-end-of-input.
+# ASCII labels: alnum + "_" (init) / alnum + "_-" (body), mirroring `label`.
+_ASCII_DOMAIN_LABELS_PATTERN = r"(?:[A-Za-z0-9_][A-Za-z0-9_-]{0,62}\.)+(?=[A-Za-z0-9_-])"
+# Unicode labels: `\w` is Unicode-aware (letters of any script + digits + "_")
+# and `[\w-]` replaces `[A-Za-z0-9_-]` for label bodies. The TLD itself stays
+# ASCII — the IANA list stores IDN TLDs in their `xn--` punycode form.
+_UNICODE_DOMAIN_LABELS_PATTERN = r"(?:\w[\w-]{0,62}\.)+(?=[\w-])"
 
-url_scheme = one_of(schemes, caseless=True)
-port = Word(":", nums, min=2)
-url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
-url_userinfo_complete = Word(alphanums + "-._~!$&'()*+,;=:%")
-url_authority_complete = Combine(
-    Optional(url_userinfo_complete("url_userinfo") + "@")
-    + Or([domain_name, ipv4_address, ipv6_address])("url_host")
-    + Optional(port)("port")
-)
-# The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt
-# (of particular interest is "Appendix A.  Collected ABNF for URI", which defines
-# pchar = unreserved / pct-encoded / sub-delims / ":" / "@").
-# url_path_word omits "," and "@" to reduce false positives in the simple grammar;
-# url_path_word_complete includes the full pchar set for spec-faithful matching.
-url_path_word = Word(alphanums + "-._~!$&'()*+;=:%")
-url_path_word_complete = Word(alphanums + "-._~!$&'()*+,;=:@%")
-url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
-url_path_complete = Combine(OneOrMore(MatchFirst([url_path_word_complete, Literal("/")])))
-url_query = Word(printables, exclude_chars="#\"']")
-url_fragment = Word(printables, exclude_chars="?\"']")
-url = alphanum_word_start + Combine(
-    url_scheme("url_scheme")
-    + "://"
-    + url_authority("url_authority")
-    + Optional(Combine("/" + Optional(url_path)))("url_path")
-    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-)
-url_complete = alphanum_word_start + Combine(
-    url_scheme("url_scheme")
-    + "://"
-    + url_authority_complete("url_authority")
-    + Optional(Combine("/" + Optional(url_path_complete)))("url_path")
-    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-)
-# Issue #244: `scheme_less_url[_complete]` now only matches URLs without a
-# scheme (the scheme-ful alternative has been dropped). `parse_urls` runs the
-# scheme-ful grammar first and masks each matched URL's character span before
-# running this grammar, so a scheme-ful URL never re-surfaces as a scheme-less
-# one and embedded URL paths/queries (e.g.
-# `https://shortener.com/?url=foo.com/bar`) do not surface twice either.
-scheme_less_url = alphanum_word_start + Combine(
-    Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
-    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-)
-scheme_less_url_complete = alphanum_word_start + Combine(
-    Combine(url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path"))
-    + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
-)
+
+def _build_domain_layer(domain_labels_pattern: str) -> SimpleNamespace:
+    """Build `domain_name` and every email/URL/XMPP grammar that embeds it, using
+    `domain_labels_pattern` for the run of dot-separated labels before the TLD.
+    Called once for the ASCII pattern and once (cached) for the Unicode one; see
+    `unicode_domain_layer`."""
+    domain_labels = Regex(domain_labels_pattern)
+    domain_name = (
+        alphanum_word_start + Combine(domain_labels("domain_labels") + domain_tld("tld")) + alphanum_word_end
+    ).set_parse_action(pyparsing_common.downcase_tokens)
+
+    complete_email_comment = Regex(r"\([a-zA-Z0-9]+\)")
+    # the complete_email_local_part grammar ignores the fact that characters like <<<(),:;<>@[\] >>>
+    # are possible in a quoted complete_email_local_part
+    # (and the double-quotes and backslash should be preceded by a backslash)
+    complete_email_local_part = Combine(
+        Optional(complete_email_comment)("email_address_start_comment")
+        + OneOrMore(MatchFirst([Word(alphanums + "!#$%&'*+-/=?^_`{|}~." + '"'), CaselessLiteral("\\@")]))
+        + Optional(complete_email_comment)("email_address_end_comment")
+    )
+    complete_email_address = Combine(
+        complete_email_local_part("email_address_local_part")
+        + "@"
+        + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
+    )
+
+    email_local_part = Word(alphanums, body_chars=alphanums + "+-_.").set_parse_action(pyparsing_common.downcase_tokens)
+    email_address = alphanum_word_start + Combine(
+        email_local_part("email_address_local_part")
+        + "@"
+        + Or([domain_name, "[" + ipv4_address + "]", "[IPv6:" + ipv6_address + "]"])("email_address_domain")
+    )
+
+    url_scheme = one_of(schemes, caseless=True)
+    port = Word(":", nums, min=2)
+    url_authority = Combine(Or([email_address, domain_name, ipv4_address, ipv6_address]) + Optional(port)("port"))
+    url_userinfo_complete = Word(alphanums + "-._~!$&'()*+,;=:%")
+    url_authority_complete = Combine(
+        Optional(url_userinfo_complete("url_userinfo") + "@")
+        + Or([domain_name, ipv4_address, ipv6_address])("url_host")
+        + Optional(port)("port")
+    )
+    # The url_path_word characters are taken from https://www.ietf.org/rfc/rfc3986.txt
+    # (of particular interest is "Appendix A.  Collected ABNF for URI", which defines
+    # pchar = unreserved / pct-encoded / sub-delims / ":" / "@").
+    # url_path_word omits "," and "@" to reduce false positives in the simple grammar;
+    # url_path_word_complete includes the full pchar set for spec-faithful matching.
+    url_path_word = Word(alphanums + "-._~!$&'()*+;=:%")
+    url_path_word_complete = Word(alphanums + "-._~!$&'()*+,;=:@%")
+    url_path = Combine(OneOrMore(MatchFirst([url_path_word, Literal("/")])))
+    url_path_complete = Combine(OneOrMore(MatchFirst([url_path_word_complete, Literal("/")])))
+    url_query = Word(printables, exclude_chars="#\"']")
+    url_fragment = Word(printables, exclude_chars="?\"']")
+    url = alphanum_word_start + Combine(
+        url_scheme("url_scheme")
+        + "://"
+        + url_authority("url_authority")
+        + Optional(Combine("/" + Optional(url_path)))("url_path")
+        + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+    )
+    url_complete = alphanum_word_start + Combine(
+        url_scheme("url_scheme")
+        + "://"
+        + url_authority_complete("url_authority")
+        + Optional(Combine("/" + Optional(url_path_complete)))("url_path")
+        + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+    )
+    # Issue #244: `scheme_less_url[_complete]` now only matches URLs without a
+    # scheme (the scheme-ful alternative has been dropped). `parse_urls` runs the
+    # scheme-ful grammar first and masks each matched URL's character span before
+    # running this grammar, so a scheme-ful URL never re-surfaces as a scheme-less
+    # one and embedded URL paths/queries (e.g.
+    # `https://shortener.com/?url=foo.com/bar`) do not surface twice either.
+    scheme_less_url = alphanum_word_start + Combine(
+        Combine(url_authority("url_authority") + Combine("/" + Optional(url_path))("url_path"))
+        + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+    )
+    scheme_less_url_complete = alphanum_word_start + Combine(
+        Combine(url_authority_complete("url_authority") + Combine("/" + Optional(url_path_complete))("url_path"))
+        + (Optional(Combine("?" + url_query)("url_query")) & Optional(Combine("#" + url_fragment)("url_fragment")))
+    )
+
+    # see https://github.com/fhightower/ioc-finder/issues/18
+    xmpp_address = alphanum_word_start + Combine(
+        email_local_part("email_address_local_part") + "@" + domain_name("jabber_address_domain")
+    ).add_condition(lambda tokens: "jabber" in tokens[0].split("@")[-1] or "xmpp" in tokens[0].split("@")[-1])
+
+    return SimpleNamespace(
+        domain_name=domain_name,
+        complete_email_comment=complete_email_comment,
+        complete_email_local_part=complete_email_local_part,
+        complete_email_address=complete_email_address,
+        email_local_part=email_local_part,
+        email_address=email_address,
+        url_scheme=url_scheme,
+        port=port,
+        url_authority=url_authority,
+        url_userinfo_complete=url_userinfo_complete,
+        url_authority_complete=url_authority_complete,
+        url_path_word=url_path_word,
+        url_path_word_complete=url_path_word_complete,
+        url_path=url_path,
+        url_path_complete=url_path_complete,
+        url_query=url_query,
+        url_fragment=url_fragment,
+        url=url,
+        url_complete=url_complete,
+        scheme_less_url=scheme_less_url,
+        scheme_less_url_complete=scheme_less_url_complete,
+        xmpp_address=xmpp_address,
+    )
+
+
+_ascii_domain_layer = _build_domain_layer(_ASCII_DOMAIN_LABELS_PATTERN)
+domain_name = _ascii_domain_layer.domain_name
+complete_email_comment = _ascii_domain_layer.complete_email_comment
+complete_email_local_part = _ascii_domain_layer.complete_email_local_part
+complete_email_address = _ascii_domain_layer.complete_email_address
+email_local_part = _ascii_domain_layer.email_local_part
+email_address = _ascii_domain_layer.email_address
+url_scheme = _ascii_domain_layer.url_scheme
+port = _ascii_domain_layer.port
+url_authority = _ascii_domain_layer.url_authority
+url_userinfo_complete = _ascii_domain_layer.url_userinfo_complete
+url_authority_complete = _ascii_domain_layer.url_authority_complete
+url_path_word = _ascii_domain_layer.url_path_word
+url_path_word_complete = _ascii_domain_layer.url_path_word_complete
+url_path = _ascii_domain_layer.url_path
+url_path_complete = _ascii_domain_layer.url_path_complete
+url_query = _ascii_domain_layer.url_query
+url_fragment = _ascii_domain_layer.url_fragment
+url = _ascii_domain_layer.url
+url_complete = _ascii_domain_layer.url_complete
+scheme_less_url = _ascii_domain_layer.scheme_less_url
+scheme_less_url_complete = _ascii_domain_layer.scheme_less_url_complete
+xmpp_address = _ascii_domain_layer.xmpp_address
+
+
+@functools.lru_cache(maxsize=1)
+def unicode_domain_layer() -> SimpleNamespace:
+    """Return the domain/email/URL/XMPP grammar layer rebuilt with a Unicode-aware
+    domain-label character set, for find_iocs(..., parse_unicode_iocs=True). Built
+    once and cached; the returned namespace exposes the same attribute names as the
+    module-level ASCII grammars it mirrors."""
+    return _build_domain_layer(_UNICODE_DOMAIN_LABELS_PATTERN)
+
 
 # this allows for matching file hashes preceeded with an 'x' or 'X'...
 # see https://github.com/fhightower/ioc-finder/issues/41
@@ -342,10 +433,8 @@ bitcoin_address = (
 
 monero_address = alphanum_word_start + Regex("4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}") + alphanum_word_end
 
-# see https://github.com/fhightower/ioc-finder/issues/18
-xmpp_address = alphanum_word_start + Combine(
-    email_local_part("email_address_local_part") + "@" + domain_name("jabber_address_domain")
-).add_condition(lambda tokens: "jabber" in tokens[0].split("@")[-1] or "xmpp" in tokens[0].split("@")[-1])
+# `xmpp_address` is defined in the domain/email/URL/XMPP grammar layer above
+# (see `_build_domain_layer`) so it tracks the `parse_unicode_iocs` label set.
 
 # the mac address grammar was developed from https://en.wikipedia.org/wiki/MAC_address#Notational_conventions
 # handles xx:xx:xx:xx:xx:xx or xx-xx-xx-xx-xx-xx

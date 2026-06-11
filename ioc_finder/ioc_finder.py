@@ -36,8 +36,9 @@ _ATTACK_TECHNIQUE_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9])T\d{4}[A-Za-z0-9.]
 # spans. Each label is capped at 63 chars to mirror ioc_grammars.label
 # (`Word(..., max=63)`); without the cap, a too-long-label run would over-capture
 # and hide an embedded valid domain (e.g. "<100 a's>.bar.com" → "bar.com" still
-# wants to surface). Char classes are otherwise ASCII-only — if IDN support is
-# ever added, both this regex and `ioc_grammars.label` need to change together.
+# wants to surface). Char classes are ASCII-only; the Unicode counterpart used
+# when find_iocs(..., parse_unicode_iocs=True) is `_DOMAIN_CANDIDATE_RE_UNICODE`
+# below (which tracks the Unicode `domain_labels` pattern in ioc_grammars).
 _DOMAIN_CANDIDATE_RE = re.compile(
     # Boundaries mirror ioc_grammars.alphanum_word_start / alphanum_word_end,
     # which only treat ASCII alphanumerics as word chars — so a domain may
@@ -188,6 +189,43 @@ _XMPP_CANDIDATE_RE = re.compile(
     r"[A-Za-z0-9][A-Za-z0-9+\-_.]*"
     r"@"
     r"[A-Za-z0-9._\-]*?(?i:jabber|xmpp)[A-Za-z0-9._\-]*"
+)
+
+# Unicode-aware variants of the domain / email / XMPP candidate regexes, used
+# when find_iocs(..., parse_unicode_iocs=True). They differ from their ASCII
+# counterparts above in the domain-label character class: `\w` (Unicode letters
+# of any script + digits + "_") in place of `[A-Za-z0-9_]`. The word-boundary
+# lookarounds use `[^\W_]` ("Unicode alphanumeric", no underscore) — in Unicode
+# mode a non-ASCII letter is a word character, so e.g. `example.com中` is one
+# word and yields no domain (mirroring how `example.comX` yields none in ASCII
+# mode), whereas ASCII mode treats the `中` as a boundary and reports
+# `example.com`. This is a deliberate semantic difference, covered by
+# `test_unicode_boundary_semantics`.
+#
+# Scope: the rule applies to *bare domains only*. The email/URL/XMPP grammars
+# keep the ASCII `alphanum_word_start`/`alphanum_word_end` boundaries even in
+# the Unicode layer, so `bob@example.com中` still yields `bob@example.com` in
+# both modes — Unicode mode never *removes* an email/URL/XMPP match that ASCII
+# mode finds. Also deliberate; pinned by the same test. Local parts stay
+# ASCII, matching the email/XMPP local-part grammars (which parse_unicode_iocs
+# leaves untouched). See ioc_grammars._build_domain_layer for the
+# corresponding grammar change.
+_DOMAIN_CANDIDATE_RE_UNICODE = re.compile(
+    r"(?<![^\W_])"
+    r"\w[\w-]{0,62}"
+    r"(?:\.\w[\w-]{0,62})+"
+    r"(?![^\W_])"
+)
+_EMAIL_CANDIDATE_RE_UNICODE = re.compile(
+    r"(?:\\@|[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.\"()\\])+"
+    r"@"
+    r"(?:\[[^\]\s]{1,80}\]|[\w.\-]+)"
+)
+_XMPP_CANDIDATE_RE_UNICODE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"[A-Za-z0-9][A-Za-z0-9+\-_.]*"
+    r"@"
+    r"[\w.\-]*?(?i:jabber|xmpp)[\w.\-]*"
 )
 
 # Bitcoin-address candidates: mirrors the three Regex() branches in the
@@ -380,37 +418,49 @@ def _clean_url(url: str) -> str:
     return url
 
 
-def parse_urls(text: str, *, parse_urls_without_scheme: bool = True) -> list:
+def _domain_grammars(parse_unicode_iocs: bool):
+    """Return the namespace of domain/email/URL/XMPP grammars to use: the
+    module-level ASCII grammars (``ioc_grammars``) or, when ``parse_unicode_iocs``
+    is set, the Unicode-aware layer from ``ioc_grammars.unicode_domain_layer()``.
+    Both expose the same attribute names (``domain_name``, ``email_address``,
+    ``scheme_less_url``, ...)."""
+    return ioc_grammars.unicode_domain_layer() if parse_unicode_iocs else ioc_grammars
+
+
+def parse_urls(text: str, *, parse_urls_without_scheme: bool = True, parse_unicode_iocs: bool = False) -> list:
     """."""
-    raw_urls, scheme_ful_spans = _scan_url_candidates_with_spans(text, ioc_grammars.url)
+    grammars = _domain_grammars(parse_unicode_iocs)
+    raw_urls, scheme_ful_spans = _scan_url_candidates_with_spans(text, grammars.url)
     raw_urls = list(raw_urls)
     if parse_urls_without_scheme:
         # Blank the exact spans the scheme-ful URLs occupy so the scheme-less
         # grammar can't re-discover their authority/path/query as a second URL.
         masked = _mask_spans(text, scheme_ful_spans)
-        raw_urls.extend(_scan_url_candidates(masked, ioc_grammars.scheme_less_url))
+        raw_urls.extend(_scan_url_candidates(masked, grammars.scheme_less_url))
     # Cleaning may collapse two raw matches to the same string, so dedupe again.
     return _deduplicate(map(_clean_url, raw_urls))
 
 
-def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True) -> list:
+def parse_urls_complete(text: str, *, parse_urls_without_scheme: bool = True, parse_unicode_iocs: bool = False) -> list:
     """."""
-    raw_urls, scheme_ful_spans = _scan_url_candidates_with_spans(text, ioc_grammars.url_complete)
+    grammars = _domain_grammars(parse_unicode_iocs)
+    raw_urls, scheme_ful_spans = _scan_url_candidates_with_spans(text, grammars.url_complete)
     raw_urls = list(raw_urls)
     if parse_urls_without_scheme:
         masked = _mask_spans(text, scheme_ful_spans)
-        raw_urls.extend(_scan_url_candidates(masked, ioc_grammars.scheme_less_url_complete))
+        raw_urls.extend(_scan_url_candidates(masked, grammars.scheme_less_url_complete))
     return _deduplicate(map(_clean_url, raw_urls))
 
 
-def _parse_url(url: str) -> ParseResults:
+def _parse_url(url: str, *, parse_unicode_iocs: bool = False) -> ParseResults:
     """Parse a URL by trying the four URL grammars in order, since each may match
     a different shape of input (scheme-ful vs scheme-less, narrow vs complete)."""
+    grammars = _domain_grammars(parse_unicode_iocs)
     for grammar in (
-        ioc_grammars.url,
-        ioc_grammars.scheme_less_url,
-        ioc_grammars.url_complete,
-        ioc_grammars.scheme_less_url_complete,
+        grammars.url,
+        grammars.scheme_less_url,
+        grammars.url_complete,
+        grammars.scheme_less_url_complete,
     ):
         try:
             return grammar.parse_string(url)
@@ -419,10 +469,10 @@ def _parse_url(url: str) -> ParseResults:
     raise ParseException(url, msg=f"could not parse URL: {url!r}")
 
 
-def _remove_url_domain_name(urls: list, text: str) -> str:
+def _remove_url_domain_name(urls: list, text: str, *, parse_unicode_iocs: bool = False) -> str:
     """Remove the domain name of each url from the text."""
     for url in urls:
-        parsed_url = _parse_url(url)
+        parsed_url = _parse_url(url, parse_unicode_iocs=parse_unicode_iocs)
         url_authority = parsed_url.url_authority
         if isinstance(url_authority, ParseResults):
             url_authority = url_authority[0]
@@ -430,10 +480,10 @@ def _remove_url_domain_name(urls: list, text: str) -> str:
     return text
 
 
-def _remove_url_paths(urls: list, text: str) -> str:
+def _remove_url_paths(urls: list, text: str, *, parse_unicode_iocs: bool = False) -> str:
     """Remove the path of each url from the text."""
     for url in urls:
-        parsed_url = _parse_url(url)
+        parsed_url = _parse_url(url, parse_unicode_iocs=parse_unicode_iocs)
         url_path = urlparse.unquote_plus(parsed_url.url_path)
 
         is_cidr_range = parse_ipv4_cidrs(str(url))
@@ -443,12 +493,13 @@ def _remove_url_paths(urls: list, text: str) -> str:
     return text
 
 
-def _remove_url_userinfo(urls: list, text: str) -> str:
+def _remove_url_userinfo(urls: list, text: str, *, parse_unicode_iocs: bool = False) -> str:
     """Remove userinfo from each URL so it is not parsed as an email address."""
+    grammars = _domain_grammars(parse_unicode_iocs)
     for url in urls:
         # Only the "complete" grammars expose url_userinfo. Try both because
         # `scheme_less_url_complete` now rejects scheme-ful URLs.
-        for grammar in (ioc_grammars.url_complete, ioc_grammars.scheme_less_url_complete):
+        for grammar in (grammars.url_complete, grammars.scheme_less_url_complete):
             try:
                 parsed_url = grammar.parse_string(url)
                 break
@@ -468,11 +519,12 @@ def _percent_decode_url(urls: list, text: str) -> str:
     return text
 
 
-def parse_domain_names(text):
+def parse_domain_names(text, *, parse_unicode_iocs: bool = False):
     """."""
+    candidate_re = _DOMAIN_CANDIDATE_RE_UNICODE if parse_unicode_iocs else _DOMAIN_CANDIDATE_RE
     seen: set[str] = set()
     out: list[str] = []
-    for m in _DOMAIN_CANDIDATE_RE.finditer(text):
+    for m in candidate_re.finditer(text):
         candidate = m.group(0).lower()
         segments = candidate.split(".")
         # Walk segments right-to-left for the rightmost TLD that still
@@ -677,14 +729,16 @@ def _scan_validated(text, candidate_re, validator):
     return out
 
 
-def parse_complete_email_addresses(text: str) -> list:
+def parse_complete_email_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
     """."""
-    return _scan_candidates(text, _EMAIL_CANDIDATE_RE, ioc_grammars.complete_email_address)
+    candidate_re = _EMAIL_CANDIDATE_RE_UNICODE if parse_unicode_iocs else _EMAIL_CANDIDATE_RE
+    return _scan_candidates(text, candidate_re, _domain_grammars(parse_unicode_iocs).complete_email_address)
 
 
-def parse_email_addresses(text: str) -> list:
+def parse_email_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
     """."""
-    return _scan_candidates(text, _EMAIL_CANDIDATE_RE, ioc_grammars.email_address)
+    candidate_re = _EMAIL_CANDIDATE_RE_UNICODE if parse_unicode_iocs else _EMAIL_CANDIDATE_RE
+    return _scan_candidates(text, candidate_re, _domain_grammars(parse_unicode_iocs).email_address)
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
@@ -801,9 +855,10 @@ def parse_monero_addresses(text):
     return _scan_candidates(text, _MONERO_CANDIDATE_RE, ioc_grammars.monero_address)
 
 
-def parse_xmpp_addresses(text: str) -> list:
+def parse_xmpp_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
     """."""
-    return _scan_candidates(text, _XMPP_CANDIDATE_RE, ioc_grammars.xmpp_address)
+    candidate_re = _XMPP_CANDIDATE_RE_UNICODE if parse_unicode_iocs else _XMPP_CANDIDATE_RE
+    return _scan_candidates(text, candidate_re, _domain_grammars(parse_unicode_iocs).xmpp_address)
 
 
 def _remove_xmpp_local_part(xmpp_addresses: list, text: str) -> str:
@@ -927,6 +982,11 @@ def parse_tlp_labels(text):
     default=True,
 )
 @click.option(
+    "--parse_unicode_iocs",
+    is_flag=True,
+    help="Allow non-ASCII (Unicode) characters in domain labels (and the domain part of email/URL/XMPP IOCs)",
+)
+@click.option(
     "--all",
     "parse_all",
     is_flag=True,
@@ -940,6 +1000,7 @@ def cli_find_iocs(
     no_cidr_address_parsing,
     no_xmpp_addr_domain_parsing,
     parse_urls_without_scheme,
+    parse_unicode_iocs,
     parse_all,
 ):
     """CLI interface for parsing observables."""
@@ -959,6 +1020,7 @@ def cli_find_iocs(
         parse_address_from_cidr=not no_cidr_address_parsing,
         parse_domain_name_from_xmpp_address=not no_xmpp_addr_domain_parsing,
         parse_urls_without_scheme=parse_urls_without_scheme,
+        parse_unicode_iocs=parse_unicode_iocs,
         included_ioc_types=included_ioc_types,
     )
     ioc_string = json.dumps(iocs, indent=4, sort_keys=True)
@@ -974,6 +1036,7 @@ def find_iocs(
     parse_address_from_cidr: bool = True,
     parse_domain_name_from_xmpp_address: bool = True,
     parse_urls_without_scheme: bool = True,
+    parse_unicode_iocs: bool = False,
     included_ioc_types: Iterable[str] | None = None,
 ) -> IndicatorData:
     """Find observables (a.k.a. indicators of compromise) in the given text.
@@ -993,6 +1056,12 @@ def find_iocs(
             addresses. Only applicable when ``"domains"`` is in ``included_ioc_types``.
         parse_urls_without_scheme: Whether to parse URLs without a scheme. Only applicable
             when ``"urls"`` or ``"urls_complete"`` is in ``included_ioc_types``.
+        parse_unicode_iocs: Whether to allow non-ASCII (Unicode) characters in domain
+            labels. When ``True``, domains like ``warrıors.com`` are parsed (and likewise
+            the domain part of email, URL, and XMPP IOCs). Defaults to ``False`` so the
+            ASCII-only behaviour is unchanged unless explicitly opted into. The TLD
+            itself is always ASCII (IANA stores IDN TLDs in their ``xn--`` punycode
+            form), as are email/URL/XMPP local parts and URL paths.
         included_ioc_types: Collection of IOC type names to parse. If ``None``,
             the common default types are parsed (see ``DEFAULT_IOC_TYPES``). For
             the full list of parseable types, see ``SUPPORTED_IOC_TYPES``. When
@@ -1030,11 +1099,15 @@ def find_iocs(
 
     # urls
     if "urls" in included_ioc_types:
-        iocs["urls"] = parse_urls(text, parse_urls_without_scheme=parse_urls_without_scheme)
+        iocs["urls"] = parse_urls(
+            text, parse_urls_without_scheme=parse_urls_without_scheme, parse_unicode_iocs=parse_unicode_iocs
+        )
 
     # urls_complete
     if "urls_complete" in included_ioc_types:
-        iocs["urls_complete"] = parse_urls_complete(text, parse_urls_without_scheme=parse_urls_without_scheme)
+        iocs["urls_complete"] = parse_urls_complete(
+            text, parse_urls_without_scheme=parse_urls_without_scheme, parse_unicode_iocs=parse_unicode_iocs
+        )
 
     # TODO: clean this section up
     if not parse_domain_from_url and not parse_from_url_path:
@@ -1042,45 +1115,57 @@ def find_iocs(
         text = _remove_items(iocs.get("urls_complete", []), text)
     elif not parse_domain_from_url:
         text = _percent_decode_url(iocs.get("urls", []), text)
-        text = _remove_url_domain_name(iocs.get("urls", []), text)
+        text = _remove_url_domain_name(iocs.get("urls", []), text, parse_unicode_iocs=parse_unicode_iocs)
 
         text = _percent_decode_url(iocs.get("urls_complete", []), text)
-        text = _remove_url_domain_name(iocs.get("urls_complete", []), text)
+        text = _remove_url_domain_name(iocs.get("urls_complete", []), text, parse_unicode_iocs=parse_unicode_iocs)
     elif not parse_from_url_path:
         text = _percent_decode_url(iocs.get("urls", []), text)
-        text = _remove_url_paths(iocs.get("urls", []), text)
+        text = _remove_url_paths(iocs.get("urls", []), text, parse_unicode_iocs=parse_unicode_iocs)
 
         text = _percent_decode_url(iocs.get("urls_complete", []), text)
-        text = _remove_url_paths(iocs.get("urls_complete", []), text)
+        text = _remove_url_paths(iocs.get("urls_complete", []), text, parse_unicode_iocs=parse_unicode_iocs)
     else:
         text = _percent_decode_url(iocs.get("urls", []), text)
         text = _percent_decode_url(iocs.get("urls_complete", []), text)
 
     # xmpp addresses
     if "xmpp_addresses" in included_ioc_types:
-        iocs["xmpp_addresses"] = parse_xmpp_addresses(text)
+        iocs["xmpp_addresses"] = parse_xmpp_addresses(text, parse_unicode_iocs=parse_unicode_iocs)
 
     if "domains" in included_ioc_types and not parse_domain_name_from_xmpp_address:
-        xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
+        xmpp_addresses = _get_items(
+            iocs, "xmpp_addresses", parse_xmpp_addresses, text, parse_unicode_iocs=parse_unicode_iocs
+        )
         text = _remove_items(xmpp_addresses, text)
     # even if we want to parse domain names from the xmpp_address,
     # we don't want them also being caught as email addresses so we'll remove everything before the `@`
     elif "email_addresses_complete" in included_ioc_types or "email_addresses" in included_ioc_types:
-        xmpp_addresses = _get_items(iocs, "xmpp_addresses", parse_xmpp_addresses, text)
+        xmpp_addresses = _get_items(
+            iocs, "xmpp_addresses", parse_xmpp_addresses, text, parse_unicode_iocs=parse_unicode_iocs
+        )
         text = _remove_xmpp_local_part(xmpp_addresses, text)
 
     if "email_addresses_complete" in included_ioc_types or "email_addresses" in included_ioc_types:
-        text = _remove_url_userinfo(iocs.get("urls_complete", []), text)
+        text = _remove_url_userinfo(iocs.get("urls_complete", []), text, parse_unicode_iocs=parse_unicode_iocs)
 
     # complete email addresses
     if "email_addresses_complete" in included_ioc_types:
-        iocs["email_addresses_complete"] = parse_complete_email_addresses(text)
+        iocs["email_addresses_complete"] = parse_complete_email_addresses(text, parse_unicode_iocs=parse_unicode_iocs)
     if "email_addresses" in included_ioc_types:
-        iocs["email_addresses"] = parse_email_addresses(text)
+        iocs["email_addresses"] = parse_email_addresses(text, parse_unicode_iocs=parse_unicode_iocs)
 
     if not parse_domain_from_email_address:
-        email_addresses_complete = _get_items(iocs, "email_addresses_complete", parse_complete_email_addresses, text)
-        email_addresses = _get_items(iocs, "email_addresses", parse_email_addresses, text)
+        email_addresses_complete = _get_items(
+            iocs,
+            "email_addresses_complete",
+            parse_complete_email_addresses,
+            text,
+            parse_unicode_iocs=parse_unicode_iocs,
+        )
+        email_addresses = _get_items(
+            iocs, "email_addresses", parse_email_addresses, text, parse_unicode_iocs=parse_unicode_iocs
+        )
 
         text = _remove_items(email_addresses_complete, text)
         text = _remove_items(email_addresses, text)
@@ -1170,7 +1255,7 @@ def find_iocs(
 
     # domains
     if "domains" in included_ioc_types:
-        iocs["domains"] = parse_domain_names(text)
+        iocs["domains"] = parse_domain_names(text, parse_unicode_iocs=parse_unicode_iocs)
 
     # ip addresses
     if "ipv4s" in included_ioc_types:
@@ -1251,8 +1336,9 @@ def find_iocs(
                 parse_urls,
                 text,
                 parse_urls_without_scheme=parse_urls_without_scheme,
+                parse_unicode_iocs=parse_unicode_iocs,
             )
-            text = _remove_url_paths(urls, text)
+            text = _remove_url_paths(urls, text, parse_unicode_iocs=parse_unicode_iocs)
 
         iocs["file_paths"] = parse_file_paths(text)
 
