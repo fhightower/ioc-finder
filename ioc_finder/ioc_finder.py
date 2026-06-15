@@ -4,7 +4,7 @@ import json
 import logging
 import re
 import urllib.parse as urlparse
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from string import hexdigits
 
 import click
@@ -54,18 +54,21 @@ _DOMAIN_CANDIDATE_RE = re.compile(
 # Each is intentionally a superset of what its grammar accepts — pyparsing
 # applies the precise rules; the regex only narrows where pyparsing runs.
 
-# Local-part character class for complete_email_local_part (alphanums + the
-# special chars listed in ioc_grammars + '"' for quoted locals + '()' for
-# email comments). The leading "\\@|" alternative mirrors the grammar's
-# CaselessLiteral("\\@") branch so a backslash-escaped at-sign inside a local
-# part doesn't terminate the candidate prematurely (see "Abc\@def@example.com"
-# in test_edge_cases). The tail accepts a domain-shaped run or a bracketed
-# IP literal ("[192.168.0.1]", "[IPv6:...]").
-_EMAIL_CANDIDATE_RE = re.compile(
-    r"(?:\\@|[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.\"()\\])+"
-    r"@"
-    r"(?:\[[^\]\s]{1,80}\]|[A-Za-z0-9._\-]+)"
+# Email candidates are located by anchoring on '@' and expanding outward in
+# Python (see `_email_candidate_spans`), NOT with a single `(?:local+)@domain`
+# regex. A leading `(?:...)+` before '@' makes `re` restart at every offset and
+# re-walk the whole run on input that never reaches an '@' (a base64/hex blob is
+# all local-part chars), which is O(n²) — the same trap `_URL_MARKER_RE` avoids.
+# `_EMAIL_LOCAL_CHARS` mirrors complete_email_local_part (alphanums + the special
+# chars listed in ioc_grammars + '"' for quoted locals + '()' for email comments
+# + '\\' so a backslash-escaped at-sign stays inside the local part, cf.
+# "Abc\@def@example.com" in test_edge_cases). The domain tail is applied with
+# `.match()` at a fixed offset just past '@' (anchored → linear) and accepts a
+# domain-shaped run or a bracketed IP literal ("[192.168.0.1]", "[IPv6:...]").
+_EMAIL_LOCAL_CHARS = frozenset(
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&'*+-/=?^_`{|}~.\"()\\"
 )
+_EMAIL_DOMAIN_TAIL_RE = re.compile(r"\[[^\]\s]{1,80}\]|[A-Za-z0-9._\-]+")
 
 # IPv6 candidates: hex+colon runs that contain at least two colons. Boundaries
 # mirror ipv6_word_start / ipv6_word_end (alphanums + ':' as word chars). Every
@@ -216,11 +219,9 @@ _DOMAIN_CANDIDATE_RE_UNICODE = re.compile(
     r"(?:\.\w[\w-]{0,62})+"
     r"(?![^\W_])"
 )
-_EMAIL_CANDIDATE_RE_UNICODE = re.compile(
-    r"(?:\\@|[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.\"()\\])+"
-    r"@"
-    r"(?:\[[^\]\s]{1,80}\]|[\w.\-]+)"
-)
+# Email local part stays ASCII (`_EMAIL_LOCAL_CHARS`); only the domain tail
+# widens to the Unicode label class `[\w.\-]` (`\w` == `str.isalnum()` + '_').
+_EMAIL_DOMAIN_TAIL_RE_UNICODE = re.compile(r"\[[^\]\s]{1,80}\]|[\w.\-]+")
 _XMPP_CANDIDATE_RE_UNICODE = re.compile(
     r"(?<![A-Za-z0-9])"
     r"[A-Za-z0-9][A-Za-z0-9+\-_.]*"
@@ -570,6 +571,61 @@ def _scan_candidates(text, candidate_re, grammar):
     return out
 
 
+def _email_candidate_spans(text: str, *, parse_unicode_iocs: bool = False) -> Iterator[str]:
+    """Yield each plausible email candidate substring by anchoring on '@' and
+    expanding outward, instead of letting a `(?:local+)@domain` regex search go
+    O(n²) on a long run of local-part characters that never reaches an '@' (e.g.
+    a base64/hex blob). Mirrors the marker-expansion approach of
+    `_url_candidate_spans`; the email grammar stays the precise validator, so
+    each span only needs to be a superset of what the grammar accepts.
+
+    Faithfully reproduces the old `_EMAIL_CANDIDATE_RE.finditer` semantics:
+    matches are non-overlapping and left-to-right (`search_pos` floors both the
+    '@' scan and the leftward local-part expansion onto already-consumed text),
+    a '@' preceded by '\\' is an escaped at-sign that belongs to the local part
+    rather than a separator, and the domain tail is matched with the same
+    alternation the old regex used."""
+    tail_re = _EMAIL_DOMAIN_TAIL_RE_UNICODE if parse_unicode_iocs else _EMAIL_DOMAIN_TAIL_RE
+    local = _EMAIL_LOCAL_CHARS
+    search_pos = 0
+    for m in re.finditer("@", text):
+        at = m.start()
+        if at < search_pos:
+            continue
+        if at > 0 and text[at - 1] == "\\":  # escaped '@' is local-part, not a separator
+            continue
+        tail = tail_re.match(text, at + 1)
+        if tail is None:
+            continue
+        start = at
+        while start > search_pos:
+            char = text[start - 1]
+            if char in local:
+                start -= 1
+            elif char == "@" and start - 2 >= search_pos and text[start - 2] == "\\":
+                start -= 2  # step over a `\@` unit embedded in the local part
+            else:
+                break
+        if start == at:  # no local part before the '@'
+            continue
+        search_pos = tail.end()
+        yield text[start : tail.end()]
+
+
+def _scan_email_candidates(text, grammar, *, parse_unicode_iocs=False):
+    """Like `_scan_candidates`, but locates email spans via
+    `_email_candidate_spans` (O(n)) rather than a quadratic candidate regex."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for span in _email_candidate_spans(text, parse_unicode_iocs=parse_unicode_iocs):
+        for tokens, _start, _end in grammar.scan_string(span):
+            value = tokens[0]
+            if value and value not in seen:
+                seen.add(value)
+                out.append(value)
+    return out
+
+
 def _url_candidate_spans(text):
     """Yield `(offset, substring)` for each non-whitespace run around a
     `_URL_MARKER_RE` hit, where `offset` is the run's start index in `text`.
@@ -731,14 +787,14 @@ def _scan_validated(text, candidate_re, validator):
 
 def parse_complete_email_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
     """."""
-    candidate_re = _EMAIL_CANDIDATE_RE_UNICODE if parse_unicode_iocs else _EMAIL_CANDIDATE_RE
-    return _scan_candidates(text, candidate_re, _domain_grammars(parse_unicode_iocs).complete_email_address)
+    grammar = _domain_grammars(parse_unicode_iocs).complete_email_address
+    return _scan_email_candidates(text, grammar, parse_unicode_iocs=parse_unicode_iocs)
 
 
 def parse_email_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
     """."""
-    candidate_re = _EMAIL_CANDIDATE_RE_UNICODE if parse_unicode_iocs else _EMAIL_CANDIDATE_RE
-    return _scan_candidates(text, candidate_re, _domain_grammars(parse_unicode_iocs).email_address)
+    grammar = _domain_grammars(parse_unicode_iocs).email_address
+    return _scan_email_candidates(text, grammar, parse_unicode_iocs=parse_unicode_iocs)
 
 
 # there is a trailing underscore on this function to differentiate it from the argument with the same name
