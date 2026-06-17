@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed quadratic-time (ReDoS) behavior in the email-address candidate prefilter. The old `(?:local+)@domain` candidate regex restarted and re-walked the local part at every offset, so a long run of local-part characters (e.g. a base64/hex blob) caused `find_iocs` to hang — two 100 KB blobs took ~16 minutes each. The prefilter now anchors on `@` and expands outward in linear time (`_email_candidate_spans`), with the domain tail matched by an anchored `.match()`; the pyparsing email grammar remains the precise validator and detection results are unchanged ([#389](https://github.com/fhightower/ioc-finder/pull/389)).
+
 ## [9.4.0] - 2026.06.11
 
 ### Added

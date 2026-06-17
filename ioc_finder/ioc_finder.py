@@ -579,12 +579,15 @@ def _email_candidate_spans(text: str, *, parse_unicode_iocs: bool = False) -> It
     `_url_candidate_spans`; the email grammar stays the precise validator, so
     each span only needs to be a superset of what the grammar accepts.
 
-    Faithfully reproduces the old `_EMAIL_CANDIDATE_RE.finditer` semantics:
-    matches are non-overlapping and left-to-right (`search_pos` floors both the
-    '@' scan and the leftward local-part expansion onto already-consumed text),
-    a '@' preceded by '\\' is an escaped at-sign that belongs to the local part
-    rather than a separator, and the domain tail is matched with the same
-    alternation the old regex used."""
+    Tracks the old `_EMAIL_CANDIDATE_RE.finditer` scanning order: matches are
+    non-overlapping and left-to-right (`search_pos` floors both the '@' scan and
+    the leftward local-part expansion onto already-consumed text), a '@'
+    preceded by '\\' is an escaped at-sign that belongs to the local part rather
+    than a separator, and the domain tail is matched with the same alternation
+    the old regex used. The candidate spans are not byte-for-byte identical to
+    the old regex in cases the grammar rejects anyway (e.g. a bare leading
+    '\\@'), but `find_iocs` detection results are unchanged — verified by an
+    order-sensitive equivalence check over the test corpus."""
     tail_re = _EMAIL_DOMAIN_TAIL_RE_UNICODE if parse_unicode_iocs else _EMAIL_DOMAIN_TAIL_RE
     local = _EMAIL_LOCAL_CHARS
     search_pos = 0
