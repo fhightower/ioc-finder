@@ -1,4 +1,27 @@
-from ioc_finder import ioc_finder
+import time
+
+import pytest
+
+from ioc_finder import find_iocs, ioc_finder
+
+
+@pytest.mark.parametrize(
+    "blob",
+    [
+        "ab" * 50000,  # 100 KB hex run
+        "QUJD" * 25000,  # 100 KB base64 run
+    ],
+)
+def test_email_candidate_scan_is_linear(blob):
+    """Regression for the quadratic email-candidate ReDoS: a long run of
+    local-part characters with no '@' used to make the candidate regex restart
+    and re-walk the run at every offset (O(n^2) — these 100 KB blobs took ~16
+    minutes each). The '@'-anchored span scan is linear, so this finishes near
+    instantly; the wide bound keeps it non-flaky under parallel test load."""
+    start = time.perf_counter()
+    find_iocs(blob)
+    elapsed = time.perf_counter() - start
+    assert elapsed < 5, f"find_iocs took {elapsed:.1f}s on a {len(blob)}-byte blob (expected < 5s)"
 
 
 def parse():

@@ -141,6 +141,14 @@ def test_address_email_address():
     assert iocs["email_addresses"] == ["jsmith@[IPv6:2001:db8::1]"]
     assert iocs["ipv6s"] == ["2001:db8::1"]
 
+    # An '@' nested inside a bracketed domain literal must not re-anchor a second
+    # candidate: the '@'-anchored span scan consumes the whole `[...]` literal,
+    # so the inner '@' falls within the already-scanned span and is skipped.
+    s = "user@[abc@def]"
+    iocs = find_iocs(s)
+    assert iocs["email_addresses"] == []
+    assert iocs["email_addresses_complete"] == []
+
 
 def test_address_domain_url():
     s = "http://192.64.55.61/test.php"
