@@ -351,15 +351,15 @@ wheels = [
 
 [[package]]
 name = "d8s-file-system"
-version = "0.10.0"
+version = "0.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "atomicwrites" },
     { name = "d8s-hashes" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/b7/81d4b13c0e3d5ce7e97eabd4f7bf324c6b2b716a027be09292f04289655a/d8s_file_system-0.10.0.tar.gz", hash = "sha256:45b56e76ed82b71c1aa0c2c33eea56c02adeb3493f4a558a0aa59f9280d0e6e0", size = 32684, upload-time = "2021-05-07T10:54:10.96Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/86/41/86e397a2260d007ade927e006dfb8433b4f14552e33707d915407eb6942b/d8s_file_system-0.11.0.tar.gz", hash = "sha256:3a07df280e88f7bdb8458cddec4455bb57886be049feee3a1e992f3aeddc386b", size = 96573, upload-time = "2026-07-01T12:04:19.125Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/18/be/8053db213cfcddec0ce0ea1d47383310a40428c3e00850582b385328ea4e/d8s_file_system-0.10.0-py2.py3-none-any.whl", hash = "sha256:6356bbb3e4823657d0c0bacb99e82a4478415ff77c1439f753e14b3eef481dca", size = 28756, upload-time = "2021-05-07T10:54:08.669Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/f9/009fc30da0092c0608551e7afbdfca14c196ee76b1495f031d51188435c7/d8s_file_system-0.11.0-py3-none-any.whl", hash = "sha256:cf4015452880cc6c75022b56b8087090b574c332a88795904a57f72b8728e0af", size = 23701, upload-time = "2026-07-01T12:04:17.83Z" },
 ]
 
 [[package]]
