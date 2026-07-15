@@ -336,4 +336,15 @@ REGISTRY_DATA = [
         {},
         id="registry_full_example",
     ),
+    param(
+        # A registry-key section containing an internal run of multiple spaces
+        # must not be absorbed into the path. The old double-space check used
+        # start-anchored `re.match`, which missed internal double spaces and
+        # let surrounding prose ride along in the parsed path (this text
+        # previously yielded "HKLM\\SOFTWARE\\Microsoft\\Foo.exe  trailing junk\\More").
+        "HKLM\\SOFTWARE\\Microsoft\\Foo.exe  trailing junk\\More",
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\Microsoft\\Foo"]},
+        {},
+        id="registry_internal_double_space_rejected",
+    ),
 ]

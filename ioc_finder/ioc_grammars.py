@@ -293,7 +293,10 @@ sha512 = (
     + alphanum_word_end
 )
 
-year = Word("12") + Word(nums, exact=3)
+# A single regex rather than `Word("12") + Word(nums, exact=3)`: Word is
+# greedy and does not backtrack, so the old form ate every leading 1/2 digit
+# and failed on years whose digits are all 1s and 2s (e.g. "CVE-2121-12345").
+year = Regex(r"[12]\d{3}")
 cve = (
     alphanum_word_start
     + Combine(
@@ -345,8 +348,11 @@ root_key = one_of(root_key_list)
 
 
 def hasMultipleConsecutiveSpaces(string):
-    """Return True if the given string has multiple, consecutive spaces."""
-    return re.match("  +", string)
+    """Return a truthy value if the given string contains multiple, consecutive
+    spaces anywhere (`re.search`, not the start-anchored `re.match` this used
+    previously — which silently accepted registry-key sections with an internal
+    double space, e.g. the "c  d" in `HKLM\\a\\b.c  d\\e`)."""
+    return re.search("  +", string)
 
 
 def hasBothOrNeitherAngleBrackets(string):
