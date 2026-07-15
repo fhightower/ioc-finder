@@ -130,13 +130,23 @@ _CVE_CANDIDATE_RE = re.compile(
 _IMPHASH_CANDIDATE_RE = re.compile(r"(?:imphash|import hash)[^a-z0-9]*[a-f0-9]{32}(?![a-z0-9])")
 _AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![a-z0-9])")
 
-# URL marker: '://' (scheme present) or '.<tld>/' (scheme-less URL with a
-# path). The candidate span is built in Python by expanding from each
-# marker out to whitespace boundaries (see `_url_candidate_spans`). A pure
-# regex of the form `\S*<marker>\S*` would go quadratic on long
-# non-whitespace, non-URL runs (e.g. 10k bytes of base64) because the
-# leading `\S*` walks to the end and backtracks for each starting offset.
-_URL_MARKER_RE = re.compile(r"://|\.[A-Za-z][A-Za-z0-9-]*/")
+# URL marker: '://' (scheme present), '.<tld>[:port]/' (scheme-less URL with
+# a path), or an IPv4-shaped host + optional port + '/' (the scheme_less_url
+# grammar's url_authority accepts ipv4_address hosts, and the letter-after-dot
+# marker can never fire on one). The candidate span is built in Python by
+# expanding from each marker out to whitespace boundaries (see
+# `_url_candidate_spans`). A pure regex of the form `\S*<marker>\S*` would go
+# quadratic on long non-whitespace, non-URL runs (e.g. 10k bytes of base64)
+# because the leading `\S*` walks to the end and backtracks for each starting
+# offset; every alternative here is anchored (no leading unbounded
+# quantifier), so the scan stays linear. The markers are locators only — the
+# URL grammars remain the validators (e.g. `999.1.2.3/x` produces a candidate
+# span the grammar then rejects).
+_URL_MARKER_RE = re.compile(
+    r"://"
+    r"|\.[A-Za-z][A-Za-z0-9-]*(?::\d{1,5})?/"
+    r"|(?:\d{1,3}\.){3}\d{1,3}(?::\d{1,5})?/"
+)
 
 # MAC candidates: the three notations the grammar accepts —
 # `xx[:-]xx[:-]xx[:-]xx[:-]xx[:-]xx` (mixed colon/dash separators allowed)

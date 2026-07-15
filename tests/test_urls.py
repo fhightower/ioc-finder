@@ -314,3 +314,33 @@ def test_remove_url_userinfo_works_for_scheme_ful_url():
         "http://userid:password@example.com/",
     )
     assert "userid:password@" not in stripped
+
+
+def test_scheme_less_url_with_port_is_found():
+    """A scheme-less URL with an explicit port must be found. The
+    `_URL_MARKER_RE` prefilter previously only recognized `://` and `.tld/`
+    markers, so `.tld:port/` spans were never handed to the (accepting)
+    scheme_less_url grammar."""
+    result = find_iocs("visit example.com:8080/admin now")
+    assert result["urls"] == ["example.com:8080/admin"]
+
+
+def test_scheme_less_url_with_ipv4_host_is_found():
+    """A scheme-less URL with an IPv4 host must be found. The `.tld/` marker
+    requires a letter after the dot, so `1.2.3.4/gate.php` spans were never
+    handed to the (accepting) scheme_less_url grammar."""
+    result = find_iocs("panel at 1.2.3.4/gate.php here")
+    assert result["urls"] == ["1.2.3.4/gate.php"]
+
+
+def test_scheme_less_url_with_ipv4_host_and_port_is_found():
+    result = find_iocs("callback to 10.0.0.5:8443/c2/beacon channel")
+    assert result["urls"] == ["10.0.0.5:8443/c2/beacon"]
+
+
+def test_ipv4_cidrs_still_not_found_as_urls_with_ipv4_url_marker():
+    """The IPv4 URL marker makes `1.1.1.1/0` a URL *candidate*; the CIDR
+    removal pass in find_iocs (issue #91) must still keep it out of urls."""
+    result = find_iocs("1.1.1.1/0 and 10.0.0.0/8")
+    assert result["urls"] == []
+    assert iterables_have_same_items(result["ipv4_cidrs"], ["1.1.1.1/0", "10.0.0.0/8"])
