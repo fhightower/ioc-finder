@@ -84,8 +84,15 @@ _IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa
 # fifth dotted segment ("1.2.3.4.5") is excluded. The per-octet `<256` check
 # and the grammar's leading-zero normalization are applied by
 # `_normalized_ipv4` (pure Python — see parse_ipv4_addresses), which rejects
-# e.g. "999.1.1.1".
-_IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![A-Za-z0-9])(?!\.\S)")
+# e.g. "999.1.1.1". Octets are `[0-9]`, not `\d`: with the ipv4_address
+# grammar (whose Word(nums) is ASCII-only) no longer run on these spans,
+# a Unicode-aware `\d` would let int() fabricate addresses from non-ASCII
+# digit runs like "١.٢.٣.٤" / "１.２.３.４". The `(?<!\d)` / `(?!\d)`
+# lookarounds ARE Unicode-aware on purpose: they mirror the `\b` implied by
+# the grammar's `Word(nums, as_keyword=True)` octets, which rejected a quad
+# hugging a non-ASCII digit ("٣3.2.3.4", "1.2.3.4٣") because `\b` treats
+# the adjacent digit as a word character.
+_IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?!\d)(?![A-Za-z0-9])(?!\.\S)")
 
 # Hash candidates: a hex run of exactly 32/40/64 chars. The leading lookbehind
 # mirrors file_hash_word_start (word_chars = alphanums minus 'x'/'X'), so a
@@ -248,7 +255,15 @@ _BITCOIN_CANDIDATE_RE = re.compile(
 # match the ipv4 prefilter (alphanum_word_start excluding leading '.' too)
 # and alphanum_word_end. Per-octet `<256` and the bit-range bounds are
 # still enforced by the grammar.
-_IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
+# `[0-9]`, not `\d`, for the same reason as _IPV4_CANDIDATE_RE: the grammar's
+# ASCII-only Word(nums) no longer backstops these spans, and the bit range is
+# emitted verbatim — a Unicode-aware `\d` would let non-ASCII digits through.
+# The Unicode-aware `(?<!\d)` matches _IPV4_CANDIDATE_RE (see the comment
+# there); no trailing `(?!\d)` on the bit range because the grammar's
+# `Word(nums, max=2)` was not a keyword — it truncated before a non-ASCII
+# digit ("1.2.3.4/1٣" -> "1.2.3.4/1") rather than rejecting, and the
+# `(?![A-Za-z0-9])` lookahead reproduces exactly that.
+_IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}(?![A-Za-z0-9])")
 
 # IPv6 CIDR candidates: hex+colon runs that contain at least two colons,
 # followed by '/' and 1-3 digit bit-range. Same boundary shape as the IPv6
@@ -564,11 +579,10 @@ def _normalized_ipv4(span: str) -> str | None:
     `str(int(...))` parse action ("001.002.003.004" -> "1.2.3.4"). The
     candidate regexes guarantee four 1-3 digit groups and enforce the word
     boundaries, so neither is re-checked here."""
-    octets = span.split(".")
-    for octet in octets:
-        if int(octet) > 255:
-            return None
-    return ".".join(str(int(octet)) for octet in octets)
+    octets = [int(octet) for octet in span.split(".")]
+    if any(octet > 255 for octet in octets):
+        return None
+    return ".".join(map(str, octets))
 
 
 def parse_ipv4_addresses(text):
