@@ -585,22 +585,29 @@ def _normalized_ipv4(span: str) -> str | None:
     return ".".join(map(str, octets))
 
 
+def _scan_transformed(text, candidate_re, transform: Callable[[str], str | None]) -> list[str]:
+    """Run `transform` on each span matched by `candidate_re`, keeping the
+    first-seen order of the non-None results and deduplicating on the
+    *transformed* value (so e.g. "1.2.3.4" and "01.2.3.4" are one result).
+    This is the shared shape of every pure-Python fast path that bypasses
+    pyparsing; `transform` returns the parsed value or None to reject."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in candidate_re.finditer(text):
+        value = transform(m.group(0))
+        if value is not None and value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
 def parse_ipv4_addresses(text):
     """."""
     # Pure-Python fast path (same asymmetry as parse_ipv6_addresses): the
     # ipv4_address grammar's only transformation is the per-octet
     # normalization reproduced by _normalized_ipv4, so skipping pyparsing
-    # preserves the output shape. Note dedup happens on the *normalized*
-    # value, matching the old grammar path ("1.2.3.4" and "01.2.3.4" are
-    # one result).
-    seen: set[str] = set()
-    out: list[str] = []
-    for m in _IPV4_CANDIDATE_RE.finditer(text):
-        value = _normalized_ipv4(m.group(0))
-        if value is not None and value not in seen:
-            seen.add(value)
-            out.append(value)
-    return out
+    # preserves the output shape.
+    return _scan_transformed(text, _IPV4_CANDIDATE_RE, _normalized_ipv4)
 
 
 def _scan_candidates(text, candidate_re, grammar):
@@ -823,16 +830,7 @@ def _scan_validated(text, candidate_re, validator):
     """Like _scan_candidates, but uses a pure-Python validator on the matched
     span instead of running a pyparsing grammar. Used where the grammar adds
     no transformation and a hand-written check is faster."""
-    seen: set[str] = set()
-    out: list[str] = []
-    for m in candidate_re.finditer(text):
-        span = m.group(0)
-        if span in seen:
-            continue
-        if validator(span):
-            seen.add(span)
-            out.append(span)
-    return out
+    return _scan_transformed(text, candidate_re, lambda span: span if validator(span) else None)
 
 
 def parse_complete_email_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
@@ -873,15 +871,9 @@ def _scan_hash_candidates(text, candidate_re):
     ioc_grammars ever grows a rule its candidate regex doesn't mirror, these
     parsers must go back through _scan_candidates. (parse_imphashes_ /
     parse_authentihashes_ still run the real imphash/authentihash grammars,
-    which embed md5/sha256.)"""
-    seen: set[str] = set()
-    out: list[str] = []
-    for m in candidate_re.finditer(text):
-        value = m.group(0).lower()
-        if value not in seen:
-            seen.add(value)
-            out.append(value)
-    return out
+    which embed md5/sha256.) The regex/grammar equivalence is asserted by
+    tests/test_fast_path_equivalence.py."""
+    return _scan_transformed(text, candidate_re, str.lower)
 
 
 def parse_md5s(text):
@@ -919,26 +911,23 @@ def parse_cves(text):
     return _scan_candidates(text, _CVE_CANDIDATE_RE, ioc_grammars.cve)
 
 
+def _normalized_ipv4_cidr(span: str) -> str | None:
+    """Transform for the ipv4_cidr fast path: the address half gets the same
+    per-octet <256 check and leading-zero normalization as
+    parse_ipv4_addresses (via _normalized_ipv4); the bit range is kept
+    verbatim. The grammar's `Word(nums, max=2)` put no numeric bound on the
+    bit range (so e.g. "/99" was accepted), and the candidate regex's
+    `/[0-9]{1,2}` reproduces that — deliberately unchanged here."""
+    address, _, bits = span.partition("/")
+    normalized = _normalized_ipv4(address)
+    if normalized is None:
+        return None
+    return f"{normalized}/{bits}"
+
+
 def parse_ipv4_cidrs(text: str) -> list:
     """."""
-    # Pure-Python fast path mirroring the ipv4_cidr grammar: the address half
-    # gets the same per-octet <256 check and leading-zero normalization as
-    # parse_ipv4_addresses (via _normalized_ipv4); the bit range is kept
-    # verbatim. The grammar's `Word(nums, max=2)` put no numeric bound on the
-    # bit range (so e.g. "/99" was accepted), and the candidate regex's
-    # `/\d{1,2}` reproduces that — deliberately unchanged here.
-    seen: set[str] = set()
-    out: list[str] = []
-    for m in _IPV4_CIDR_CANDIDATE_RE.finditer(text):
-        address, _, bits = m.group(0).partition("/")
-        normalized = _normalized_ipv4(address)
-        if normalized is None:
-            continue
-        value = f"{normalized}/{bits}"
-        if value not in seen:
-            seen.add(value)
-            out.append(value)
-    return out
+    return _scan_transformed(text, _IPV4_CIDR_CANDIDATE_RE, _normalized_ipv4_cidr)
 
 
 def _is_valid_ipv6_cidr(span: str) -> bool:
