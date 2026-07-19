@@ -639,6 +639,13 @@ def test_unicode_digits_are_not_parsed_as_ipv4s():
     # (a non-ASCII digit is a word character to `\b`).
     assert find_iocs("٣3.2.3.4")["ipv4s"] == []
     assert find_iocs("1.2.3.4٣")["ipv4s"] == []
+    # Deliberate divergence from the old regex+grammar pipeline, whose
+    # context-blind span-slicing accepted these two ("1.2.3.4" /
+    # "1.2.3.4/8") because regex backtracking happened to exclude the
+    # hugging Unicode digit from the candidate span. The lookarounds reject
+    # every hugging-digit case uniformly (see _IPV4_CANDIDATE_RE).
+    assert find_iocs("1.2.3.4٣.5")["ipv4s"] == []
+    assert find_iocs(".٣1.2.3.4/8")["ipv4_cidrs"] == []
 
     # CIDRs: a Unicode digit in the bit range terminates the match exactly as
     # the ASCII-only grammar did (the '1.2.3.4/1' prefix is still the IOC).

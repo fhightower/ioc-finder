@@ -8,7 +8,17 @@ embedded in the imphash/authentihash grammars, ipv4_address in the URL/email
 grammars), so a grammar edit that skips the regexes would silently make the
 two disagree. These tests make the "keep them in sync" comments executable:
 each compares a fast-path parser against `_scan_candidates` with the same
-candidate regex and the corresponding grammar."""
+candidate regex and the corresponding grammar.
+
+Oracle scope: `_scan_candidates` runs the grammar on the *isolated* candidate
+span, so these tests check transform-vs-grammar agreement on matched spans —
+they cannot see context-sensitive boundary effects (a too-strict candidate
+regex makes both sides return [] and pass). Those boundary semantics are
+pinned separately by explicit cases in test_edge_cases.py
+(test_unicode_digits_are_not_parsed_as_ipv4s). A full-text grammar scan is
+not a usable oracle here: the grammar's `as_keyword` \\b treats '_' and
+non-ASCII letters as word chars, so it diverges from the candidate-regex
+pipeline (old and new alike) on inputs like '_1.2.3.4'."""
 
 import pytest
 from hypothesis import given, settings
@@ -65,10 +75,10 @@ def test_hash_fast_path_matches_grammar_on_boundary_cases(parser, candidate_re, 
         assert parser(text) == _scan_candidates(text, candidate_re, grammar), text
 
 
-@pytest.mark.parametrize("parser, candidate_re, grammar, length", HASH_CASES)
+@pytest.mark.parametrize("parser, candidate_re, grammar, _length", HASH_CASES)
 @settings(deadline=None)
 @given(st.text(alphabet=BOUNDARY_ALPHABET, max_size=200))
-def test_hash_fast_path_matches_grammar(parser, candidate_re, grammar, length, text):
+def test_hash_fast_path_matches_grammar(parser, candidate_re, grammar, _length, text):
     assert parser(text) == _scan_candidates(text, candidate_re, grammar)
 
 

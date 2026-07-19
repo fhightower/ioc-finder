@@ -91,7 +91,13 @@ _IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa
 # lookarounds ARE Unicode-aware on purpose: they mirror the `\b` implied by
 # the grammar's `Word(nums, as_keyword=True)` octets, which rejected a quad
 # hugging a non-ASCII digit ("٣3.2.3.4", "1.2.3.4٣") because `\b` treats
-# the adjacent digit as a word character.
+# the adjacent digit as a word character. Deliberate divergence from the
+# old regex+grammar pipeline: its span-slicing was context-blind, so a quad
+# whose adjacent Unicode digit happened to be excluded from the candidate
+# span by regex backtracking was accepted ("1.2.3.4٣.5" -> "1.2.3.4") while
+# the same quad without the trailing ".5" was rejected. The lookarounds
+# reject every hugging-digit case uniformly; pinned in
+# test_unicode_digits_are_not_parsed_as_ipv4s.
 _IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?!\d)(?![A-Za-z0-9])(?!\.\S)")
 
 # Hash candidates: a hex run of exactly 32/40/64 chars. The leading lookbehind
@@ -99,10 +105,8 @@ _IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-
 # leading 'x'/'X' prefix is allowed (issue #41). The trailing lookahead mirrors
 # alphanum_word_end so a longer hex run isn't sliced into a shorter hash —
 # e.g. a 64-char run won't surface as an MD5 candidate.
-# NOTE: unlike the other candidate regexes these are *exact* mirrors of their
-# grammars, not supersets — parse_md5s/sha1s/sha256s/sha512s use them as the
-# sole validator via _scan_hash_candidates (no pyparsing pass). Keep them
-# byte-for-byte in sync with the md5/sha1/sha256/sha512 grammars.
+# NOTE: exact mirrors of their grammars, not supersets, and used as the sole
+# validators — see _scan_hash_candidates for the full contract.
 _MD5_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{32}(?![A-Za-z0-9])")
 _SHA1_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{40}(?![A-Za-z0-9])")
 _SHA256_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{64}(?![A-Za-z0-9])")
@@ -603,10 +607,10 @@ def _scan_transformed(text, candidate_re, transform: Callable[[str], str | None]
 
 def parse_ipv4_addresses(text):
     """."""
-    # Pure-Python fast path (same asymmetry as parse_ipv6_addresses): the
-    # ipv4_address grammar's only transformation is the per-octet
-    # normalization reproduced by _normalized_ipv4, so skipping pyparsing
-    # preserves the output shape.
+    # Pure-Python fast path (see _scan_transformed): the ipv4_address
+    # grammar's only transformation is the per-octet normalization
+    # reproduced by _normalized_ipv4, so skipping pyparsing preserves the
+    # output shape.
     return _scan_transformed(text, _IPV4_CANDIDATE_RE, _normalized_ipv4)
 
 
@@ -784,10 +788,10 @@ def _is_valid_ipv6(s: str) -> bool:
 
 def parse_ipv6_addresses(text):
     """."""
-    # Asymmetry with the other parse_* helpers: this validates candidates
-    # in pure Python via _is_valid_ipv6 instead of routing them through
-    # _scan_candidates + a pyparsing grammar. The grammar applies no parse
-    # actions to ipv6_address, so skipping it preserves the output shape.
+    # Pure-Python fast path (see _scan_transformed): candidates are
+    # validated via _is_valid_ipv6 instead of _scan_candidates + a pyparsing
+    # grammar. The grammar applies no parse actions to ipv6_address, so
+    # skipping it preserves the output shape.
     return _scan_validated(text, _IPV6_CANDIDATE_RE, _is_valid_ipv6)
 
 
