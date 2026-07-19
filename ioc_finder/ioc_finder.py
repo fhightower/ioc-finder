@@ -294,7 +294,11 @@ _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){
 # refanging those forms would require running the validator against the
 # post-fang text, which has its own quirks; this narrow boundary fix is
 # enough to keep the partial-host truncation from surfacing.
-_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])")
+#
+# The bit range is `[0-9]`, not `\d`: this parser is pure-Python (no grammar
+# backstop) and `str.isdigit()` in the validator accepts non-ASCII digits, so
+# a Unicode-aware `\d` would emit CIDRs like "2001:db8::/٣٢" verbatim.
+_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/[0-9]{1,3}(?![A-Za-z0-9])")
 
 # Socket address candidates: either a dotted IPv4 quad or a bracketed IPv6
 # literal, followed by ':' and a 1..5 digit port. Boundaries reject hugging
@@ -302,10 +306,15 @@ _IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}
 # numeric port range, octet ranges, and IPv6 shape are validated by the
 # Python validator below; the prefilter is intentionally a superset.
 # See https://github.com/fhightower/ioc-finder/issues/248.
+#
+# Digits are `[0-9]`, not `\d`: this parser is pure-Python (no grammar
+# backstop) and the validator's `str.isdigit()`/`int()` accept non-ASCII
+# digits, so a Unicode-aware `\d` would emit sockets like "١.٢.٣.٤:80" or
+# "1.2.3.4:٨0" verbatim.
 _SOCKET_ADDRESS_CANDIDATE_RE = re.compile(
     r"(?<![A-Za-z0-9.])"
-    r"(?:(?:\d{1,3}\.){3}\d{1,3}|\[[0-9A-Fa-f:]+\])"
-    r":\d{1,5}"
+    r"(?:(?:[0-9]{1,3}\.){3}[0-9]{1,3}|\[[0-9A-Fa-f:]+\])"
+    r":[0-9]{1,5}"
     r"(?![A-Za-z0-9])"
 )
 
