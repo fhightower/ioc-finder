@@ -639,11 +639,12 @@ def test_unicode_digits_are_not_parsed_as_ipv4s():
     # (a non-ASCII digit is a word character to `\b`).
     assert find_iocs("٣3.2.3.4")["ipv4s"] == []
     assert find_iocs("1.2.3.4٣")["ipv4s"] == []
-    # Deliberate divergence from the old regex+grammar pipeline, whose
-    # context-blind span-slicing accepted these two ("1.2.3.4" /
-    # "1.2.3.4/8") because regex backtracking happened to exclude the
-    # hugging Unicode digit from the candidate span. The lookarounds reject
-    # every hugging-digit case uniformly (see _IPV4_CANDIDATE_RE).
+    # The old regex+grammar pipeline accepted these two ("1.2.3.4" /
+    # "1.2.3.4/8") because it ran the grammar on an isolated span and regex
+    # backtracking had already pushed the hugging Unicode digit outside it,
+    # hiding it from the grammar's `\b` — the same quad was rejected in the
+    # cases just above. The lookarounds apply that boundary rule to every
+    # hugging-digit case (see _IPV4_CANDIDATE_RE).
     assert find_iocs("1.2.3.4٣.5")["ipv4s"] == []
     assert find_iocs(".٣1.2.3.4/8")["ipv4_cidrs"] == []
 

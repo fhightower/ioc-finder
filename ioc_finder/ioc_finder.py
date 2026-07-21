@@ -91,13 +91,15 @@ _IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa
 # lookarounds ARE Unicode-aware on purpose: they mirror the `\b` implied by
 # the grammar's `Word(nums, as_keyword=True)` octets, which rejected a quad
 # hugging a non-ASCII digit ("٣3.2.3.4", "1.2.3.4٣") because `\b` treats
-# the adjacent digit as a word character. Deliberate divergence from the
-# old regex+grammar pipeline: its span-slicing was context-blind, so a quad
-# whose adjacent Unicode digit happened to be excluded from the candidate
-# span by regex backtracking was accepted ("1.2.3.4٣.5" -> "1.2.3.4") while
-# the same quad without the trailing ".5" was rejected. The lookarounds
-# reject every hugging-digit case uniformly; pinned in
-# test_unicode_digits_are_not_parsed_as_ipv4s.
+# the adjacent digit as a word character. Enforcing that here fixes a leak
+# in the old regex+grammar pipeline rather than diverging from it: because
+# _scan_candidates runs the grammar on an *isolated* span, a hugging digit
+# that regex backtracking pushed outside the span was invisible to the
+# grammar's `\b`, so the same quad was accepted or rejected depending on
+# surrounding text ("١010.0.0.1" -> "10.0.0.1" and "1.2.3.4٣.5" ->
+# "1.2.3.4" were accepted; bare "٣3.2.3.4" / "1.2.3.4٣" were rejected).
+# The lookarounds apply the grammar's own boundary rule to every
+# hugging-digit case; pinned in test_unicode_digits_are_not_parsed_as_ipv4s.
 _IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?!\d)(?![A-Za-z0-9])(?!\.\S)")
 
 # Hash candidates: a hex run of exactly 32/40/64 chars. The leading lookbehind
