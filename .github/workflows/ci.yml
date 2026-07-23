@@ -72,3 +72,79 @@ jobs:
       run: |
         uv run pytest
         uv run codecov
+
+  # Gate a PR against its own base commit instead of the checked-in
+  # .benchmarks/ baselines. Those are absolute numbers captured once on some
+  # other machine and refreshed only by hand, so they drift: as of #406 they
+  # claimed 6.57ms for test_parse_urls where main actually ran ~1.8ms, leaving
+  # ~3x of headroom in which a regression is invisible. A commit on that PR
+  # carrying a 2.3x parse_urls regression passed the baseline gate on all three
+  # OSes. Measuring the base commit in this same job, on this same runner,
+  # minutes apart, removes both the staleness and the cross-machine variance.
+  #
+  # This catches per-PR regressions; it cannot see cumulative drift (twenty PRs
+  # each 5% slower would all pass individually). The checked-in baselines
+  # compared in build_multi_os stay for that.
+  benchmark_regression:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # The base commit is checked out below, so a shallow clone won't do.
+        fetch-depth: 0
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.14'
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v6
+    - name: Compare benchmarks against the base commit
+      run: |
+        set -euo pipefail
+
+        HEAD_SHA="$(git rev-parse HEAD)"
+        BASE_SHA="$(git rev-parse '${{ github.event.pull_request.base.sha }}')"
+        echo "comparing $BASE_SHA (base) -> $HEAD_SHA (head)"
+
+        # Both runs have to measure the same workload, so carry this PR's
+        # benchmark harness back onto the base commit's package source.
+        # Otherwise a PR that edits tests/benchmarks.py compares two different
+        # benchmarks and the percentages mean nothing.
+        mkdir -p /tmp/harness
+        cp tests/benchmarks.py /tmp/harness/benchmarks.py
+        cp -R tests/data /tmp/harness/data
+
+        git checkout --quiet --force --detach "$BASE_SHA"
+        mkdir -p tests/data
+        cp /tmp/harness/benchmarks.py tests/benchmarks.py
+        cp -R /tmp/harness/data/. tests/data/
+        uv sync --locked --group dev
+
+        # `-c .` mirrors how build_multi_os invokes the benchmarks: it makes
+        # pytest fail to resolve a config file, so the `-n auto --cov` addopts
+        # in pyproject.toml never apply. That matters — xdist disables
+        # pytest-benchmark outright, and coverage instrumentation would swamp
+        # the timings — so both runs here have to keep skipping them too.
+        #
+        # A PR whose harness cannot run against the base source at all (it
+        # benchmarks something the base commit does not have yet) is a skip,
+        # not a failure: there is no meaningful comparison to be made.
+        if ! uv run pytest -c "." --benchmark-storage=/tmp/bench \
+             --benchmark-save=base --benchmark-columns='mean,median,stddev' \
+             tests/benchmarks.py; then
+          echo "::warning::Could not benchmark base commit $BASE_SHA with this PR's harness; skipping the base-vs-head comparison."
+          exit 0
+        fi
+
+        # --force because the harness files copied in above are local edits.
+        git checkout --quiet --force --detach "$HEAD_SHA"
+        uv sync --locked --group dev
+
+        # Gate on median, not mean. pytest-benchmark's mean is badly
+        # outlier-sensitive on shared runners — one descheduled round can put
+        # the mean an order of magnitude above the median — so a mean gate
+        # tight enough to catch a real regression also flakes.
+        uv run pytest -c "." --benchmark-storage=/tmp/bench \
+          --benchmark-compare=0001 --benchmark-compare-fail='median:25%' \
+          --benchmark-columns='mean,median,stddev' tests/benchmarks.py
