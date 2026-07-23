@@ -114,11 +114,12 @@ _SHA1_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{40}(?![A-Za-z0
 _SHA256_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{64}(?![A-Za-z0-9])")
 
 # CVE candidates: "CVE" + dash/space separators + 4-digit year (1xxx/2xxx) + dashes
-# + 4-or-more digit id. Mirrors `year = Word("12") + Word(nums, exact=3)` and the
-# trailing `Word(nums, min=4)` + alphanum_word_end. Case-insensitive to match
-# CaselessLiteral("cve").
+# + 4-or-more digit id. Mirrors `year = Regex(r"[12][0-9]{3}")` and the trailing
+# `Word(nums, min=4)` + alphanum_word_end. Case-insensitive to match
+# CaselessLiteral("cve"). Digits are `[0-9]`, not `\d`, to match the ASCII-only
+# grammar rather than relying on it to reject non-ASCII digit runs.
 _CVE_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])cve[- ]+[12]\d{3}-+\d{4,}(?![A-Za-z0-9])",
+    r"(?<![A-Za-z0-9])cve[- ]+[12][0-9]{3}-+[0-9]{4,}(?![A-Za-z0-9])",
     re.IGNORECASE,
 )
 
@@ -130,13 +131,61 @@ _CVE_CANDIDATE_RE = re.compile(
 _IMPHASH_CANDIDATE_RE = re.compile(r"(?:imphash|import hash)[^a-z0-9]*[a-f0-9]{32}(?![a-z0-9])")
 _AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![a-z0-9])")
 
-# URL marker: '://' (scheme present) or '.<tld>/' (scheme-less URL with a
-# path). The candidate span is built in Python by expanding from each
-# marker out to whitespace boundaries (see `_url_candidate_spans`). A pure
-# regex of the form `\S*<marker>\S*` would go quadratic on long
-# non-whitespace, non-URL runs (e.g. 10k bytes of base64) because the
-# leading `\S*` walks to the end and backtracks for each starting offset.
-_URL_MARKER_RE = re.compile(r"://|\.[A-Za-z][A-Za-z0-9-]*/")
+# URL marker: '://' (scheme present), '.<tld>[:port]/' (scheme-less URL with
+# a path), or the tail of an IPv4-shaped host + optional port + '/' (the
+# scheme_less_url grammar's url_authority accepts ipv4_address hosts, and the
+# letter-after-dot marker can never fire on one). The candidate span is built in Python by
+# expanding from each marker out to whitespace boundaries (see
+# `_url_candidate_spans`). A pure regex of the form `\S*<marker>\S*` would go
+# quadratic on long non-whitespace, non-URL runs (e.g. 10k bytes of base64)
+# because the leading `\S*` walks to the end and backtracks for each starting
+# offset; every alternative here is anchored (no leading unbounded
+# quantifier), so the scan stays linear. The markers are locators only — the
+# URL grammars remain the validators (e.g. `999.1.2.3/x` produces a candidate
+# span the grammar then rejects). Digits are `[0-9]`, not `\d`, purely for
+# consistency with the other candidate regexes here; the grammar would reject
+# non-ASCII digits either way.
+#
+# The IPv4 alternative excludes the bare-CIDR shape (quad + '/' + one or two
+# digits ending the whitespace-delimited token). Without that exclusion every
+# `10.0.0.0/8` in a netblock feed or firewall dump becomes a candidate span,
+# and the ~750µs of grammar work it costs is pure waste: `find_iocs` strips
+# the resulting "URL" again in the issue-#91 removal pass, and standalone
+# `parse_urls("10.0.0.0/8")` returned nothing before the IPv4 marker existed.
+# The exclusion is deliberately narrow — anything after the digits (`/8.php`,
+# `/12?a=b`, `/80/x`) still marks — so a CIDR trailed by prose punctuation
+# ("10.0.0.0/8.") does still pay for a candidate span. Bulk CIDR text, the
+# case that actually matters for throughput, is whitespace-delimited.
+#
+# The IPv4 alternative matches only the last two octets (`.3.4/`), not the
+# whole quad, so that it starts with a literal '.' like the alternative above
+# it. This matters a lot: `re` prefilters a branch by the set of characters
+# that can start it, and leading the alternation with `[0-9]` widens that set
+# enough to defeat the skip — the full-quad form scanned the benchmark corpus
+# in 1.21ms against 0.15ms for the two original alternatives, an 8x cost for
+# an identical set of hits. Matching the tail costs nothing in coverage: every
+# quad + '/' contains `.<octet>.<octet>/`, and markers only locate the span
+# (`_url_candidate_spans` expands back to the whitespace boundaries), so the
+# leading octets are recovered anyway. It does let a non-quad like `v1.2.3/x`
+# mark, which is fine — that is what "locators only" buys.
+#
+# Not covered: bracketed IPv6 hosts (`[2001:db8::1]:8080/gate.php`). Adding a
+# marker for them would not help — the url grammars reject the scheme-*ful*
+# form too, so that is a grammar gap rather than a marker gap.
+# The port runs are unbounded (`[0-9]+`), not capped at the five digits a real
+# TCP port needs, because the grammar's `port = Word(":", nums, min=2)` is
+# itself unbounded and a marker must stay a superset of what its grammar
+# accepts. A five-digit cap made `example.com:123456/x` unreachable while the
+# scheme-*ful* `http://example.com:123456/x` still parsed (the `://` marker
+# does not look at the port), i.e. the same authority parsed or not depending
+# on whether a scheme was present. Unbounded costs nothing measurable — the
+# runs sit behind a literal '.' so they are rarely entered, and they stay
+# linear on adversarial digit runs.
+_URL_MARKER_RE = re.compile(
+    r"://"
+    r"|\.[A-Za-z][A-Za-z0-9-]*(?::[0-9]+)?/"
+    r"|\.[0-9]{1,3}\.[0-9]{1,3}(?::[0-9]+)?/(?![0-9]{1,2}(?!\S))"
+)
 
 # MAC candidates: the three notations the grammar accepts —
 # `xx[:-]xx[:-]xx[:-]xx[:-]xx[:-]xx` (mixed colon/dash separators allowed)
@@ -284,7 +333,11 @@ _IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){
 # refanging those forms would require running the validator against the
 # post-fang text, which has its own quirks; this narrow boundary fix is
 # enough to keep the partial-host truncation from surfacing.
-_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/\d{1,3}(?![A-Za-z0-9])")
+#
+# The bit range is `[0-9]`, not `\d`: this parser is pure-Python (no grammar
+# backstop) and `str.isdigit()` in the validator accepts non-ASCII digits, so
+# a Unicode-aware `\d` would emit CIDRs like "2001:db8::/٣٢" verbatim.
+_IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa-f]*/[0-9]{1,3}(?![A-Za-z0-9])")
 
 # Socket address candidates: either a dotted IPv4 quad or a bracketed IPv6
 # literal, followed by ':' and a 1..5 digit port. Boundaries reject hugging
@@ -292,10 +345,15 @@ _IPV6_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:\])])(?:[0-9A-Fa-f]*:){2,}
 # numeric port range, octet ranges, and IPv6 shape are validated by the
 # Python validator below; the prefilter is intentionally a superset.
 # See https://github.com/fhightower/ioc-finder/issues/248.
+#
+# Digits are `[0-9]`, not `\d`: this parser is pure-Python (no grammar
+# backstop) and the validator's `str.isdigit()`/`int()` accept non-ASCII
+# digits, so a Unicode-aware `\d` would emit sockets like "١.٢.٣.٤:80" or
+# "1.2.3.4:٨0" verbatim.
 _SOCKET_ADDRESS_CANDIDATE_RE = re.compile(
     r"(?<![A-Za-z0-9.])"
-    r"(?:(?:\d{1,3}\.){3}\d{1,3}|\[[0-9A-Fa-f:]+\])"
-    r":\d{1,5}"
+    r"(?:(?:[0-9]{1,3}\.){3}[0-9]{1,3}|\[[0-9A-Fa-f:]+\])"
+    r":[0-9]{1,5}"
     r"(?![A-Za-z0-9])"
 )
 

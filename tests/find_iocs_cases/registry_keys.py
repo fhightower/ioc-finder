@@ -336,4 +336,25 @@ REGISTRY_DATA = [
         {},
         id="registry_full_example",
     ),
+    param(
+        # A registry-key section containing an internal run of multiple spaces
+        # must not be absorbed into the path. The old double-space check used
+        # start-anchored `re.match`, which missed internal double spaces and
+        # let surrounding prose ride along in the parsed path (this text
+        # previously yielded "HKLM\\SOFTWARE\\Microsoft\\Foo.exe  trailing junk\\More").
+        #
+        # NOTE: the expected value below records current behavior, not the
+        # ideal one — the ".exe" is dropped. `Word(alphanums + " ")` greedily
+        # eats "exe  trailing junk", the double-space condition then rejects
+        # it, and ZeroOrMore cannot retry a shorter match, so the whole
+        # extension segment is lost. The right answer is
+        # "HKLM\\SOFTWARE\\Microsoft\\Foo.exe" (which is what this text yields
+        # without the trailing junk). Rejecting the junk is the point of this
+        # case; the truncated extension is a separate, pre-existing
+        # non-backtracking-Word limitation.
+        "HKLM\\SOFTWARE\\Microsoft\\Foo.exe  trailing junk\\More",
+        {"registry_key_paths": ["HKLM\\SOFTWARE\\Microsoft\\Foo"]},
+        {},
+        id="registry_internal_double_space_rejected",
+    ),
 ]

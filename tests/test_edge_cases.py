@@ -625,30 +625,29 @@ def test_certificate_serial_number_issue_96():
     assert observables["mac_addresses"] == []
 
 
-def test_unicode_digits_are_not_parsed_as_ipv4s():
-    """The pure-Python IPv4 fast path must not accept non-ASCII digits. A
-    Unicode-aware `\\d` in the candidate regexes plus int()'s Unicode-digit
-    support would fabricate addresses (e.g. '١.٢.٣.٤' -> '1.2.3.4') that the
-    ASCII-only ipv4_address grammar never matched; the candidate regexes use
-    `[0-9]` to keep the old behavior."""
-    # Arabic-Indic and fullwidth digit quads: no IPv4s.
-    assert find_iocs("١.٢.٣.٤")["ipv4s"] == []
-    assert find_iocs("１.２.３.４")["ipv4s"] == []
-    # A Unicode digit hugging an ASCII quad rejects the whole match, mirroring
-    # the `\b` implied by the grammar's `Word(nums, as_keyword=True)` octets
-    # (a non-ASCII digit is a word character to `\b`).
-    assert find_iocs("٣3.2.3.4")["ipv4s"] == []
-    assert find_iocs("1.2.3.4٣")["ipv4s"] == []
-    # The old regex+grammar pipeline accepted these two ("1.2.3.4" /
-    # "1.2.3.4/8") because it ran the grammar on an isolated span and regex
-    # backtracking had already pushed the hugging Unicode digit outside it,
-    # hiding it from the grammar's `\b` — the same quad was rejected in the
-    # cases just above. The lookarounds apply that boundary rule to every
-    # hugging-digit case (see _IPV4_CANDIDATE_RE).
-    assert find_iocs("1.2.3.4٣.5")["ipv4s"] == []
-    assert find_iocs(".٣1.2.3.4/8")["ipv4_cidrs"] == []
+def test_unicode_digits_are_not_parsed_as_socket_addresses_or_ipv6_cidrs():
+    """parse_socket_addresses and parse_ipv6_cidrs are pure-Python (no
+    pyparsing backstop), and their validators use str.isdigit()/int(), which
+    accept non-ASCII digits. The candidate regexes must therefore be ASCII
+    `[0-9]`, not `\\d`, or Unicode-digit inputs are emitted verbatim as IOCs
+    (e.g. '١.٢.٣.٤:80' or '2001:db8::/٣٢')."""
+    assert find_iocs("connect to ١.٢.٣.٤:80")["socket_addresses"] == []
+    assert find_iocs("1.2.3.4:٨0")["socket_addresses"] == []
+    assert find_iocs("2001:db8::/٣٢")["ipv6_cidrs"] == []
+    # A Unicode digit terminating the port/bit range truncates the match at
+    # the last ASCII digit, like any other non-alphanumeric terminator.
+    assert find_iocs("1.2.3.4:8٣")["socket_addresses"] == ["1.2.3.4:8"]
+    assert find_iocs("2001:db8::/3٢")["ipv6_cidrs"] == ["2001:db8::/3"]
+    # Sanity: plain ASCII forms still parse.
+    assert find_iocs("1.2.3.4:8080")["socket_addresses"] == ["1.2.3.4:8080"]
+    assert find_iocs("2001:db8::/32")["ipv6_cidrs"] == ["2001:db8::/32"]
 
-    # CIDRs: a Unicode digit in the bit range terminates the match exactly as
-    # the ASCII-only grammar did (the '1.2.3.4/1' prefix is still the IOC).
-    assert find_iocs("net 1.2.3.4/1٣")["ipv4_cidrs"] == ["1.2.3.4/1"]
-    assert find_iocs("١.٢.٣.٤/٨")["ipv4_cidrs"] == []
+
+def test_unicode_digits_are_not_parsed_as_cve_years():
+    """The `year` grammar is a `Regex`, and `re` is Unicode-aware where the
+    `Word(nums)` it replaced was ASCII-only. Both it and `_CVE_CANDIDATE_RE`
+    must spell their digits `[0-9]`, or a non-ASCII year is accepted."""
+    assert find_iocs("CVE-2٠٢١-1234")["cves"] == []
+    assert find_iocs("CVE-2021-١٢٣٤")["cves"] == []
+    # Sanity: plain ASCII forms still parse.
+    assert find_iocs("CVE-2021-1234")["cves"] == ["CVE-2021-1234"]

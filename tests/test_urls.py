@@ -5,6 +5,7 @@ from d8s_lists import iterables_have_same_items
 from pyparsing import ParseException
 
 from ioc_finder import find_iocs as _find_iocs
+from ioc_finder import parse_urls
 from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES, _parse_url, _remove_url_userinfo
 from ioc_finder.ioc_grammars import scheme_less_url
 
@@ -314,3 +315,59 @@ def test_remove_url_userinfo_works_for_scheme_ful_url():
         "http://userid:password@example.com/",
     )
     assert "userid:password@" not in stripped
+
+
+def test_scheme_less_url_with_port_is_found():
+    """A scheme-less URL with an explicit port must be found. The
+    `_URL_MARKER_RE` prefilter previously only recognized `://` and `.tld/`
+    markers, so `.tld:port/` spans were never handed to the (accepting)
+    scheme_less_url grammar."""
+    result = find_iocs("visit example.com:8080/admin now")
+    assert result["urls"] == ["example.com:8080/admin"]
+
+
+def test_scheme_less_url_with_ipv4_host_is_found():
+    """A scheme-less URL with an IPv4 host must be found. The `.tld/` marker
+    requires a letter after the dot, so `1.2.3.4/gate.php` spans were never
+    handed to the (accepting) scheme_less_url grammar."""
+    result = find_iocs("panel at 1.2.3.4/gate.php here")
+    assert result["urls"] == ["1.2.3.4/gate.php"]
+
+
+def test_scheme_less_url_with_ipv4_host_and_port_is_found():
+    result = find_iocs("callback to 10.0.0.5:8443/c2/beacon channel")
+    assert result["urls"] == ["10.0.0.5:8443/c2/beacon"]
+
+
+def test_scheme_less_url_port_is_not_capped_below_the_grammar():
+    """The marker must stay a superset of the grammar it gates. `port` is
+    `Word(":", nums, min=2)` — unbounded — so capping the marker's port at the
+    five digits a real TCP port needs would make these unreachable while the
+    scheme-*ful* spelling still parsed (the `://` marker never looks at the
+    port), i.e. the same authority would parse or not depending on whether a
+    scheme was present."""
+    assert parse_urls("example.com:123456/x") == ["example.com:123456/x"]
+    assert parse_urls("http://example.com:123456/x") == ["http://example.com:123456/x"]
+    assert parse_urls("1.2.3.4:123456/x") == ["1.2.3.4:123456/x"]
+
+
+def test_ipv4_cidrs_still_not_found_as_urls_with_ipv4_url_marker():
+    """The IPv4 URL marker must not turn CIDRs into URLs. It excludes the
+    bare-CIDR shape outright, so these never even become candidate spans; the
+    CIDR removal pass in find_iocs (issue #91) is the second line of defense."""
+    result = find_iocs("1.1.1.1/0 and 10.0.0.0/8")
+    assert result["urls"] == []
+    assert iterables_have_same_items(result["ipv4_cidrs"], ["1.1.1.1/0", "10.0.0.0/8"])
+
+
+def test_bare_ipv4_cidrs_do_not_become_url_candidates():
+    """The bare-CIDR exclusion in `_URL_MARKER_RE` keeps netblock-dense text
+    off the grammar's slow path: a candidate span costs ~750µs of grammar work
+    that find_iocs then discards. `parse_urls` (which has no CIDR removal pass)
+    is the direct observation point."""
+    assert parse_urls("10.0.0.0/8") == []
+    assert parse_urls("192.168.1.1/24") == []
+    # ...but anything past the prefix-length digits is still a URL candidate.
+    assert parse_urls("1.2.3.4/80/x") == ["1.2.3.4/80/x"]
+    assert parse_urls("1.2.3.4/12?a=b") == ["1.2.3.4/12?a=b"]
+    assert parse_urls("1.2.3.4/123") == ["1.2.3.4/123"]
