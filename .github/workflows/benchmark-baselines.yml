@@ -1,0 +1,151 @@
+# Regenerate the checked-in .benchmarks/ baselines that build_multi_os in
+# ci.yml compares against.
+#
+# These baselines have to be produced on the CI runners, not on a maintainer's
+# machine: they are absolute timings, and the compare step runs on a runner, so
+# a laptop-generated baseline compares two different machines and means
+# nothing. (For scale: a 2015 MacBook runs test_parse_urls roughly 3x faster
+# than the checked-in Darwin baseline claimed.)
+#
+# Previously only Windows had a generator, which is why the Darwin and Linux
+# baselines went stale — by #406 they claimed 6.57ms for test_parse_urls where
+# main actually ran ~1.8ms, leaving ~3x of headroom in which a regression was
+# invisible. This covers all three.
+#
+# Note that ci.yml's benchmark_regression job gates PRs against their own base
+# commit, which is the check that catches a regression you are introducing.
+# These baselines are for the things that job cannot see: cumulative drift
+# across many PRs, and pushes to main (benchmark_regression is PR-only).
+name: Generate Benchmark Baselines
+
+on:
+  # TEMPORARY BOOTSTRAP TRIGGER — REMOVE BEFORE MERGE.
+  # workflow_dispatch only fires for workflows already on the default branch,
+  # so this is the only way to generate the first set of baselines from this
+  # branch. Removed once the artifacts are collected.
+  push:
+    branches: [ chore/refresh-benchmark-baselines ]
+  workflow_dispatch:
+    inputs:
+      python_version:
+        description: Python version to benchmark
+        required: false
+        default: "3.14"
+      open_pr:
+        description: Open a pull request with the regenerated baselines
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PYTHON_VERSION: ${{ github.event.inputs.python_version || '3.14' }}
+
+jobs:
+  baseline:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Keep going if one OS fails so a single flaky runner doesn't cost the
+      # other two baselines.
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dependencies
+        run: uv sync --locked --group dev
+
+      - name: Generate baseline
+        # bash on all three runners (Git Bash on Windows) so this stays one
+        # script rather than a PowerShell fork.
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Drop the committed baselines first. pytest-benchmark numbers its
+          # saves sequentially, so leaving 0001_benchmark.json in place would
+          # make this run land as 0002 and ci.yml (--benchmark-compare=0001)
+          # would keep reading the stale file.
+          rm -rf .benchmarks
+
+          # `-c .` matches how ci.yml invokes the benchmarks: it makes pytest
+          # fail to resolve a config file, so the `-n auto --cov` addopts in
+          # pyproject.toml do not apply. That is load-bearing — xdist disables
+          # pytest-benchmark outright, and coverage instrumentation would
+          # inflate the timings. A baseline measured with different addopts
+          # than the comparison is not comparable.
+          uv run pytest -c "." --benchmark-storage=.benchmarks \
+            --benchmark-save=benchmark \
+            --benchmark-columns='mean,median,stddev,iqr' \
+            tests/benchmarks.py
+
+          # pytest-benchmark picks the machine-specific subdirectory name
+          # itself (e.g. Darwin-CPython-3.14-64bit), which is exactly the name
+          # ci.yml reconstructs when it compares. Let it name the directory
+          # rather than duplicating that logic here.
+          produced="$(find .benchmarks -name '*_benchmark.json' | head -1)"
+          if [ -z "$produced" ]; then
+            echo "::error::No benchmark JSON was produced."
+            exit 1
+          fi
+          echo "produced $produced"
+
+      - name: Upload baseline artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-baseline-${{ runner.os }}-py${{ env.PYTHON_VERSION }}
+          path: .benchmarks/**/*_benchmark.json
+          if-no-files-found: error
+
+  open_pr:
+    needs: baseline
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.open_pr == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download every baseline artifact
+        uses: actions/download-artifact@v4
+        with:
+          pattern: benchmark-baseline-*
+          path: /tmp/baselines
+          merge-multiple: true
+
+      - name: Stage the regenerated baselines
+        run: |
+          set -euo pipefail
+          # merge-multiple flattens the artifacts but preserves the
+          # machine-specific subdirectory inside each, so this lands the files
+          # back on the paths ci.yml reads.
+          find /tmp/baselines -name '*_benchmark.json' -print
+          rm -rf .benchmarks
+          mkdir -p .benchmarks
+          cp -R /tmp/baselines/. .benchmarks/
+          find .benchmarks -name '*_benchmark.json' -print
+
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Regenerate benchmark baselines for Python ${{ env.PYTHON_VERSION }}
+          title: Regenerate benchmark baselines for Python ${{ env.PYTHON_VERSION }}
+          body: |
+            Regenerated on the CI runners by the `benchmark-baselines.yml`
+            workflow. These are absolute per-OS timings that `build_multi_os`
+            compares against, so they must come from the runners rather than a
+            maintainer's machine.
+          branch: chore/regenerate-benchmark-baselines-py${{ env.PYTHON_VERSION }}
+          add-paths: |
+            .benchmarks/**
