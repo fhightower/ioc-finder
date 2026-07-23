@@ -16,15 +16,15 @@
 # commit, which is the check that catches a regression you are introducing.
 # These baselines are for the things that job cannot see: cumulative drift
 # across many PRs, and pushes to main (benchmark_regression is PR-only).
+#
+# When regenerating, run this workflow at least twice and keep the SLOWER
+# result per OS. Two runs over identical code differed by up to 20.5% on min
+# and 42% on median and mean, so a baseline taken from a single lucky-fast
+# runner will make ci.yml fail on unchanged code. That variance is also why
+# ci.yml compares on `min` with a deliberately loose threshold.
 name: Generate Benchmark Baselines
 
 on:
-  # TEMPORARY BOOTSTRAP TRIGGER — REMOVE BEFORE MERGE.
-  # workflow_dispatch only fires for workflows already on the default branch,
-  # so this is the only way to generate the first set of baselines from this
-  # branch. Removed once the artifacts are collected.
-  push:
-    branches: [ chore/refresh-benchmark-baselines ]
   workflow_dispatch:
     inputs:
       python_version:
