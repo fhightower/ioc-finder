@@ -12,16 +12,27 @@
 # main actually ran ~1.8ms, leaving ~3x of headroom in which a regression was
 # invisible. This covers all three.
 #
-# Note that ci.yml's benchmark_regression job gates PRs against their own base
-# commit, which is the check that catches a regression you are introducing.
-# These baselines are for the things that job cannot see: cumulative drift
-# across many PRs, and pushes to main (benchmark_regression is PR-only).
+# These baselines back a coarse drift alarm on main, gated on `min` (see the
+# long note in ci.yml). They are NOT a tight regression gate — min is blind to
+# tail/GC/occasional-slow-path regressions. A tight per-PR check is proposed
+# separately in PR #411; do not assume it exists when reasoning about coverage.
 #
-# When regenerating, run this workflow at least twice and keep the SLOWER
-# result per OS. Two runs over identical code differed by up to 20.5% on min
-# and 42% on median and mean, so a baseline taken from a single lucky-fast
-# runner will make ci.yml fail on unchanged code. That variance is also why
-# ci.yml compares on `min` with a deliberately loose threshold.
+# CONSERVATIVE-BASELINE PROCEDURE (this is manual; the workflow does not do it
+# for you). One dispatch of this workflow runs each OS exactly once, so its
+# output — including the open_pr=true auto-PR — is a SINGLE-run baseline. A
+# single run can land on a lucky-fast runner, and committing that makes ci.yml
+# fail on unchanged code: two runs over identical code differed by up to 20.5%
+# on min (42% on median/mean). To get a baseline that will not flake:
+#   1. Dispatch this workflow at least twice.
+#   2. Download the per-OS artifacts from every run.
+#   3. For each OS, and each benchmark within it, keep the SLOWEST min across
+#      runs (i.e. per-benchmark max — do not just keep whichever whole file was
+#      slower overall).
+#   4. Commit the reconciled files.
+# The baselines currently on this branch were produced exactly this way.
+# open_pr=true is a convenience for grabbing one run's numbers into a PR to
+# iterate on; it is a starting point, not the finished baseline, and a second
+# dispatch with open_pr=true overwrites that PR's branch rather than merging.
 name: Generate Benchmark Baselines
 
 on:
@@ -150,6 +161,13 @@ jobs:
             workflow. These are absolute per-OS timings that `build_multi_os`
             compares against, so they must come from the runners rather than a
             maintainer's machine.
+
+            ⚠️ SINGLE-RUN baseline — one run per OS. It may have landed on a
+            lucky-fast runner (up to ~20% faster than a slow one on `min`),
+            which would make CI fail on unchanged code. Before merging,
+            reconcile against at least one more dispatch of this workflow,
+            keeping the slowest `min` per benchmark per OS. See the header of
+            `benchmark-baselines.yml`.
           branch: chore/regenerate-benchmark-baselines-py${{ env.PYTHON_VERSION }}
           add-paths: |
             .benchmarks/**
