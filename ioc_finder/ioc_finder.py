@@ -114,11 +114,12 @@ _SHA1_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{40}(?![A-Za-z0
 _SHA256_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{64}(?![A-Za-z0-9])")
 
 # CVE candidates: "CVE" + dash/space separators + 4-digit year (1xxx/2xxx) + dashes
-# + 4-or-more digit id. Mirrors `year = Word("12") + Word(nums, exact=3)` and the
-# trailing `Word(nums, min=4)` + alphanum_word_end. Case-insensitive to match
-# CaselessLiteral("cve").
+# + 4-or-more digit id. Mirrors `year = Regex(r"[12][0-9]{3}")` and the trailing
+# `Word(nums, min=4)` + alphanum_word_end. Case-insensitive to match
+# CaselessLiteral("cve"). Digits are `[0-9]`, not `\d`, to match the ASCII-only
+# grammar rather than relying on it to reject non-ASCII digit runs.
 _CVE_CANDIDATE_RE = re.compile(
-    r"(?<![A-Za-z0-9])cve[- ]+[12]\d{3}-+\d{4,}(?![A-Za-z0-9])",
+    r"(?<![A-Za-z0-9])cve[- ]+[12][0-9]{3}-+[0-9]{4,}(?![A-Za-z0-9])",
     re.IGNORECASE,
 )
 
@@ -141,11 +142,28 @@ _AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![
 # offset; every alternative here is anchored (no leading unbounded
 # quantifier), so the scan stays linear. The markers are locators only — the
 # URL grammars remain the validators (e.g. `999.1.2.3/x` produces a candidate
-# span the grammar then rejects).
+# span the grammar then rejects). Digits are `[0-9]`, not `\d`, purely for
+# consistency with the other candidate regexes here; the grammar would reject
+# non-ASCII digits either way.
+#
+# The IPv4 alternative excludes the bare-CIDR shape (quad + '/' + one or two
+# digits ending the whitespace-delimited token). Without that exclusion every
+# `10.0.0.0/8` in a netblock feed or firewall dump becomes a candidate span,
+# and the ~750µs of grammar work it costs is pure waste: `find_iocs` strips
+# the resulting "URL" again in the issue-#91 removal pass, and standalone
+# `parse_urls("10.0.0.0/8")` returned nothing before the IPv4 marker existed.
+# The exclusion is deliberately narrow — anything after the digits (`/8.php`,
+# `/12?a=b`, `/80/x`) still marks — so a CIDR trailed by prose punctuation
+# ("10.0.0.0/8.") does still pay for a candidate span. Bulk CIDR text, the
+# case that actually matters for throughput, is whitespace-delimited.
+#
+# Not covered: bracketed IPv6 hosts (`[2001:db8::1]:8080/gate.php`). Adding a
+# marker for them would not help — the url grammars reject the scheme-*ful*
+# form too, so that is a grammar gap rather than a marker gap.
 _URL_MARKER_RE = re.compile(
     r"://"
-    r"|\.[A-Za-z][A-Za-z0-9-]*(?::\d{1,5})?/"
-    r"|(?:\d{1,3}\.){3}\d{1,3}(?::\d{1,5})?/"
+    r"|\.[A-Za-z][A-Za-z0-9-]*(?::[0-9]{1,5})?/"
+    r"|(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]{1,5})?/(?![0-9]{1,2}(?!\S))"
 )
 
 # MAC candidates: the three notations the grammar accepts —

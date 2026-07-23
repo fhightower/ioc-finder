@@ -641,3 +641,13 @@ def test_unicode_digits_are_not_parsed_as_socket_addresses_or_ipv6_cidrs():
     # Sanity: plain ASCII forms still parse.
     assert find_iocs("1.2.3.4:8080")["socket_addresses"] == ["1.2.3.4:8080"]
     assert find_iocs("2001:db8::/32")["ipv6_cidrs"] == ["2001:db8::/32"]
+
+
+def test_unicode_digits_are_not_parsed_as_cve_years():
+    """The `year` grammar is a `Regex`, and `re` is Unicode-aware where the
+    `Word(nums)` it replaced was ASCII-only. Both it and `_CVE_CANDIDATE_RE`
+    must spell their digits `[0-9]`, or a non-ASCII year is accepted."""
+    assert find_iocs("CVE-2٠٢١-1234")["cves"] == []
+    assert find_iocs("CVE-2021-١٢٣٤")["cves"] == []
+    # Sanity: plain ASCII forms still parse.
+    assert find_iocs("CVE-2021-1234")["cves"] == ["CVE-2021-1234"]

@@ -296,7 +296,11 @@ sha512 = (
 # A single regex rather than `Word("12") + Word(nums, exact=3)`: Word is
 # greedy and does not backtrack, so the old form ate every leading 1/2 digit
 # and failed on years whose digits are all 1s and 2s (e.g. "CVE-2121-12345").
-year = Regex(r"[12]\d{3}")
+# `[0-9]`, not `\d`: `re` is Unicode-aware while the `Word(nums)` it replaces
+# was ASCII-only, so `\d` here would accept non-ASCII year digits
+# ("CVE-2٠٢١-1234"). This grammar is the validator behind the deliberately
+# broad _CVE_CANDIDATE_RE, so it has to keep enforcing ASCII itself.
+year = Regex(r"[12][0-9]{3}")
 cve = (
     alphanum_word_start
     + Combine(
@@ -348,11 +352,12 @@ root_key = one_of(root_key_list)
 
 
 def hasMultipleConsecutiveSpaces(string):
-    """Return a truthy value if the given string contains multiple, consecutive
-    spaces anywhere (`re.search`, not the start-anchored `re.match` this used
-    previously — which silently accepted registry-key sections with an internal
-    double space, e.g. the "c  d" in `HKLM\\a\\b.c  d\\e`)."""
-    return re.search("  +", string)
+    """Return True if the given string contains multiple, consecutive spaces."""
+    # `re.search`, not `re.match`: the check has to see runs of spaces anywhere
+    # in the string, not only at its start. Start-anchoring silently accepted
+    # registry-key sections with an internal double space, letting surrounding
+    # prose ride along in the parsed path (e.g. the "c  d" in `HKLM\a\b.c  d\e`).
+    return bool(re.search("  +", string))
 
 
 def hasBothOrNeitherAngleBrackets(string):

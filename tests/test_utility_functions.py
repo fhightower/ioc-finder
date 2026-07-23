@@ -24,3 +24,9 @@ def test_hasMultipleConsecutiveSpaces_1():
     assert not hasMultipleConsecutiveSpaces(" ")
     assert hasMultipleConsecutiveSpaces("  ")
     assert hasMultipleConsecutiveSpaces("   ")
+
+    # Runs of spaces anywhere in the string count, not only at its start.
+    assert hasMultipleConsecutiveSpaces("a  b")
+    assert hasMultipleConsecutiveSpaces("a b  c")
+    assert hasMultipleConsecutiveSpaces("Foo.exe  trailing junk")
+    assert not hasMultipleConsecutiveSpaces("a b c")

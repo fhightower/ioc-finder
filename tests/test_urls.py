@@ -5,6 +5,7 @@ from d8s_lists import iterables_have_same_items
 from pyparsing import ParseException
 
 from ioc_finder import find_iocs as _find_iocs
+from ioc_finder import parse_urls
 from ioc_finder.ioc_finder import SUPPORTED_IOC_TYPES, _parse_url, _remove_url_userinfo
 from ioc_finder.ioc_grammars import scheme_less_url
 
@@ -339,8 +340,22 @@ def test_scheme_less_url_with_ipv4_host_and_port_is_found():
 
 
 def test_ipv4_cidrs_still_not_found_as_urls_with_ipv4_url_marker():
-    """The IPv4 URL marker makes `1.1.1.1/0` a URL *candidate*; the CIDR
-    removal pass in find_iocs (issue #91) must still keep it out of urls."""
+    """The IPv4 URL marker must not turn CIDRs into URLs. It excludes the
+    bare-CIDR shape outright, so these never even become candidate spans; the
+    CIDR removal pass in find_iocs (issue #91) is the second line of defense."""
     result = find_iocs("1.1.1.1/0 and 10.0.0.0/8")
     assert result["urls"] == []
     assert iterables_have_same_items(result["ipv4_cidrs"], ["1.1.1.1/0", "10.0.0.0/8"])
+
+
+def test_bare_ipv4_cidrs_do_not_become_url_candidates():
+    """The bare-CIDR exclusion in `_URL_MARKER_RE` keeps netblock-dense text
+    off the grammar's slow path: a candidate span costs ~750µs of grammar work
+    that find_iocs then discards. `parse_urls` (which has no CIDR removal pass)
+    is the direct observation point."""
+    assert parse_urls("10.0.0.0/8") == []
+    assert parse_urls("192.168.1.1/24") == []
+    # ...but anything past the prefix-length digits is still a URL candidate.
+    assert parse_urls("1.2.3.4/80/x") == ["1.2.3.4/80/x"]
+    assert parse_urls("1.2.3.4/12?a=b") == ["1.2.3.4/12?a=b"]
+    assert parse_urls("1.2.3.4/123") == ["1.2.3.4/123"]
