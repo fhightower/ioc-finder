@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Fixed
+
+- Scheme-less URLs with an explicit port (`example.com:8080/admin`) or an IPv4 host (`1.2.3.4/gate.php`) are now found. The `scheme_less_url` grammar already accepted both, but the `_URL_MARKER_RE` candidate prefilter only recognized `://` and `.tld/` markers, so these spans were never handed to the grammar ([#406](https://github.com/fhightower/ioc-finder/pull/406)).
+- Fixed CVE identifiers whose year digits are all 1s and 2s (e.g. `CVE-2121-12345`). The `year` grammar was `Word("12") + Word(nums, exact=3)`; `Word` is greedy and does not backtrack, so it consumed every leading 1/2 digit and left too few for the 3-digit remainder. It is now a single `Regex(r"[12][0-9]{3}")` — spelled `[0-9]` rather than `\d` because `re` is Unicode-aware where `Word(nums)` was ASCII-only, and this grammar is the validator behind a deliberately broad candidate regex.
+- Registry-key path sections containing an internal run of multiple spaces no longer absorb surrounding prose into the parsed path. The double-space check used start-anchored `re.match`, so it only ever saw a run of spaces at the very start of a section.
+- Rejected non-ASCII digits in the socket-address and IPv6 CIDR candidate regexes (`[0-9]` instead of `\d`). Those parsers validate in pure Python with `str.isdigit()`/`int()`, which accept Unicode digits, so inputs like `١.٢.٣.٤:80` or `2001:db8::/٣٢` were emitted verbatim as IOCs.
+
+### Changed
+
+- The IPv4 URL marker excludes the bare-CIDR shape (a quad plus `/` plus one or two digits ending the token), so netblock feeds and firewall dumps don't pay for a candidate span per CIDR — each costs ~750µs of grammar work that `find_iocs` then discards in its CIDR removal pass. 2000 CIDRs through `parse_urls` went from 2.0s to 0.002s. The exclusion is narrow: anything past the prefix-length digits (`/8.php`, `/12?a=b`, `/80/x`) still marks.
+- The IPv4 URL marker matches only the last two octets (`.3.4/`) so that it starts with a literal `.`, like the `.tld/` alternative beside it. `re` prefilters an alternation branch by the set of characters that can start it, and leading with `[0-9]` widened that set enough to defeat the skip — the full-quad form scanned the benchmark corpus in 1.21ms against 0.15ms for the original two alternatives, for an identical set of hits. No coverage is lost, since every quad plus `/` contains `.<octet>.<octet>/` and the marker only locates a span that is then expanded to its whitespace boundaries.
+
 ## [9.4.1] - 2026.06.17
 
 ### Fixed
