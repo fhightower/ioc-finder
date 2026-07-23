@@ -623,3 +623,32 @@ def test_certificate_serial_number_issue_96():
     print(observables)
     assert observables["ipv6s"] == []
     assert observables["mac_addresses"] == []
+
+
+def test_unicode_digits_are_not_parsed_as_ipv4s():
+    """The pure-Python IPv4 fast path must not accept non-ASCII digits. A
+    Unicode-aware `\\d` in the candidate regexes plus int()'s Unicode-digit
+    support would fabricate addresses (e.g. '١.٢.٣.٤' -> '1.2.3.4') that the
+    ASCII-only ipv4_address grammar never matched; the candidate regexes use
+    `[0-9]` to keep the old behavior."""
+    # Arabic-Indic and fullwidth digit quads: no IPv4s.
+    assert find_iocs("١.٢.٣.٤")["ipv4s"] == []
+    assert find_iocs("１.２.３.４")["ipv4s"] == []
+    # A Unicode digit hugging an ASCII quad rejects the whole match, mirroring
+    # the `\b` implied by the grammar's `Word(nums, as_keyword=True)` octets
+    # (a non-ASCII digit is a word character to `\b`).
+    assert find_iocs("٣3.2.3.4")["ipv4s"] == []
+    assert find_iocs("1.2.3.4٣")["ipv4s"] == []
+    # The old regex+grammar pipeline accepted these two ("1.2.3.4" /
+    # "1.2.3.4/8") because it ran the grammar on an isolated span and regex
+    # backtracking had already pushed the hugging Unicode digit outside it,
+    # hiding it from the grammar's `\b` — the same quad was rejected in the
+    # cases just above. The lookarounds apply that boundary rule to every
+    # hugging-digit case (see _IPV4_CANDIDATE_RE).
+    assert find_iocs("1.2.3.4٣.5")["ipv4s"] == []
+    assert find_iocs(".٣1.2.3.4/8")["ipv4_cidrs"] == []
+
+    # CIDRs: a Unicode digit in the bit range terminates the match exactly as
+    # the ASCII-only grammar did (the '1.2.3.4/1' prefix is still the IOC).
+    assert find_iocs("net 1.2.3.4/1٣")["ipv4_cidrs"] == ["1.2.3.4/1"]
+    assert find_iocs("١.٢.٣.٤/٨")["ipv4_cidrs"] == []

@@ -81,15 +81,34 @@ _IPV6_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9:])(?:[0-9A-Fa-f]*:){2,}[0-9A-Fa
 # IPv4 candidates: four 1–3 digit groups separated by dots. The lookbehind
 # mirrors alphanum_word_start + WordStart("." + nums) — neither alphanumeric
 # nor '.' may precede. The trailing `(?!\.\S)` mirrors NotAny(r"\.\S") so a
-# fifth dotted segment ("1.2.3.4.5") is excluded; the grammar's per-octet
-# `<256` check still runs and rejects e.g. "999.1.1.1".
-_IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![A-Za-z0-9])(?!\.\S)")
+# fifth dotted segment ("1.2.3.4.5") is excluded. The per-octet `<256` check
+# and the grammar's leading-zero normalization are applied by
+# `_normalized_ipv4` (pure Python — see parse_ipv4_addresses), which rejects
+# e.g. "999.1.1.1". Octets are `[0-9]`, not `\d`: with the ipv4_address
+# grammar (whose Word(nums) is ASCII-only) no longer run on these spans,
+# a Unicode-aware `\d` would let int() fabricate addresses from non-ASCII
+# digit runs like "١.٢.٣.٤" / "１.２.３.４". The `(?<!\d)` / `(?!\d)`
+# lookarounds ARE Unicode-aware on purpose: they mirror the `\b` implied by
+# the grammar's `Word(nums, as_keyword=True)` octets, which rejected a quad
+# hugging a non-ASCII digit ("٣3.2.3.4", "1.2.3.4٣") because `\b` treats
+# the adjacent digit as a word character. Enforcing that here fixes a leak
+# in the old regex+grammar pipeline rather than diverging from it: because
+# _scan_candidates runs the grammar on an *isolated* span, a hugging digit
+# that regex backtracking pushed outside the span was invisible to the
+# grammar's `\b`, so the same quad was accepted or rejected depending on
+# surrounding text ("١010.0.0.1" -> "10.0.0.1" and "1.2.3.4٣.5" ->
+# "1.2.3.4" were accepted; bare "٣3.2.3.4" / "1.2.3.4٣" were rejected).
+# The lookarounds apply the grammar's own boundary rule to every
+# hugging-digit case; pinned in test_unicode_digits_are_not_parsed_as_ipv4s.
+_IPV4_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?!\d)(?![A-Za-z0-9])(?!\.\S)")
 
 # Hash candidates: a hex run of exactly 32/40/64 chars. The leading lookbehind
 # mirrors file_hash_word_start (word_chars = alphanums minus 'x'/'X'), so a
 # leading 'x'/'X' prefix is allowed (issue #41). The trailing lookahead mirrors
 # alphanum_word_end so a longer hex run isn't sliced into a shorter hash —
 # e.g. a 64-char run won't surface as an MD5 candidate.
+# NOTE: exact mirrors of their grammars, not supersets, and used as the sole
+# validators — see _scan_hash_candidates for the full contract.
 _MD5_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{32}(?![A-Za-z0-9])")
 _SHA1_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{40}(?![A-Za-z0-9])")
 _SHA256_CANDIDATE_RE = re.compile(r"(?<![A-WYZa-wyz0-9])[A-Fa-f0-9]{64}(?![A-Za-z0-9])")
@@ -242,7 +261,15 @@ _BITCOIN_CANDIDATE_RE = re.compile(
 # match the ipv4 prefilter (alphanum_word_start excluding leading '.' too)
 # and alphanum_word_end. Per-octet `<256` and the bit-range bounds are
 # still enforced by the grammar.
-_IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}(?![A-Za-z0-9])")
+# `[0-9]`, not `\d`, for the same reason as _IPV4_CANDIDATE_RE: the grammar's
+# ASCII-only Word(nums) no longer backstops these spans, and the bit range is
+# emitted verbatim — a Unicode-aware `\d` would let non-ASCII digits through.
+# The Unicode-aware `(?<!\d)` matches _IPV4_CANDIDATE_RE (see the comment
+# there); no trailing `(?!\d)` on the bit range because the grammar's
+# `Word(nums, max=2)` was not a keyword — it truncated before a non-ASCII
+# digit ("1.2.3.4/1٣" -> "1.2.3.4/1") rather than rejecting, and the
+# `(?![A-Za-z0-9])` lookahead reproduces exactly that.
+_IPV4_CIDR_CANDIDATE_RE = re.compile(r"(?<![A-Za-z0-9.])(?<!\d)(?:[0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}(?![A-Za-z0-9])")
 
 # IPv6 CIDR candidates: hex+colon runs that contain at least two colons,
 # followed by '/' and 1-3 digit bit-range. Same boundary shape as the IPv6
@@ -551,9 +578,42 @@ def parse_domain_names(text, *, parse_unicode_iocs: bool = False):
     return out
 
 
+def _normalized_ipv4(span: str) -> str | None:
+    """Validate and normalize an IPv4 candidate span in pure Python, mirroring
+    ioc_grammars.ipv4_address: every octet must be < 256, and each is passed
+    through int() so leading zeros are stripped exactly like the grammar's
+    `str(int(...))` parse action ("001.002.003.004" -> "1.2.3.4"). The
+    candidate regexes guarantee four 1-3 digit groups and enforce the word
+    boundaries, so neither is re-checked here."""
+    octets = [int(octet) for octet in span.split(".")]
+    if any(octet > 255 for octet in octets):
+        return None
+    return ".".join(map(str, octets))
+
+
+def _scan_transformed(text, candidate_re, transform: Callable[[str], str | None]) -> list[str]:
+    """Run `transform` on each span matched by `candidate_re`, keeping the
+    first-seen order of the non-None results and deduplicating on the
+    *transformed* value (so e.g. "1.2.3.4" and "01.2.3.4" are one result).
+    This is the shared shape of every pure-Python fast path that bypasses
+    pyparsing; `transform` returns the parsed value or None to reject."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for m in candidate_re.finditer(text):
+        value = transform(m.group(0))
+        if value is not None and value not in seen:
+            seen.add(value)
+            out.append(value)
+    return out
+
+
 def parse_ipv4_addresses(text):
     """."""
-    return _scan_candidates(text, _IPV4_CANDIDATE_RE, ioc_grammars.ipv4_address)
+    # Pure-Python fast path (see _scan_transformed): the ipv4_address
+    # grammar's only transformation is the per-octet normalization
+    # reproduced by _normalized_ipv4, so skipping pyparsing preserves the
+    # output shape.
+    return _scan_transformed(text, _IPV4_CANDIDATE_RE, _normalized_ipv4)
 
 
 def _scan_candidates(text, candidate_re, grammar):
@@ -730,10 +790,10 @@ def _is_valid_ipv6(s: str) -> bool:
 
 def parse_ipv6_addresses(text):
     """."""
-    # Asymmetry with the other parse_* helpers: this validates candidates
-    # in pure Python via _is_valid_ipv6 instead of routing them through
-    # _scan_candidates + a pyparsing grammar. The grammar applies no parse
-    # actions to ipv6_address, so skipping it preserves the output shape.
+    # Pure-Python fast path (see _scan_transformed): candidates are
+    # validated via _is_valid_ipv6 instead of _scan_candidates + a pyparsing
+    # grammar. The grammar applies no parse actions to ipv6_address, so
+    # skipping it preserves the output shape.
     return _scan_validated(text, _IPV6_CANDIDATE_RE, _is_valid_ipv6)
 
 
@@ -776,16 +836,7 @@ def _scan_validated(text, candidate_re, validator):
     """Like _scan_candidates, but uses a pure-Python validator on the matched
     span instead of running a pyparsing grammar. Used where the grammar adds
     no transformation and a hand-written check is faster."""
-    seen: set[str] = set()
-    out: list[str] = []
-    for m in candidate_re.finditer(text):
-        span = m.group(0)
-        if span in seen:
-            continue
-        if validator(span):
-            seen.add(span)
-            out.append(span)
-    return out
+    return _scan_transformed(text, candidate_re, lambda span: span if validator(span) else None)
 
 
 def parse_complete_email_addresses(text: str, *, parse_unicode_iocs: bool = False) -> list:
@@ -816,24 +867,39 @@ def parse_authentihashes_(text: str) -> list:
     return _deduplicate(ioc_grammars.authentihash.parse_string(a).hash[0] for a in full_authentihash_instances)
 
 
+def _scan_hash_candidates(text, candidate_re):
+    """Pure-Python fast path for the fixed-length hex hash types. Unlike the
+    other candidate regexes (which are deliberate supersets of their grammars),
+    the md5/sha1/sha256/sha512 candidate regexes are *exact* mirrors: same hex
+    charset, exact length, same word-boundary rules — and the grammars' only
+    parse action is downcasing. So the lowercased regex match IS the grammar
+    output and pyparsing can be skipped entirely. If a hash grammar in
+    ioc_grammars ever grows a rule its candidate regex doesn't mirror, these
+    parsers must go back through _scan_candidates. (parse_imphashes_ /
+    parse_authentihashes_ still run the real imphash/authentihash grammars,
+    which embed md5/sha256.) The regex/grammar equivalence is asserted by
+    tests/test_fast_path_equivalence.py."""
+    return _scan_transformed(text, candidate_re, str.lower)
+
+
 def parse_md5s(text):
     """."""
-    return _scan_candidates(text, _MD5_CANDIDATE_RE, ioc_grammars.md5)
+    return _scan_hash_candidates(text, _MD5_CANDIDATE_RE)
 
 
 def parse_sha1s(text):
     """."""
-    return _scan_candidates(text, _SHA1_CANDIDATE_RE, ioc_grammars.sha1)
+    return _scan_hash_candidates(text, _SHA1_CANDIDATE_RE)
 
 
 def parse_sha256s(text):
     """."""
-    return _scan_candidates(text, _SHA256_CANDIDATE_RE, ioc_grammars.sha256)
+    return _scan_hash_candidates(text, _SHA256_CANDIDATE_RE)
 
 
 def parse_sha512s(text):
     """."""
-    return _scan_candidates(text, _SHA512_CANDIDATE_RE, ioc_grammars.sha512)
+    return _scan_hash_candidates(text, _SHA512_CANDIDATE_RE)
 
 
 def parse_ssdeeps(text):
@@ -851,9 +917,23 @@ def parse_cves(text):
     return _scan_candidates(text, _CVE_CANDIDATE_RE, ioc_grammars.cve)
 
 
+def _normalized_ipv4_cidr(span: str) -> str | None:
+    """Transform for the ipv4_cidr fast path: the address half gets the same
+    per-octet <256 check and leading-zero normalization as
+    parse_ipv4_addresses (via _normalized_ipv4); the bit range is kept
+    verbatim. The grammar's `Word(nums, max=2)` put no numeric bound on the
+    bit range (so e.g. "/99" was accepted), and the candidate regex's
+    `/[0-9]{1,2}` reproduces that — deliberately unchanged here."""
+    address, _, bits = span.partition("/")
+    normalized = _normalized_ipv4(address)
+    if normalized is None:
+        return None
+    return f"{normalized}/{bits}"
+
+
 def parse_ipv4_cidrs(text: str) -> list:
     """."""
-    return _scan_candidates(text, _IPV4_CIDR_CANDIDATE_RE, ioc_grammars.ipv4_cidr)
+    return _scan_transformed(text, _IPV4_CIDR_CANDIDATE_RE, _normalized_ipv4_cidr)
 
 
 def _is_valid_ipv6_cidr(span: str) -> bool:
