@@ -132,9 +132,9 @@ _IMPHASH_CANDIDATE_RE = re.compile(r"(?:imphash|import hash)[^a-z0-9]*[a-f0-9]{3
 _AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![a-z0-9])")
 
 # URL marker: '://' (scheme present), '.<tld>[:port]/' (scheme-less URL with
-# a path), or an IPv4-shaped host + optional port + '/' (the scheme_less_url
-# grammar's url_authority accepts ipv4_address hosts, and the letter-after-dot
-# marker can never fire on one). The candidate span is built in Python by
+# a path), or the tail of an IPv4-shaped host + optional port + '/' (the
+# scheme_less_url grammar's url_authority accepts ipv4_address hosts, and the
+# letter-after-dot marker can never fire on one). The candidate span is built in Python by
 # expanding from each marker out to whitespace boundaries (see
 # `_url_candidate_spans`). A pure regex of the form `\S*<marker>\S*` would go
 # quadratic on long non-whitespace, non-URL runs (e.g. 10k bytes of base64)
@@ -157,13 +157,25 @@ _AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![
 # ("10.0.0.0/8.") does still pay for a candidate span. Bulk CIDR text, the
 # case that actually matters for throughput, is whitespace-delimited.
 #
+# The IPv4 alternative matches only the last two octets (`.3.4/`), not the
+# whole quad, so that it starts with a literal '.' like the alternative above
+# it. This matters a lot: `re` prefilters a branch by the set of characters
+# that can start it, and leading the alternation with `[0-9]` widens that set
+# enough to defeat the skip — the full-quad form scanned the benchmark corpus
+# in 1.21ms against 0.15ms for the two original alternatives, an 8x cost for
+# an identical set of hits. Matching the tail costs nothing in coverage: every
+# quad + '/' contains `.<octet>.<octet>/`, and markers only locate the span
+# (`_url_candidate_spans` expands back to the whitespace boundaries), so the
+# leading octets are recovered anyway. It does let a non-quad like `v1.2.3/x`
+# mark, which is fine — that is what "locators only" buys.
+#
 # Not covered: bracketed IPv6 hosts (`[2001:db8::1]:8080/gate.php`). Adding a
 # marker for them would not help — the url grammars reject the scheme-*ful*
 # form too, so that is a grammar gap rather than a marker gap.
 _URL_MARKER_RE = re.compile(
     r"://"
     r"|\.[A-Za-z][A-Za-z0-9-]*(?::[0-9]{1,5})?/"
-    r"|(?:[0-9]{1,3}\.){3}[0-9]{1,3}(?::[0-9]{1,5})?/(?![0-9]{1,2}(?!\S))"
+    r"|\.[0-9]{1,3}\.[0-9]{1,3}(?::[0-9]{1,5})?/(?![0-9]{1,2}(?!\S))"
 )
 
 # MAC candidates: the three notations the grammar accepts —
