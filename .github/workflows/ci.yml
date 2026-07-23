@@ -127,10 +127,19 @@ jobs:
         # pytest-benchmark outright, and coverage instrumentation would swamp
         # the timings — so both runs here have to keep skipping them too.
         #
+        # The storage path must stay *relative*. pytest-benchmark's
+        # storage.location does `path.relative_to(Path.cwd())`, and it is
+        # evaluated while formatting the "machine_info is different" warning —
+        # so an absolute path outside the workspace (e.g. /tmp/bench) turns
+        # that cosmetic warning into a pytest INTERNALERROR. That warning is
+        # expected to fire here: machine_info embeds py-cpuinfo's hz_actual,
+        # the CPU's current clock, which drifts between two runs seconds apart
+        # on a shared runner. It is harmless; the comparison still happens.
+        #
         # A PR whose harness cannot run against the base source at all (it
         # benchmarks something the base commit does not have yet) is a skip,
         # not a failure: there is no meaningful comparison to be made.
-        if ! uv run pytest -c "." --benchmark-storage=/tmp/bench \
+        if ! uv run pytest -c "." --benchmark-storage=.bench-cmp \
              --benchmark-save=base --benchmark-columns='mean,median,stddev' \
              tests/benchmarks.py; then
           echo "::warning::Could not benchmark base commit $BASE_SHA with this PR's harness; skipping the base-vs-head comparison."
@@ -145,6 +154,6 @@ jobs:
         # outlier-sensitive on shared runners — one descheduled round can put
         # the mean an order of magnitude above the median — so a mean gate
         # tight enough to catch a real regression also flakes.
-        uv run pytest -c "." --benchmark-storage=/tmp/bench \
+        uv run pytest -c "." --benchmark-storage=.bench-cmp \
           --benchmark-compare=0001 --benchmark-compare-fail='median:25%' \
           --benchmark-columns='mean,median,stddev' tests/benchmarks.py
