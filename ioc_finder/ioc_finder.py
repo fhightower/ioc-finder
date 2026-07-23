@@ -172,10 +172,19 @@ _AUTHENTIHASH_CANDIDATE_RE = re.compile(r"authentihash[^a-z0-9]*[a-f0-9]{64}(?![
 # Not covered: bracketed IPv6 hosts (`[2001:db8::1]:8080/gate.php`). Adding a
 # marker for them would not help — the url grammars reject the scheme-*ful*
 # form too, so that is a grammar gap rather than a marker gap.
+# The port runs are unbounded (`[0-9]+`), not capped at the five digits a real
+# TCP port needs, because the grammar's `port = Word(":", nums, min=2)` is
+# itself unbounded and a marker must stay a superset of what its grammar
+# accepts. A five-digit cap made `example.com:123456/x` unreachable while the
+# scheme-*ful* `http://example.com:123456/x` still parsed (the `://` marker
+# does not look at the port), i.e. the same authority parsed or not depending
+# on whether a scheme was present. Unbounded costs nothing measurable — the
+# runs sit behind a literal '.' so they are rarely entered, and they stay
+# linear on adversarial digit runs.
 _URL_MARKER_RE = re.compile(
     r"://"
-    r"|\.[A-Za-z][A-Za-z0-9-]*(?::[0-9]{1,5})?/"
-    r"|\.[0-9]{1,3}\.[0-9]{1,3}(?::[0-9]{1,5})?/(?![0-9]{1,2}(?!\S))"
+    r"|\.[A-Za-z][A-Za-z0-9-]*(?::[0-9]+)?/"
+    r"|\.[0-9]{1,3}\.[0-9]{1,3}(?::[0-9]+)?/(?![0-9]{1,2}(?!\S))"
 )
 
 # MAC candidates: the three notations the grammar accepts —

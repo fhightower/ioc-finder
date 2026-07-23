@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Changed
 
 - The IPv4 URL marker excludes the bare-CIDR shape (a quad plus `/` plus one or two digits ending the token), so netblock feeds and firewall dumps don't pay for a candidate span per CIDR — each costs ~750µs of grammar work that `find_iocs` then discards in its CIDR removal pass. 2000 CIDRs through `parse_urls` went from 2.0s to 0.002s. The exclusion is narrow: anything past the prefix-length digits (`/8.php`, `/12?a=b`, `/80/x`) still marks.
+- The URL marker's port runs are unbounded rather than capped at five digits, keeping the marker a superset of the `port = Word(":", nums, min=2)` grammar it gates. A cap left `example.com:123456/x` unreachable while the scheme-ful `http://example.com:123456/x` still parsed, since the `://` marker never looks at the port.
 - The IPv4 URL marker matches only the last two octets (`.3.4/`) so that it starts with a literal `.`, like the `.tld/` alternative beside it. `re` prefilters an alternation branch by the set of characters that can start it, and leading with `[0-9]` widened that set enough to defeat the skip — the full-quad form scanned the benchmark corpus in 1.21ms against 0.15ms for the original two alternatives, for an identical set of hits. No coverage is lost, since every quad plus `/` contains `.<octet>.<octet>/` and the marker only locates a span that is then expanded to its whitespace boundaries.
 
 ## [9.4.1] - 2026.06.17
