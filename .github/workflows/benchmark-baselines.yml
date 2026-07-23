@@ -108,6 +108,10 @@ jobs:
         with:
           name: benchmark-baseline-${{ runner.os }}-py${{ env.PYTHON_VERSION }}
           path: .benchmarks/**/*_benchmark.json
+          # .benchmarks is a dotfile directory and upload-artifact@v4 skips
+          # hidden paths by default, so without this the upload silently finds
+          # nothing.
+          include-hidden-files: true
           if-no-files-found: error
 
   open_pr:
