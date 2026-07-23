@@ -128,13 +128,12 @@ jobs:
         # the timings — so both runs here have to keep skipping them too.
         #
         # The storage path must stay *relative*. pytest-benchmark's
-        # storage.location does `path.relative_to(Path.cwd())`, and it is
-        # evaluated while formatting the "machine_info is different" warning —
-        # so an absolute path outside the workspace (e.g. /tmp/bench) turns
-        # that cosmetic warning into a pytest INTERNALERROR. That warning is
-        # expected to fire here: machine_info embeds py-cpuinfo's hz_actual,
-        # the CPU's current clock, which drifts between two runs seconds apart
-        # on a shared runner. It is harmless; the comparison still happens.
+        # storage.location does `path.relative_to(Path.cwd())`, so an absolute
+        # path outside the workspace (e.g. /tmp/bench) raises ValueError. That
+        # property is only read while formatting a "machine_info is different"
+        # warning, which makes the failure mode confusing: a cosmetic warning
+        # surfaces as a pytest INTERNALERROR with no obvious connection to the
+        # storage flag.
         #
         # A PR whose harness cannot run against the base source at all (it
         # benchmarks something the base commit does not have yet) is a skip,
