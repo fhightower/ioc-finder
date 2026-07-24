@@ -68,3 +68,4 @@ Pipfile
 Pipfile.lock
 
 .DS_Store
+.bench-cmp/
