@@ -1,19 +1,40 @@
 {
     "machine_info": {
-        "machine": "x86_64",
-        "python_compiler": "Clang 14.0.0 (clang-1400.0.29.202)",
+        "node": "sat12-dp154-229870b7-29a1-4672-b90d-312acd04bcb8-52E171EF2BAC.local",
+        "processor": "arm",
+        "machine": "arm64",
+        "python_compiler": "Clang 21.0.0 (clang-2100.1.1.101)",
         "python_implementation": "CPython",
-        "python_implementation_version": "3.14.2",
-        "python_version": "3.14.2",
+        "python_implementation_version": "3.14.6",
+        "python_version": "3.14.6",
         "python_build": [
-            "main",
-            "Jan 30 2026 00:20:31"
+            "v3.14.6:c63aec69bd5",
+            "Jun 10 2026 08:07:54"
         ],
-        "release": "21.6.0",
-        "system": "Darwin"
+        "release": "25.4.0",
+        "system": "Darwin",
+        "cpu": {
+            "python_version": "3.14.6.final.0 (64 bit)",
+            "cpuinfo_version": [
+                9,
+                0,
+                0
+            ],
+            "cpuinfo_version_string": "9.0.0",
+            "arch": "ARM_8",
+            "bits": 64,
+            "count": 3,
+            "arch_string_raw": "arm64",
+            "brand_raw": "Apple M1 (Virtual)"
+        }
     },
     "commit_info": {
-        "project": "ioc-finder"
+        "id": "3738bd0d24276b19414de3265bfe3d786db5890f",
+        "time": "2026-07-23T12:07:51-04:00",
+        "author_time": "2026-07-23T12:07:51-04:00",
+        "dirty": true,
+        "project": "ioc-finder",
+        "branch": "chore/refresh-benchmark-baselines"
     },
     "benchmarks": [
         {
@@ -32,22 +53,22 @@
                 "warmup": false
             },
             "stats": {
-                "min": 0.06850632402347401,
-                "max": 0.07887013797881082,
-                "mean": 0.071554329310311,
-                "stddev": 0.003063062069912949,
-                "rounds": 10,
-                "median": 0.0714686585124582,
-                "iqr": 0.003438599989749491,
-                "q1": 0.0692944060137961,
-                "q3": 0.0727330060035456,
-                "iqr_outliers": 1,
-                "stddev_outliers": 1,
-                "outliers": "1;1",
-                "ld15iqr": 0.06850632402347401,
-                "hd15iqr": 0.07887013797881082,
-                "ops": 13.975394775392013,
-                "total": 0.71554329310311,
+                "min": 0.013216667000008897,
+                "max": 0.02732445799999539,
+                "mean": 0.018415662214285384,
+                "stddev": 0.003633111427644424,
+                "rounds": 28,
+                "median": 0.018178187499998444,
+                "iqr": 0.005982583499999805,
+                "q1": 0.015397624999998527,
+                "q3": 0.021380208499998332,
+                "iqr_outliers": 0,
+                "stddev_outliers": 8,
+                "outliers": "8;0",
+                "ld15iqr": 0.013216667000008897,
+                "hd15iqr": 0.02732445799999539,
+                "ops": 54.30160416519156,
+                "total": 0.5156385419999907,
                 "iterations": 1
             }
         },
@@ -67,26 +88,26 @@
                 "warmup": false
             },
             "stats": {
-                "min": 0.0054241420002654195,
-                "max": 0.01924160198541358,
-                "mean": 0.006570026096192628,
-                "stddev": 0.0018193044530495771,
-                "rounds": 72,
-                "median": 0.006025421986123547,
-                "iqr": 0.0013220314867794514,
-                "q1": 0.005635901994537562,
-                "q3": 0.0069579334813170135,
-                "iqr_outliers": 3,
-                "stddev_outliers": 4,
-                "outliers": "4;3",
-                "ld15iqr": 0.0054241420002654195,
-                "hd15iqr": 0.009840785001870245,
-                "ops": 152.2063969547254,
-                "total": 0.47304187892586924,
+                "min": 0.0006839159999998401,
+                "max": 0.027167875000003505,
+                "mean": 0.0011208135601405125,
+                "stddev": 0.000920932347524991,
+                "rounds": 1139,
+                "median": 0.0008887079999908565,
+                "iqr": 0.0004065934999921694,
+                "q1": 0.0007966772500012098,
+                "q3": 0.0012032707499933792,
+                "iqr_outliers": 118,
+                "stddev_outliers": 90,
+                "outliers": "90;118",
+                "ld15iqr": 0.0006839159999998401,
+                "hd15iqr": 0.0018200419999914175,
+                "ops": 892.209048465325,
+                "total": 1.2766066450000437,
                 "iterations": 1
             }
         }
     ],
-    "datetime": "2026-04-30T10:29:41.990418+00:00",
+    "datetime": "2026-07-23T16:09:48.794580+00:00",
     "version": "5.2.3"
 }
