@@ -137,12 +137,29 @@ jobs:
         #
         # A PR whose harness cannot run against the base source at all (it
         # benchmarks something the base commit does not have yet) is a skip,
-        # not a failure: there is no meaningful comparison to be made.
-        if ! uv run pytest -c "." --benchmark-storage=.bench-cmp \
-             --benchmark-save=base --benchmark-columns='mean,median,stddev' \
-             tests/benchmarks.py; then
-          echo "::warning::Could not benchmark base commit $BASE_SHA with this PR's harness; skipping the base-vs-head comparison."
+        # not a failure: there is no meaningful comparison to be made. But the
+        # skip has to be narrow. Only two pytest exit codes mean "base is
+        # legitimately incompatible with this harness":
+        #   2  collection error — the harness imports a symbol the base lacks
+        #      (the exact "base too old for this PR's code" case)
+        #   5  no tests collected
+        # Every other nonzero exit is a real problem — a benchmark raising at
+        # runtime (1), a usage error (4), an INTERNALERROR (3), or a crash
+        # (segfault 139 / OOM 137) — and must fail the job. Treating those as a
+        # skip would make the gate report false-green, the worst failure mode
+        # for a regression check.
+        set +e
+        uv run pytest -c "." --benchmark-storage=.bench-cmp \
+          --benchmark-save=base --benchmark-columns='mean,median,stddev' \
+          tests/benchmarks.py
+        rc=$?
+        set -e
+        if [ "$rc" -eq 2 ] || [ "$rc" -eq 5 ]; then
+          echo "::warning::Base commit $BASE_SHA is incompatible with this PR's benchmark harness (pytest rc=$rc); skipping the base-vs-head comparison."
           exit 0
+        elif [ "$rc" -ne 0 ]; then
+          echo "::error::Benchmarking base commit $BASE_SHA failed unexpectedly (pytest rc=$rc)."
+          exit "$rc"
         fi
 
         # --force because the harness files copied in above are local edits.
