@@ -10,6 +10,7 @@ from .hashes import HASH_DATA
 from .ids import ID_DATA
 from .ip_addr import IP_DATA
 from .mac_addr import MAC_DATA
+from .pem_blocks import PEM_DATA
 from .registry_keys import REGISTRY_DATA
 from .tlp_labels import TLP_DATA
 from .urls import URL_DATA
@@ -31,6 +32,7 @@ cases = [
     ID_DATA,
     COIN_DATA,
     MAC_DATA,
+    PEM_DATA,
     URL_DATA,
     UA_DATA,
 ]
