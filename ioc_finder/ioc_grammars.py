@@ -570,3 +570,26 @@ tlp_label = Combine(
     + Or([Literal(":"), Literal("-"), Literal(" "), Empty()]).set_parse_action(lambda x: ":")
     + tlp_colors
 ).set_parse_action(pyparsing_common.upcase_tokens)
+
+# PEM-encoded X.509 certificate (RFC 7468). The STIX 2.1 X509Certificate SCO is
+# a richer object (issuer, subject, validity, hashes, ...), but raw certificates
+# in threat reports virtually always appear as a `-----BEGIN CERTIFICATE-----`
+# PEM block, so that's what we extract. Lazy `.+?` with DOTALL keeps the match
+# bounded to the first matching END marker.
+x509_certificate = Regex(
+    r"-----BEGIN CERTIFICATE-----.+?-----END CERTIFICATE-----",
+    flags=re.DOTALL,
+)
+
+# Generic PEM block — STIX 2.1 Artifact SCO models opaque bytes (mime_type +
+# payload_bin). In threat reports these typically surface as PEM blocks for
+# private keys, PGP messages, public keys, CRLs, CSRs, etc. We exclude the
+# `CERTIFICATE` label (handled by `x509_certificate`) but accept everything
+# else, including `CERTIFICATE REQUEST` (a CSR is a request, not a cert).
+# The backreference \1 enforces label symmetry between BEGIN and END.
+artifact = Regex(
+    r"-----BEGIN (?!CERTIFICATE-----)([A-Z][A-Z0-9]*(?: [A-Z][A-Z0-9]*)*)-----"
+    r".+?"
+    r"-----END \1-----",
+    flags=re.DOTALL,
+)
