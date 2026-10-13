@@ -48,6 +48,8 @@ IOC_EXAMPLES = {
     "attack_mitigations": {"enterprise": ["M1036", "M1015"]},
     "attack_tactics": {"pre_attack": ["TA0012"]},
     "attack_techniques": {"pre_attack": ["T1329"]},
+    "x509_certificates": ["-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiGCgKCAQEA\n-----END CERTIFICATE-----"],
+    "artifacts": ["-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiGAASCBKcwggSjAgEA\n-----END PRIVATE KEY-----"],
 }
 all_ioc_text = " ".join([val for sublist in IOC_EXAMPLES.values() for val in sublist])
 

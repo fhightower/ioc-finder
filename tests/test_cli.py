@@ -38,6 +38,7 @@ def test_cli_without_domain_from_url_parsing():
     assert (
         result.output.strip()
         == """{
+    "artifacts": [],
     "asns": [],
     "attack_mitigations": {
         "enterprise": [],
@@ -86,6 +87,7 @@ def test_cli_without_domain_from_url_parsing():
         "https://example.org/test/bingo.php"
     ],
     "user_agents": [],
+    "x509_certificates": [],
     "xmpp_addresses": []
 }"""
     )
